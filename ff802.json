@@ -2385,7 +2385,7 @@
             "borderRadius": "auto",
             "padding": "auto",
             "html": "",
-            "css": ".navigation {\n  margin:2rem 2rem -1rem;\n}\n",
+            "css": ".navigation {\n  margin:2rem 2rem -1rem;\n  height:34rem;\n}\n",
             "colorBg": "auto",
             "layout": "default",
             "justify": "start",
