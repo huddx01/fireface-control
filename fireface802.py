@@ -143,41 +143,33 @@ class FireFace802(AlsaMixer):
 
 
 
-        self.add_parameter('metering', None, types='s', default='off', alsa='', osc=True)
-        self.start_scene('meters', self.update_meters)
+        self.add_parameter('metering', None, types='s', default='on', alsa='', osc=True)
 
 
     def update_meters(self):
-        self.set('metering', 'on')
 
         while True:
             sleep(1/20)
 
-            if self.get('metering') != 'on':
-                
-                sleep(0.25)
+            for (mixer, sources) in self.mixer_sources.items():
 
-            else:
+                sourcetype = mixer.split(':')[1].split('-')[0]
 
-                for (mixer, sources) in self.mixer_sources.items():
+                meters = self.alsa_get(f'meter:{sourcetype}-input', f'name="meter:{sourcetype}-input",iface=CARD')
+                if meters:
+                    for i, v in enumerate(meters):
+                        self.set(f'source-{sourcetype}-meter:{i}', self.meter_abs_to_db(v))
 
-                    sourcetype = mixer.split(':')[1].split('-')[0]
+        
+            out_index = -1
+            for (output_meter, outputs) in self.output_meters.items():
 
-                    meters = self.alsa_get(f'meter:{sourcetype}-input', f'name="meter:{sourcetype}-input",iface=CARD')
+                    meters = self.alsa_get(output_meter, f'name="{output_meter}",iface=CARD')
                     if meters:
                         for i, v in enumerate(meters):
-                            self.set(f'source-{sourcetype}-meter:{i}', self.meter_abs_to_db(v))
+                            out_index += 1
 
-            
-                out_index = -1
-                for (output_meter, outputs) in self.output_meters.items():
-
-                        meters = self.alsa_get(output_meter, f'name="{output_meter}",iface=CARD')
-                        if meters:
-                            for i, v in enumerate(meters):
-                                out_index += 1
-
-                                self.set(f'output-meter:{out_index}', self.meter_abs_to_db(v))
+                            self.set(f'output-meter:{out_index}', self.meter_abs_to_db(v))
 
 
     def meter_abs_to_db(self, v):
@@ -186,6 +178,25 @@ class FireFace802(AlsaMixer):
         if v < self.meter_noisefloor:
             v = -90
         return v
+
+
+    def parameter_changed(self, mod, name, value):
+     
+        super().parameter_changed(mod, name, value)
+
+        if name == 'metering':
+            if value == 'off':
+                self.stop_scene('meters')
+                for n in self.parameters:
+                    if '-meter:' in n:
+                        self.set(n, -90)
+            else:
+                self.start_scene('meters', self.update_meters)
+
+            
+
+
+
 
     def create_monitor(self, index, outputs, name=None):
         

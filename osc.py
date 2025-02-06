@@ -21,8 +21,13 @@ class OSC(Module):
         if 'osc' in mod.parameters[name].metadata:
             if type(value) is not list:
                 value = [value]
-            self.send(f'/{name}', *value)
-            self.osc_state[f'/{name}'] = value
+            
+            if 'meter:' in name:
+                # optimize meter update (bypass o-s-c's cross-widgets sync checks)
+                self.send('/SCRIPT', f'set("{name}", {value[0]}, {'{sync: false, send:false}'})')
+            else:
+                self.send(f'/{name}', *value)
+                self.osc_state[f'/{name}'] = value
 
     def send_state(self):
         """
