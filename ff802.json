@@ -85,8 +85,9 @@
         "id": "meter_gradient",
         "comments": "",
         "value": {
-          "0": "green",
+          "0": "transparent",
           "1": "red",
+          "0.02": "green",
           "0.2": "green",
           "0.42": "lime",
           "0.6": "yellow",
@@ -1137,10 +1138,7 @@
                             "colorKnob": "auto",
                             "horizontal": false,
                             "pips": false,
-                            "dashed": [
-                              2,
-                              2
-                            ],
+                            "dashed": false,
                             "gradient": "@{output_meter_gradient}",
                             "snap": false,
                             "spring": false,
@@ -1525,10 +1523,7 @@
                             "colorKnob": "auto",
                             "horizontal": false,
                             "pips": false,
-                            "dashed": [
-                              2,
-                              2
-                            ],
+                            "dashed": false,
                             "gradient": "@{output_meter_gradient}",
                             "snap": false,
                             "spring": false,
@@ -1573,7 +1568,7 @@
                         "decimals": 2,
                         "target": "",
                         "onCreate": "",
-                        "onValue": "var {monitor, sourcetype, source} = getProp('parent', 'variables')\nupdateProp(`monitor_${monitor}_clone_${sourcetype}_${source}`, 'visible')",
+                        "onValue": "",
                         "interaction": true,
                         "typeTags": "",
                         "ignoreDefaults": false,
@@ -3102,14 +3097,15 @@
         "id": "output_meter_gradient",
         "comments": "",
         "value": {
-          "0": "green",
+          "0": "transparent",
           "1": "red",
           "0.8": "red",
           "0.16": "green",
           "0.38": "lime",
           "0.48": "yellow",
           "0.64": "yellow",
-          "0.40": "lime"
+          "0.40": "lime",
+          "0.02": "green"
         },
         "default": "",
         "linkId": "",

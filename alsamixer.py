@@ -11,26 +11,16 @@ class AlsaMixer(Module):
 
             super().__init__(*args, **kwargs)
 
-            self.watched_parameters = {}
             self.add_event_callback('parameter_changed', self.parameter_changed)
-
             self.alsaset_process = Popen(['amixer', '-c', '0', '-s', '-q'], stdin=PIPE, text=True)
-
-        def add_alsa_parameter(self, *args, alsa_lookup=None, **kwargs):
-            
-            self.add_parameter(*args, **kwargs)
-           
-            name = kwargs['name'] if 'name' in kwargs else args[0] 
-            if alsa_lookup is None:
-                alsa_lookup = f'name="{name}"'
-            self.watched_parameters[name] = alsa_lookup
 
         def parameter_changed(self, mod, name, value):
 
-            if name in self.watched_parameters:
-                alsa_lookup =  self.watched_parameters[name]
-
-                self.alsa_set(alsa_lookup, value)
+            if 'alsa' in mod.parameters[name].metadata:
+                lookup = mod.parameters[name].metadata['alsa']
+                if not lookup:
+                    lookup = f'name="{name}"'
+                self.alsa_set(lookup, value)
 
 
         def alsa_set(self, alsa_lookup, value):

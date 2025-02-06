@@ -18,7 +18,7 @@ class OSC(Module):
 
     def parameter_changed(self, mod, name, value):
 
-        if mod != self:
+        if 'osc' in mod.parameters[name].metadata:
             if type(value) is not list:
                 value = [value]
             self.send(f'/{name}', *value)
