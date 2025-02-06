@@ -2295,7 +2295,7 @@
                 "height": 340,
                 "expand": true,
                 "colorText": "auto",
-                "colorWidget": "#aeaeae",
+                "colorWidget": "auto",
                 "colorStroke": "auto",
                 "colorFill": "auto",
                 "alphaStroke": "auto",
