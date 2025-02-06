@@ -1099,7 +1099,7 @@
                           {
                             "type": "fader",
                             "lock": false,
-                            "id": "meter_input_@{parent.variables.sourcetype}_@{parent.variables.source}",
+                            "id": "source-@{parent.variables.sourcetype}-meter:@{parent.variables.source}",
                             "comments": "",
                             "value": "",
                             "default": "",
