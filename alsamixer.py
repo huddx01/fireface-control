@@ -12,9 +12,13 @@ class AlsaMixer(Module):
             super().__init__(*args, **kwargs)
 
             self.add_event_callback('parameter_changed', self.parameter_changed)
+
             self.alsaset_process = Popen(['amixer', '-c', '0', '-s', '-q'], stdin=PIPE, text=True)
 
         def parameter_changed(self, mod, name, value):
+            """
+            Update Alsa mixer (amixer) when a parameter with the alsa flag updates 
+            """
 
             if 'alsa' in mod.parameters[name].metadata:
                 lookup = mod.parameters[name].metadata['alsa']
@@ -24,33 +28,21 @@ class AlsaMixer(Module):
 
 
         def alsa_set(self, alsa_lookup, value):
+            """
+            Alsa mixer set function, uses an interactive amixer instance
+            """
+
             if type(value) is list:
                 value = ",".join([str(x) for x in value])
 
             self.alsaset_process.stdin.write('cset ' + alsa_lookup + ' ' + str(value) + '\n')
-            self.alsaset_process.stdin.flush()
-
-
-        def alsa_update(self):
-            while True:
-                sleep(0.001)
-                # with self.alsaget_lock:
-                self.alsaget_process.stdout.flush()
-                for line in self.alsaget_process.stdout:
-                    # line =  self.alsaget_process.stdout.readline()
-                    if 'name=' in line:
-                        self.alsaget_key = line.split('name=')[1][1:-2]
-                    elif ': values=' in line and self.alsaget_key is not None:
-                        values = line.split('=')[1]
-                        try:
-                            values = [int(v) for v in values.split(',')]
-                            self.alsaget_data[self.alsaget_key] = values
-                        except:
-                            pass
-
-                    
+            self.alsaset_process.stdin.flush()               
      
         def alsa_get(self, name, alsa_lookup):
+            """
+            Alsa mixer get function, uses an amixer instance per call
+            because it doesn't work with a interactive instance (cget is not supported)
+            """
 
             out = run(['amixer', '-c', '0', 'cget', alsa_lookup], stdout=PIPE).stdout.decode('utf-8')
             for line in out.split('\n'):

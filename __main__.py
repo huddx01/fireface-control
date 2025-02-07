@@ -27,7 +27,7 @@ ff802.create_monitor(5, [20,21], 'HP4 Phones 4')
 
 # rename hardware inputs
 ff802.set(f'source-line-default-name:0', '1073 A')
-ff802.set(f'source-line-default-name:1', '1073 A')
+ff802.set(f'source-line-default-name:1', '1073 B')
 for i in range(16):
     ff802.set(f'source-adat-default-name:{i}', f'ATB {i+1}')
 

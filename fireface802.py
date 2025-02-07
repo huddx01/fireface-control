@@ -147,7 +147,9 @@ class FireFace802(AlsaMixer):
 
 
     def update_meters(self):
-
+        """
+        Fetch meter values periodically
+        """
         while True:
             sleep(1/20)
 
@@ -173,6 +175,9 @@ class FireFace802(AlsaMixer):
 
 
     def meter_abs_to_db(self, v):
+        """
+        Convert meter value to dBs
+        """
         v = 20*log10(max(v / 134217712,0.00001))
         v = round(v*10) / 10
         if v < self.meter_noisefloor:
@@ -181,9 +186,13 @@ class FireFace802(AlsaMixer):
 
 
     def parameter_changed(self, mod, name, value):
+        """
+        Custom parameter update hooks
+        """
      
         super().parameter_changed(mod, name, value)
 
+        # Start/stop metering thread and reset meters when it stops
         if name == 'metering':
             if value == 'off':
                 self.stop_scene('meters')
@@ -193,13 +202,14 @@ class FireFace802(AlsaMixer):
             else:
                 self.start_scene('meters', self.update_meters)
 
-            
-
-
-
 
     def create_monitor(self, index, outputs, name=None):
+        """
+        Create stereo monitors / mixers
+        """
         
+        # create gain, mute and pan controls for every input
+        # and map them to the appropriate mixer source gains 
         for (mixer, sources) in self.mixer_sources.items():
 
             sourcetype = mixer.split(':')[1].split('-')[0]
@@ -221,6 +231,7 @@ class FireFace802(AlsaMixer):
                     transform = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[0, 40960])
                 )
 
+        # monitor master controls
         default_name = name if name is not None else f'{self.mixer_outputs_default_names[outputs[0]]} + {self.mixer_outputs_default_names[outputs[1]]}'
         self.add_parameter(f'monitor-name:{index}', None, types='s', default=default_name, osc=True)
 
@@ -241,7 +252,7 @@ class FireFace802(AlsaMixer):
             inverse = lambda v: v,
         )
 
-        # stereo link
+        # stereo link outputs
         self.add_mapping(
             src = f'output:volume-db:{outputs[0]}',
             dest = f'output:volume-db:{outputs[1]}',
@@ -256,17 +267,19 @@ class FireFace802(AlsaMixer):
         )
 
     def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range):
+      
         # apply mute
         if mute:
             return [out_range[0], out_range[0]]
+     
         # map volume to raw gain -65dB,6dB to 0,40960
-        vol = (max(in_range[0], min(in_range[1], vol)) - in_range[0]) / (in_range[1] - in_range[0]) * (out_range[1]-out_range[0]) + out_range[0]
-        # apply pan
+        g1 = g2 = (max(in_range[0], min(in_range[1], vol)) - in_range[0]) / (in_range[1] - in_range[0]) * (out_range[1]-out_range[0]) + out_range[0]
+       
+        # apply simple pan: linear attenuation of the weakest side
         pan = max(0, min(1, pan))
-        g1 = vol
-        g2 = vol
         if pan < 0.5:
             g2 *= pan * 2
         elif pan > 0.5:
             g1 *= 2 - 2 * pan 
+
         return [g1, g2]
