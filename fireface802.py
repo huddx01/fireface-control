@@ -66,6 +66,7 @@ class FireFace802(AlsaMixer):
             self.add_parameter(f'output:mute:{dest}', None, types='i', default=0, osc=True)
             self.add_parameter(f'output:default-name:{dest}', None, types='s', default=self.mixer_outputs_default_names[dest], osc=True)
             self.add_parameter(f'output:name:{dest}', None, types='s', default='', osc=True)
+            self.add_parameter(f'output:color:{dest}', None, types='s', default='', osc=True)
 
             self.add_mapping(
                 src=[f'output:volume-db:{dest}', f'output:mute:{dest}'],
