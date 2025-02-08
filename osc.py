@@ -17,7 +17,12 @@ class OSC(Module):
 
         # run instance of o-s-c (will quit when python process exits if everything goes well)
         if not self.engine.restarted:
-            Popen(['open-stage-control', '-s', '127.0.0.1:%i' % self.engine.port, '-l', '%s/ff802.json' % self.engine.folder])
+            Popen([
+                'open-stage-control',
+                '--port', str(self.port),
+                '-s', '127.0.0.1:%i' % self.engine.port,
+                '-l', '%s/ff802.json' % self.engine.folder
+            ])
 
 
     def parameter_changed(self, mod, name, value):
