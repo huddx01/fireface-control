@@ -9,7 +9,7 @@ from osc import OSC
 
 engine = Engine('AlsaMixer', port=5555, folder=dirname(__file__))
 
-ff802 = FireFace802()
+ff802 = FireFace802(id=0)
 osc = OSC(protocol='osc', ff802=ff802, port=8080)
 
 engine.add_module(ff802)
