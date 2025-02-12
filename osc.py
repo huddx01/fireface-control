@@ -46,12 +46,12 @@ class OSC(Module):
                 self.send(f'/{name}', *value)
                 self.local_state[f'/{name}'] = value
 
-    def remote_state(self):
+    def send_state(self):
         """
         Send local state when a new osc client connects (or if it refreshes)
         """
 
-        super().remote_state()
+        super().send_state()
 
         # send custom state
         prioritized = ['/sources-types', '/sources-ids']
@@ -68,7 +68,7 @@ class OSC(Module):
         """
 
         if address == '/connect':
-            self.remote_state()
+            self.send_state()
 
         elif address == '/state':
             if args[0] == 'save':
