@@ -14,6 +14,7 @@ class OSC(Module):
         self.engine.add_event_callback('parameter_changed', self.parameter_changed)
         self.ff802 = ff802
         self.osc_state = {}
+        self.send_state = {}
 
         # run instance of o-s-c (will quit when python process exits if everything goes well)
         if not self.engine.restarted:
@@ -27,18 +28,20 @@ class OSC(Module):
 
     def parameter_changed(self, mod, name, value):
         """
-        Update GUI when a parameter with the osc flag updates 
+        Update GUI when a parameter with the osc flag updates
         """
 
         if 'osc' in mod.parameters[name].metadata:
 
             if type(value) is not list:
                 value = [value]
-            
+
             if 'meter:' in name:
                 # optimize meter update (bypass o-s-c's cross-widgets sync checks)
                 self.send('/SCRIPT', f'set("{name}", {value[0]}, {'{sync: false, send:false}'})')
             else:
+                if name in self.send_state and self.send_state[name] == value:
+                    return
                 self.send(f'/{name}', *value)
                 self.osc_state[f'/{name}'] = value
 
@@ -77,4 +80,5 @@ class OSC(Module):
         else:
             name = address[1:]
             if self.ff802.get_parameter(name):
+                self.send_state[name] = args
                 self.ff802.set(name, *args)
