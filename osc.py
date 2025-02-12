@@ -13,8 +13,8 @@ class OSC(Module):
 
         self.engine.add_event_callback('parameter_changed', self.parameter_changed)
         self.ff802 = ff802
-        self.osc_state = {}
-        self.send_state = {}
+        self.local_state = {}
+        self.remote_state = {}
 
         # run instance of o-s-c (will quit when python process exits if everything goes well)
         if not self.engine.restarted:
@@ -22,7 +22,8 @@ class OSC(Module):
                 'open-stage-control',
                 '--port', str(self.port),
                 '-s', '127.0.0.1:%i' % self.engine.port,
-                '-l', '%s/ff802.json' % self.engine.folder
+                '-l', '%s/ui/ui.json' % self.engine.folder,
+                '-t', '%s/ui/styles.css' % self.engine.folder
             ])
 
 
@@ -40,35 +41,35 @@ class OSC(Module):
                 # optimize meter update (bypass o-s-c's cross-widgets sync checks)
                 self.send('/SCRIPT', f'set("{name}", {value[0]}, {'{sync: false, send:false}'})')
             else:
-                if name in self.send_state and self.send_state[name] == value:
+                if name in self.remote_state and self.remote_state[name] == value:
                     return
                 self.send(f'/{name}', *value)
-                self.osc_state[f'/{name}'] = value
+                self.local_state[f'/{name}'] = value
 
-    def send_state(self):
+    def remote_state(self):
         """
         Send local state when a new osc client connects (or if it refreshes)
         """
 
-        super().send_state()
+        super().remote_state()
 
         # send custom state
         prioritized = ['/sources-types', '/sources-ids']
         for address in prioritized:
-            self.send(address, *self.osc_state[address])
+            self.send(address, *self.local_state[address])
 
-        for address, value in self.osc_state.items():
+        for address, value in self.local_state.items():
             if address not in prioritized:
                 self.send(address, *value)
 
     def route(self, address, args):
         """
-        Widget routing. 
+        Widget routing.
         """
-        
+
         if address == '/connect':
-            self.send_state()
-        
+            self.remote_state()
+
         elif address == '/state':
             if args[0] == 'save':
                 self.ff802.save('test', omit_defaults=True)
@@ -76,9 +77,9 @@ class OSC(Module):
                 self.ff802.load('test')
             elif args[0] == 'reset':
                 self.ff802.reset()
-    
+
         else:
             name = address[1:]
             if self.ff802.get_parameter(name):
-                self.send_state[name] = args
+                self.remote_state[name] = args
                 self.ff802.set(name, *args)

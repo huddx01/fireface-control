@@ -1,0 +1,122 @@
+/*
+    Dev panel: hidden widget templates duplicated in clone matrices
+*/
+.dev-panel {
+    display: none;
+}
+.editor-enabled .dev-panel {
+    display: flex;
+}
+
+/*
+    General settings
+*/
+.root-container {
+  font-size:90%;
+  --strip-width: 68rem;
+}
+
+/*
+    Strip container
+*/
+
+.strip {
+  --color-background: var(--color-ui-foreground)
+}
+
+.strip-hidden {
+  --color-widget: #555;
+}
+.gain-fader {
+  --alpha-pips-text:0.6;
+  --alpha-pips:1;
+  --color-pips: #fff;
+}
+.strip-meter {
+  --line-width:1rem!important;
+  --alpha-fill-on:1;
+  --color-stroke: rgba(0,0,0,0.2);
+  margin: 4rem;
+  margin-left:1rem!important;
+  top:7rem!important;
+  bottom:7rem!important;
+  height:auto!important;
+}
+.strip-meter canvas {
+  background: rgba(0,0,0,0.2)!important;
+}
+
+.gain-wrapper {
+    margin:-4rem 0
+}
+
+
+
+/*
+    Buttons, inputs, menus
+*/
+
+.menu-container, .input-container, .button-container {
+  --border-radius:3rem;
+  --line-width:0;
+}
+
+.menu-container {
+ --line-width:1rem;
+ --color-stroke:rgba(0,0,0,0.25);
+ --alpha-stroke:1;
+}
+
+.option-button {
+ --color-fill: rgba(255,255,255,0.06);
+ --alpha-fill-on: 1;
+ --alpha-fill-off: 1;
+ --color-text-on: var(--color-widget);
+ --line-width:1rem;
+ --color-stroke:rgba(0,0,0,0.5);
+ --alpha-stroke:1;
+}
+
+.option-button.on {
+  --color-fill: rgba(33,37,43,0.8)
+}
+
+
+.input-container input {
+  --color-fill: rgba(109,181,253,1)
+}
+.input-container canvas,
+.input-container input {
+  z-index: 10;
+}
+
+
+/*
+    Strip color selection menu
+    Additional css generated dynamically in root.css property
+*/
+.color-menu .text {
+  margin: 0 4rem;
+}
+.color-menu .item {
+  opacity: var(--alpha-fill-on);
+  font-size: 0;
+}
+
+
+/*
+    horizontal button combo
+*/
+.combo-buttons .button-container  {
+  border-radius:0;
+}
+.combo-buttons .button-container:first-child  {
+  border-top-left-radius:3rem;
+  border-bottom-left-radius:3rem;
+  margin-right:-1rem;
+}
+.combo-buttons .button-container:last-child  {
+  border-top-right-radius:3rem;
+  border-bottom-right-radius:3rem;
+  margin-left:-1rem;
+}
