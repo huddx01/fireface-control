@@ -41,10 +41,11 @@ class OSC(Module):
                 # optimize meter update (bypass o-s-c's cross-widgets sync checks)
                 self.send('/SCRIPT', f'set("{name}", {value[0]}, {'{sync: false, send:false}'})')
             else:
+                self.local_state[f'/{name}'] = value
                 if name in self.remote_state and self.remote_state[name] == value:
                     return
+                self.remote_state[name] = value
                 self.send(f'/{name}', *value)
-                self.local_state[f'/{name}'] = value
 
     def send_state(self):
         """
