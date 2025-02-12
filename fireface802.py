@@ -45,9 +45,9 @@ class FireFace802(AlsaMixer):
             for output in self.mixer_outputs:
 
                 for source, source_name in enumerate(sources):
-                    self.add_parameter(f'{mixer}:{output}:{source}', None, types='i', default=0, osc=True)
-            
-                
+                    self.add_parameter(f'{mixer}:{output}:{source}', None, types='i', default=0)
+
+
                 self.add_parameter(f'{mixer}:{output}', None, types='i' * len(sources), alsa=f'name="{mixer}",index={output}')
 
                 self.add_mapping(
@@ -217,7 +217,7 @@ class FireFace802(AlsaMixer):
 
             for source, source_name in enumerate(sources):
 
-                self.add_parameter(f'{mixer.replace('mixer', 'monitor')}:{index}:{source}', None, types='i', default=-65, osc=True)
+                self.add_parameter(f'{mixer.replace('mixer', 'monitor')}:{index}:{source}', None, types='f', default=-65, osc=True)
                 self.add_parameter(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{index}:{source}', None, types='f', default=0.5, osc=True)
                 self.add_parameter(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{index}:{source}', None, types='i', default=0, osc=True)
                 
