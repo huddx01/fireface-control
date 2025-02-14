@@ -170,7 +170,7 @@ class FireFace802(AlsaMixer):
         self.add_mapping(
             src=[f'monitor-name:{i}' for i in mixers],
             dest='mixers:choices',
-            transform= lambda *names: json.dumps(dict(zip(names, mixers)))
+            transform= lambda *names: json.dumps({"labels":names, "values": mixers})
         )
 
     def update_meters(self):
@@ -189,7 +189,7 @@ class FireFace802(AlsaMixer):
                     for i, v in enumerate(meters):
                         self.set(f'source-{sourcetype}-meter:{i}', self.meter_abs_to_db(v))
 
-        
+
             out_index = -1
             for (output_meter, outputs) in self.output_meters.items():
 
@@ -216,7 +216,7 @@ class FireFace802(AlsaMixer):
         """
         Custom parameter update hooks
         """
-     
+
         super().parameter_changed(mod, name, value)
 
         # Start/stop metering thread and reset meters when it stops
