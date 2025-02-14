@@ -1,5 +1,6 @@
 from time import sleep
 from math import log10
+import json
 import logging
 from alsamixer import AlsaMixer
 
@@ -29,8 +30,12 @@ class FireFace802(AlsaMixer):
         'meter:adat-output': range(16)
     }
     meter_noisefloor = -85
-    
-    
+
+    stereo_mixers = {
+        8: 'RME 1',
+        10: 'RME 2',
+    }
+
 
 
     def __init__(self, *args, **kwargs):
@@ -58,7 +63,7 @@ class FireFace802(AlsaMixer):
 
 
         """
-        Output volumes
+        Output
         """
         for dest in self.mixer_outputs:
             self.add_parameter(f'output:volume:{dest}', None, types='i', default=0)
@@ -75,7 +80,7 @@ class FireFace802(AlsaMixer):
             )
 
 
-    
+
         self.add_parameter(f'output:volume', None, types='i'*len(self.mixer_outputs), alsa='')
 
         self.add_mapping(
@@ -106,8 +111,8 @@ class FireFace802(AlsaMixer):
                 sources_types.append(sourcetype)
                 sources_ids.append(source)
 
-        self.add_parameter('sources-types', None, types='s'*len(sources_types), default=sources_types, osc=True)
-        self.add_parameter('sources-ids', None, types='i'*len(sources_ids), default=sources_ids, osc=True)
+        self.add_parameter('sources-types', None, types='s'*len(sources_types), default=sources_types, osc=True, osc_order=-2)
+        self.add_parameter('sources-ids', None, types='i'*len(sources_ids), default=sources_ids, osc=True, osc_order=-2)
 
         """
         Input options
@@ -146,6 +151,27 @@ class FireFace802(AlsaMixer):
 
         self.add_parameter('metering', None, types='s', default='on', alsa='', osc=True)
 
+        """
+        Mixers
+        """
+        mixers = []
+        index = 0
+        while index < len(self.mixer_outputs):
+            mixers.append(index)
+            if index in self.stereo_mixers:
+                self.create_mixer(index, True, self.stereo_mixers[index])
+                index +=2
+            else:
+                self.create_mixer(index, False)
+                index +=1
+
+        self.add_parameter('mixers:choices', None, types='s', default=json.dumps(mixers), osc=True, osc_order=-1)
+        self.add_parameter('mixers:select', None, types='i', default=0, osc=True)
+        self.add_mapping(
+            src=[f'monitor-name:{i}' for i in mixers],
+            dest='mixers:choices',
+            transform= lambda *names: json.dumps(dict(zip(names, mixers)))
+        )
 
     def update_meters(self):
         """
@@ -204,13 +230,13 @@ class FireFace802(AlsaMixer):
                 self.start_scene('meters', self.update_meters)
 
 
-    def create_monitor(self, index, outputs, name=None):
+    def create_mixer(self, index, stereo=False, name=None):
         """
-        Create stereo monitors / mixers
+        Create mixers
         """
-        
+
         # create gain, mute and pan controls for every input
-        # and map them to the appropriate mixer source gains 
+        # and map them to the appropriate mixer source gains
         for (mixer, sources) in self.mixer_sources.items():
 
             sourcetype = mixer.split(':')[1].split('-')[0]
@@ -220,7 +246,14 @@ class FireFace802(AlsaMixer):
                 self.add_parameter(f'{mixer.replace('mixer', 'monitor')}:{index}:{source}', None, types='f', default=-65, osc=True)
                 self.add_parameter(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{index}:{source}', None, types='f', default=0.5, osc=True)
                 self.add_parameter(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{index}:{source}', None, types='i', default=0, osc=True)
-                
+
+                if stereo:
+                    transform = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[0, 40960])
+                    dest = [f'{mixer}:{index}:{source}', f'{mixer}:{index + 1}:{source}']
+                else:
+                    transform = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[0, 40960], mono=True)
+                    dest = f'{mixer}:{index}:{source}'
+
                 self.add_mapping(
                     src = [
                         f'{mixer.replace('mixer', 'monitor')}:{index}:{source}',
@@ -228,59 +261,64 @@ class FireFace802(AlsaMixer):
                         f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{index}:{source}',
                         f'source-{sourcetype}-hide:{source}',
                     ],
-                    dest = [f'{mixer}:{outputs[0]}:{source}', f'{mixer}:{outputs[1]}:{source}'],
-                    transform = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[0, 40960])
+                    dest = dest,
+                    transform = transform
                 )
 
         # monitor master controls
-        default_name = name if name is not None else f'{self.mixer_outputs_default_names[outputs[0]]} + {self.mixer_outputs_default_names[outputs[1]]}'
-        self.add_parameter(f'monitor-name:{index}', None, types='s', default=default_name, osc=True)
+        if stereo:
+            default_name = name if name is not None else f'{self.mixer_outputs_default_names[index]} + {self.mixer_outputs_default_names[index + 1]}'
+        else:
+            default_name = name if name is not None else self.mixer_outputs_default_names[index]
 
+        self.add_parameter(f'monitor-name:{index}', None, types='s', default=default_name, osc=True, osc_order=2)
         self.add_parameter(f'monitor-master-gain:{index}', None, types='f', default=0, osc=True)
         self.add_parameter(f'monitor-master-mute:{index}', None, types='i', default=0, osc=True)
+        self.add_parameter(f'monitor-stereo:{index}', None, types='i', default=int(stereo), osc=True)
 
         # map monitor master to output
         self.add_mapping(
             src = f'monitor-master-gain:{index}',
-            dest = f'output:volume-db:{outputs[0]}',
+            dest = f'output:volume-db:{index}',
             transform = lambda v: v,
             inverse = lambda v: v,
         )
         self.add_mapping(
             src = f'monitor-master-mute:{index}',
-            dest = f'output:mute:{outputs[0]}',
+            dest = f'output:mute:{index}',
             transform = lambda v: v,
             inverse = lambda v: v,
         )
 
         # stereo link outputs
-        self.add_mapping(
-            src = f'output:volume-db:{outputs[0]}',
-            dest = f'output:volume-db:{outputs[1]}',
-            transform = lambda v: v,
-            inverse = lambda v: v,
-        )
-        self.add_mapping(
-            src = f'output:mute:{outputs[0]}',
-            dest = f'output:mute:{outputs[1]}',
-            transform = lambda v: v,
-            inverse = lambda v: v,
-        )
+        if stereo:
+            for param in ['output:volume-db', 'output:mute', 'output:name', 'output:color']:
+                self.add_mapping(
+                    src = f'{param}:{index}',
+                    dest = f'{param}:{index + 1}',
+                    transform = lambda v: v,
+                    inverse = lambda v: v,
+                )
 
-    def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range):
-      
+    def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range, mono=False):
+
         # apply mute
         if mute:
+            if mono:
+                return out_range[0]
             return [out_range[0], out_range[0]]
-     
+
         # map volume to raw gain -65dB,6dB to 0,40960
         g1 = g2 = (max(in_range[0], min(in_range[1], vol)) - in_range[0]) / (in_range[1] - in_range[0]) * (out_range[1]-out_range[0]) + out_range[0]
-       
+
+        if mono:
+            return g1
+
         # apply simple pan: linear attenuation of the weakest side
         pan = max(0, min(1, pan))
         if pan < 0.5:
             g2 *= pan * 2
         elif pan > 0.5:
-            g1 *= 2 - 2 * pan 
+            g1 *= 2 - 2 * pan
 
         return [g1, g2]

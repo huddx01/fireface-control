@@ -41,11 +41,14 @@ class OSC(Module):
                 # optimize meter update (bypass o-s-c's cross-widgets sync checks)
                 self.send('/SCRIPT', f'set("{name}", {value[0]}, {'{sync: false, send:false}'})')
             else:
-                self.local_state[f'/{name}'] = value
+                self.local_state[name] = value
+                if name == 'mixers:select':
+                    self.send_sel_state(value[0])
                 if name in self.remote_state and self.remote_state[name] == value:
                     return
                 self.remote_state[name] = value
                 self.send(f'/{name}', *value)
+
 
     def send_state(self):
         """
@@ -54,14 +57,18 @@ class OSC(Module):
 
         super().send_state()
 
-        # send custom state
-        prioritized = ['/sources-types', '/sources-ids']
-        for address in prioritized:
-            self.send(address, *self.local_state[address])
 
-        for address, value in self.local_state.items():
-            if address not in prioritized:
-                self.send(address, *value)
+        state = list(self.local_state.items())
+        state.sort(key=lambda item: self.ff802.parameters[item[0]].metadata['osc_order'] if 'osc_order' in self.ff802.parameters[item[0]].metadata else 0)
+        for name, value in state:
+            self.send(f'/{name}', *value)
+        self.send_sel_state(self.ff802.get('mixers:select'))
+
+    def send_sel_state(self, index):
+        sfx = ':%i' % index
+        for name, value in self.local_state.items():
+            if 'monitor' in name and sfx in name:
+                self.send(f'/{name}', *value)
 
     def route(self, address, args):
         """
