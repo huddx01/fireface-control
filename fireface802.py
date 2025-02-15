@@ -9,7 +9,7 @@ class FireFace802(AlsaMixer):
     mixer_sources = {
         'mixer:line-source-gain':  [f'Line {x + 1}' for x in range(8)],
         'mixer:mic-source-gain': [f'MIC {x + 1}' for x in range(4)],
-        # 'mixer:spdif-source-gain': [f'SPDIF in {x + 1}' for x in range(2)],
+        'mixer:spdif-source-gain': [f'AES {x + 1}' for x in range(2)],
         'mixer:adat-source-gain': [f'ADAT {x + 1}' for x in range(16)]
     }
 
@@ -17,16 +17,16 @@ class FireFace802(AlsaMixer):
 
 
     mixer_outputs_default_names = [f'Line {x + 1}' for x in range(8)] + \
-                                       ['Phones 9', 'Phones 10'] + \
-                                       ['Phones 11', 'Phones 12'] + \
-                                       [f'SPDIF {x + 1}' for x in range(2)] + \
+                                       ['Ph 9', 'Ph 10'] + \
+                                       ['Ph 11', 'Ph 12'] + \
+                                       [f'AES {x + 1}' for x in range(2)] + \
                                        [f'ADAT {x + 1}' for x in range(16)]
 
 
     output_meters = {
         'meter:line-output':  range(8),
         'meter:hp-output': range(4),
-        # 'meter:spdif-output': range(2),
+        'meter:spdif-output': range(2),
         'meter:adat-output': range(16)
     }
     meter_noisefloor = -85
@@ -72,11 +72,12 @@ class FireFace802(AlsaMixer):
             self.add_parameter(f'output:default-name:{dest}', None, types='s', default=self.mixer_outputs_default_names[dest], osc=True)
             self.add_parameter(f'output:name:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:color:{dest}', None, types='s', default='', osc=True)
+            self.add_parameter(f'output:hide:{dest}', None, types='i', default=0, osc=True)
 
             self.add_mapping(
-                src=[f'output:volume-db:{dest}', f'output:mute:{dest}'],
+                src=[f'output:volume-db:{dest}', f'output:mute:{dest}', f'output:hide:{dest}'],
                 dest=f'output:volume:{dest}',
-                transform=lambda v, m: v*10 - m * 900,
+                transform=lambda v, m, h: v*10 - (m+h) * 900,
             )
 
 
@@ -140,14 +141,27 @@ class FireFace802(AlsaMixer):
 
                 self.add_parameter(f'source-{sourcetype}-meter:{source}', None, types='f', default=-90, osc=True)
 
+            self.add_parameter(f'source-{sourcetype}-meters-visible', None, types='i', default=1)
+            self.add_mapping(
+                src=[f'source-{sourcetype}-hide:{source}' for source, source_name in enumerate(sources)],
+                dest=f'source-{sourcetype}-meters-visible',
+                transform= lambda *hidden: int(0 in hidden)
+            )
 
         out_index = -1
         for (output_meter, outputs) in self.output_meters.items():
+            outputtype = output_meter.split(':')[1].split('-')[0]
+
             for output in outputs:
                 out_index += 1
                 self.add_parameter(f'output-meter:{out_index}', None, types='f', default=-90, osc=True)
 
-
+            self.add_parameter(f'output-{outputtype}-meters-visible', None, types='i', default=1)
+            self.add_mapping(
+                src=[f'output:hide:{dest + out_index - len(outputs) + 1}' for dest in outputs],
+                dest=f'output-{outputtype}-meters-visible',
+                transform= lambda *hidden: int(0 in hidden)
+            )
 
         self.add_parameter('metering', None, types='s', default='on', alsa='', osc=True)
 
@@ -183,23 +197,26 @@ class FireFace802(AlsaMixer):
             for (mixer, sources) in self.mixer_sources.items():
 
                 sourcetype = mixer.split(':')[1].split('-')[0]
+                if self.get(f'source-{sourcetype}-meters-visible') == 1:
 
-                meters = self.alsa_get(f'meter:{sourcetype}-input', f'name="meter:{sourcetype}-input",iface=CARD')
-                if meters:
-                    for i, v in enumerate(meters):
-                        self.set(f'source-{sourcetype}-meter:{i}', self.meter_abs_to_db(v))
+                    meters = self.alsa_get(f'meter:{sourcetype}-input', f'name="meter:{sourcetype}-input",iface=CARD')
+                    if meters:
+                        for i, v in enumerate(meters):
+                            self.set(f'source-{sourcetype}-meter:{i}', self.meter_abs_to_db(v))
 
 
             out_index = -1
             for (output_meter, outputs) in self.output_meters.items():
 
-                    meters = self.alsa_get(output_meter, f'name="{output_meter}",iface=CARD')
-                    if meters:
-                        for i, v in enumerate(meters):
-                            out_index += 1
-
-                            self.set(f'output-meter:{out_index}', self.meter_abs_to_db(v))
-
+                    outputtype = output_meter.split(':')[1].split('-')[0]
+                    if self.get(f'output-{outputtype}-meters-visible') == 1:
+                        meters = self.alsa_get(output_meter, f'name="{output_meter}",iface=CARD')
+                        if meters:
+                            for i, v in enumerate(meters):
+                                out_index += 1
+                                self.set(f'output-meter:{out_index}', self.meter_abs_to_db(v))
+                    else:
+                        out_index += len(outputs)
 
     def meter_abs_to_db(self, v):
         """
@@ -228,7 +245,6 @@ class FireFace802(AlsaMixer):
                         self.set(n, -90)
             else:
                 self.start_scene('meters', self.update_meters)
-
 
     def create_mixer(self, index, stereo=False, name=None):
         """

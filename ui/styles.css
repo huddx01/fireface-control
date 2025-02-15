@@ -12,8 +12,9 @@
     General settings
 */
 .root-container {
-  font-size:90%;
+  /* font-size:90%; */
   --strip-width: 68rem;
+  --strip-max-width: 76rem;
   --border-color:rgba(0,0,0,0.2);
 }
 
