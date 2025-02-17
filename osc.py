@@ -1,4 +1,5 @@
 from subprocess import Popen, PIPE, run, STDOUT
+import json
 
 from mentat import Module
 
@@ -33,6 +34,9 @@ class OSC(Module):
         """
         if 'osc' in mod.parameters[name].metadata:
 
+            if 'json' in mod.parameters[name].metadata:
+                value = json.loads(value)
+
             if type(value) is not list:
                 value = [value]
 
@@ -43,6 +47,12 @@ class OSC(Module):
                 self.local_state[name] = value
                 if name == 'mixers:select':
                     self.send_sel_state(value[0])
+                if 'stereo' in name:
+                    # self.send_state()
+                    for name, value in self.local_state.items():
+                        if 'stereo:' in name:
+                            self.send(f'/{name}', *value)
+
                 if name in self.remote_state and self.remote_state[name] == value:
                     return
                 self.remote_state[name] = value
@@ -65,10 +75,13 @@ class OSC(Module):
 
     def send_sel_state(self, index):
         sfx = ':%i' % index
-        self.send('/mixers:select', *self.local_state['mixers:select'])
+        if 'mixers:select' in self.local_state:
+            self.send('/mixers:select', *self.local_state['mixers:select'])
         for name, value in self.local_state.items():
             if 'monitor' in name and sfx:
                 self.send(f'/{name}', *value)
+
+
 
 
     def route(self, address, args):
