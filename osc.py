@@ -48,10 +48,8 @@ class OSC(Module):
                 if name == 'mixers:select':
                     self.send_sel_state(value[0])
                 if 'stereo' in name:
-                    # self.send_state()
-                    for name, value in self.local_state.items():
-                        if 'stereo:' in name:
-                            self.send(f'/{name}', *value)
+                    self.start_scene('stereo_stat', lambda:self.send_stereo_state())
+                    
 
                 if name in self.remote_state and self.remote_state[name] == value:
                     return
@@ -82,6 +80,11 @@ class OSC(Module):
                 self.send(f'/{name}', *value)
 
 
+    def send_stereo_state(self):
+        self.send('/output-stereo', *self.ff802.get('output-stereo'))
+        for name, value in self.local_state.items():
+            if 'stereo:' in name or 'output:hardware-name' in name:
+                self.send(f'/{name}', *value)
 
 
     def route(self, address, args):

@@ -285,7 +285,7 @@ class FireFace802(AlsaMixer):
                         f'source-{sourcetype}-hide:{source}',
                     ],
                     dest = f'{mixer}:{index}:{source}',
-                    transform = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[0, 40960], mono=True),
+                    transform = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960], mono=True),
                     condition = lambda: self.get_parameter(f'output:stereo:{index}') and self.get(f'output:stereo:{index}') == 0
                 )
 
@@ -304,7 +304,7 @@ class FireFace802(AlsaMixer):
                             f'source-{sourcetype}-hide:{source}',
                         ],
                         dest = [f'{mixer}:{index}:{source}', f'{mixer}:{index + 1}:{source}'],
-                        transform = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[0, 40960]),
+                        transform = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960]),
                         condition = lambda:  self.get_parameter(f'output:stereo:{index}') and self.get(f'output:stereo:{index}') == 1
                     )
 
@@ -335,11 +335,8 @@ class FireFace802(AlsaMixer):
                 return out_range[0]
             return [out_range[0], out_range[0]]
 
-        # map volume to raw gain -65dB,6dB to 0,40960
-        g1 = g2 = (max(in_range[0], min(in_range[1], vol)) - in_range[0]) / (in_range[1] - in_range[0]) * (out_range[1]-out_range[0]) + out_range[0]
-
-        if mono:
-            return g1
+        # normalise input
+        g1 = g2 = (max(in_range[0], min(in_range[1], vol)) - in_range[0]) / (in_range[1] - in_range[0])
 
         # apply simple pan: linear attenuation of the weakest side
         pan = max(0, min(1, pan))
@@ -347,5 +344,12 @@ class FireFace802(AlsaMixer):
             g2 *= pan * 2
         elif pan > 0.5:
             g1 *= 2 - 2 * pan
-
-        return [g1, g2]
+        
+        # map to out range
+        g1 = g1 * (out_range[1]-out_range[0]) + out_range[0]
+        g2 = g2 * (out_range[1]-out_range[0]) + out_range[0]
+        
+        if mono:
+            return g1
+        else:
+            return [g1, g2]
