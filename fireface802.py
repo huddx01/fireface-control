@@ -7,7 +7,7 @@ from alsamixer import AlsaMixer
 class FireFace802(AlsaMixer):
 
     mixer_sources = {
-        'mixer:line-source-gain':  [f'Line {x + 1}' for x in range(8)],
+        'mixer:line-source-gain':  [f'AN {x + 1}' for x in range(8)],
         'mixer:mic-source-gain': [f'MIC {x + 1}' for x in range(4)],
         'mixer:spdif-source-gain': [f'AES {x + 1}' for x in range(2)],
         'mixer:adat-source-gain': [f'ADAT {x + 1}' for x in range(16)]
@@ -17,8 +17,8 @@ class FireFace802(AlsaMixer):
 
 
     mixer_outputs_default_names = [f'Line {x + 1}' for x in range(8)] + \
-                                       ['Ph 9', 'Ph 10'] + \
-                                       ['Ph 11', 'Ph 12'] + \
+                                       ['PH 9', 'PH 10'] + \
+                                       ['PH 11', 'PH 12'] + \
                                        [f'AES {x + 1}' for x in range(2)] + \
                                        [f'ADAT {x + 1}' for x in range(16)]
 
@@ -43,7 +43,7 @@ class FireFace802(AlsaMixer):
         super().__init__(name='Fireface802', *args, **kwargs)
 
         """
-        Create mixers gain parameters
+        Source mixers gain parameters
         """
         for (mixer, sources) in self.mixer_sources.items():
 
@@ -63,13 +63,13 @@ class FireFace802(AlsaMixer):
 
 
         """
-        Output
+        Create output controls
         """
         for dest in self.mixer_outputs:
             self.add_parameter(f'output:volume:{dest}', None, types='i', default=0)
             self.add_parameter(f'output:volume-db:{dest}', None, types='f', default=0, osc=True)
             self.add_parameter(f'output:mute:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:default-name:{dest}', None, types='s', default=self.mixer_outputs_default_names[dest], osc=True)
+            self.add_parameter(f'output:hardware-name:{dest}', None, types='s', default=self.mixer_outputs_default_names[dest], osc=True)
             self.add_parameter(f'output:name:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:color:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:hide:{dest}', None, types='i', default=0, osc=True)
@@ -104,7 +104,7 @@ class FireFace802(AlsaMixer):
 
             for source, source_name in enumerate(sources):
 
-                self.add_parameter(f'source-{sourcetype}-default-name:{source}', None, types='s', default=source_name, osc=True)
+                self.add_parameter(f'source-{sourcetype}-hardware-name:{source}', None, types='s', default=source_name, osc=True)
                 self.add_parameter(f'source-{sourcetype}-name:{source}', None, types='s', default='', osc=True)
                 self.add_parameter(f'source-{sourcetype}-color:{source}', None, types='s', default='', osc=True)
                 self.add_parameter(f'source-{sourcetype}-hide:{source}', None, types='i', default=0, osc=True)
@@ -168,24 +168,28 @@ class FireFace802(AlsaMixer):
         """
         Mixers
         """
+        ouptut_ids = []
+        output_stereo = []
         mixers = []
         index = 0
         while index < len(self.mixer_outputs):
             mixers.append(index)
             if index in self.stereo_mixers:
+                output_stereo.append(1)
                 self.create_mixer(index, True, self.stereo_mixers[index])
                 index +=2
             else:
+                output_stereo.append(0)
                 self.create_mixer(index, False)
                 index +=1
 
-        self.add_parameter('mixers:choices', None, types='s', default=json.dumps(mixers), osc=True, osc_order=-1)
+        self.add_parameter('output-ids', None, types='i'*len(mixers), default=mixers, osc=True, osc_order=-1)
+        self.add_parameter('output-stereo', None, types='i'*len(output_stereo), default=output_stereo, osc=True, osc_order=-1)
+
         self.add_parameter('mixers:select', None, types='i', default=0, osc=True)
-        self.add_mapping(
-            src=[f'monitor-name:{i}' for i in mixers],
-            dest='mixers:choices',
-            transform= lambda *names: json.dumps({"labels":names, "values": mixers})
-        )
+
+
+
 
     def update_meters(self):
         """
@@ -281,33 +285,11 @@ class FireFace802(AlsaMixer):
                     transform = transform
                 )
 
-        # monitor master controls
         if stereo:
-            default_name = name if name is not None else f'{self.mixer_outputs_default_names[index]} + {self.mixer_outputs_default_names[index + 1]}'
-        else:
-            default_name = name if name is not None else self.mixer_outputs_default_names[index]
+            # change hardware (only 1 channel will be displayed but with a stereo meter)
+            self.set(f'output:hardware-name:{index}', f'{self.mixer_outputs_default_names[index]}/{index+2}')
 
-        self.add_parameter(f'monitor-name:{index}', None, types='s', default=default_name, osc=True, osc_order=2)
-        self.add_parameter(f'monitor-master-gain:{index}', None, types='f', default=0, osc=True)
-        self.add_parameter(f'monitor-master-mute:{index}', None, types='i', default=0, osc=True)
-        self.add_parameter(f'monitor-stereo:{index}', None, types='i', default=int(stereo), osc=True)
-
-        # map monitor master to output
-        self.add_mapping(
-            src = f'monitor-master-gain:{index}',
-            dest = f'output:volume-db:{index}',
-            transform = lambda v: v,
-            inverse = lambda v: v,
-        )
-        self.add_mapping(
-            src = f'monitor-master-mute:{index}',
-            dest = f'output:mute:{index}',
-            transform = lambda v: v,
-            inverse = lambda v: v,
-        )
-
-        # stereo link outputs
-        if stereo:
+            # link outputs
             for param in ['output:volume-db', 'output:mute', 'output:name', 'output:color']:
                 self.add_mapping(
                     src = f'{param}:{index}',

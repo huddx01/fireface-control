@@ -13,8 +13,10 @@
 */
 .root-container {
   /* font-size:90%; */
-  --strip-width: 68rem;
-  --strip-max-width: 76rem;
+  --strip-width: 90rem;
+  --strip-max-width: 90rem;
+  --strip-height: 360rem;
+
   --border-color:rgba(0,0,0,0.2);
 }
 
@@ -23,7 +25,12 @@
 */
 
 .strip {
-  --color-background: var(--color-ui-foreground)
+  --color-background: var(--color-ui-foreground);
+  min-width: var(--strip-width);
+  width: var(--strip-width);
+}
+.strip-selected {
+    filter: brightness(120%)
 }
 
 .strip-hidden {
@@ -33,6 +40,9 @@
   --alpha-pips-text:0.6;
   --alpha-pips:1;
   --color-pips: #fff;
+}
+.gain-fader canvas {
+    font-size:105%!important;
 }
 .strip-meter {
   --line-width:1rem!important;
@@ -47,11 +57,45 @@
 .strip-meter canvas {
   background: rgba(0,0,0,0.2)!important;
 }
-
+.strip-meter-left {
+  margin-left:0rem!important;
+}
+.strip-meter-right {
+  margin-left:2rem!important;
+}
 .gain-wrapper {
     margin:-4rem 0
 }
 
+.pan-fader {
+    /* background-color: rgba(0,0,0,0.2); */
+    margin-bottom: 4rem
+}
+.pan-label {
+    pointer-events:none;
+    opacity: 0.6
+}
+.pan-label:before,
+.pan-label:after {
+    content:"L";
+    position: absolute;
+    left:0;
+    top:0;
+    line-height: 30rem;
+    width: 30rem;
+    text-align:center;
+}
+.pan-label:after {
+    content:"R";
+    left:auto;
+    right:0;
+}
+
+
+
+.strip-matrix > inner > .widget {
+    position:unset!important
+}
 
 
 /*
@@ -60,7 +104,7 @@
 
 .menu-container, .input-container, .button-container {
   --border-radius:3rem;
-  --line-width:0;
+  --line-width:1rem;
 }
 
 .menu-container {
@@ -83,7 +127,12 @@
   --color-fill: rgba(33,37,43,0.8)
 }
 
-
+.input-container {
+    --color-widget:var(--color-ui-background);
+    --color-stroke: rgba(0,0,0,0.5);
+    --alpha-fill-off: 1;
+    --widget-padding:0;
+}
 .input-container input {
   --color-fill: rgba(109,181,253,1)
 }

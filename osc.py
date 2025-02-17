@@ -65,9 +65,11 @@ class OSC(Module):
 
     def send_sel_state(self, index):
         sfx = ':%i' % index
+        self.send('/mixers:select', *self.local_state['mixers:select'])
         for name, value in self.local_state.items():
-            if 'monitor' in name and sfx in name:
+            if 'monitor' in name and sfx:
                 self.send(f'/{name}', *value)
+
 
     def route(self, address, args):
         """
