@@ -2322,7 +2322,7 @@
                             "top": 0,
                             "left": "50%",
                             "lock": false,
-                            "id": "output-meter:@{parent.variables.output}",
+                            "id": "JS{\nvar index = @{parent.variables.output},\n    stereo = @{output_stereo}[index]\nif (index % 2 == 0 || !stereo) return 'output-meter:' + index\nelse return 'dummy-meter'\n}",
                             "visible": true,
                             "interaction": false,
                             "comments": "",
