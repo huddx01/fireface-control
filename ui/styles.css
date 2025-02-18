@@ -162,7 +162,11 @@
   opacity: var(--alpha-fill-on);
   font-size: 0;
 }
-
+.color-menu menu {
+    border-radius: 3rem;
+    overflow: hidden;
+    box-shadow: 0 0 0 1rem inset var(--border-color)
+}
 
 /*
     horizontal button combo
