@@ -2375,7 +2375,7 @@
                             "top": 0,
                             "left": "50%",
                             "lock": false,
-                            "id": "JS{\nvar index = Math.floor(@{parent.variables.output}/2)*2,\n    stereo = @{output_stereo}[index]\nif (stereo) return 'output-meter:' + (index+1)\nelse return 'dummy-meter'\n}",
+                            "id": "JS{\nvar index = Math.floor(@{parent.variables.output}/2)*2,\n    stereo = @{output_stereo}[index]\nif (stereo && @{parent.variables.output} % 2 == 0) return 'output-meter:' + (index+1)\nelse return 'dummy-meter'\n}",
                             "visible": "JS{\nvar index =  Math.floor(@{parent.variables.output}/2)*2,\n    stereo = @{output_stereo}[index]\nreturn stereo\n}",
                             "interaction": false,
                             "comments": "",
