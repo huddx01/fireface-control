@@ -47,10 +47,8 @@ class OSC(Module):
                 if name in self.remote_state and self.remote_state[name] == value:
                     return
 
-                if 'monitor:' in name:
-                    sfx = ':%i:' % self.ff802.get('mixers:select')
-                    if sfx not in name:
-                        return
+                if self.filter_param(name) is False:
+                    return
 
                 self.remote_state[name] = value
                 self.send(f'/{name}', *value)
@@ -67,7 +65,8 @@ class OSC(Module):
         state = list(self.local_state.items())
         state.sort(key=lambda item: self.ff802.parameters[item[0]].metadata['osc_order'] if 'osc_order' in self.ff802.parameters[item[0]].metadata else 0)
         for name, value in state:
-            self.send(f'/{name}', *value)
+            if self.filter_param(name) is not False:
+                self.send(f'/{name}', *value)
         self.send_sel_state(self.ff802.get('mixers:select'))
 
     def send_sel_state(self, index):
@@ -75,8 +74,14 @@ class OSC(Module):
         if 'mixers:select' in self.local_state:
             self.send('/mixers:select', *self.local_state['mixers:select'])
         for name, value in self.local_state.items():
-            if 'monitor' in name and sfx in name:
+            if 'monitor:' in name and self.filter_param(name) is not False:
                 self.send(f'/{name}', *value)
+
+
+    def filter_param(self, name):
+        sfx = ':%i:' % self.ff802.get('mixers:select')
+        if 'monitor:' in name and sfx not in name:
+            return False
 
     def route(self, address, args):
         """
