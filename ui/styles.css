@@ -28,9 +28,11 @@
   --color-background: var(--color-ui-foreground);
   min-width: var(--strip-width);
   width: var(--strip-width);
+  /* force new stacking context to trap option modal in the strip */
+  transform: translateZ(0)
 }
 .strip-selected {
-    --color-background: rgba(60,70,85,1);
+    filter: brightness(120%)
 }
 
 .strip-hidden {
@@ -143,6 +145,10 @@
   z-index: 10;
 }
 
+.option-modal {
+    font-size:80%;
+    right:0;
+}
 
 /*
     Strip color selection menu
