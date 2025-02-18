@@ -1,4 +1,4 @@
-from sys import path
+from sys import path, argv
 from os.path import dirname
 path.insert(0, dirname(__file__) + '/../')
 
@@ -7,7 +7,7 @@ from mentat import Engine
 from fireface802 import FireFace802
 from osc import OSC
 
-engine = Engine('AlsaMixer', port=5555, folder=dirname(__file__),debug=1)
+engine = Engine('AlsaMixer', port=5555, folder=dirname(__file__), debug='--debug' in argv)
 
 ff802 = FireFace802(id=0)
 osc = OSC(protocol='osc', ff802=ff802, port=8080)

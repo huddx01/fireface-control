@@ -1,7 +1,4 @@
-from time import sleep
 from math import log10
-import json
-import logging
 from alsamixer import AlsaMixer
 
 class FireFace802(AlsaMixer):
@@ -194,7 +191,7 @@ class FireFace802(AlsaMixer):
         Fetch meter values periodically
         """
         while True:
-            sleep(1/20)
+            self.wait(1/20, 's')
 
             for (mixer, sources) in self.mixer_sources.items():
 
@@ -260,12 +257,22 @@ class FireFace802(AlsaMixer):
                     if value == 1:
                         nx2 = self.mixer_outputs_default_names[dest].split(' ')[-1]
                         self.set(f'output:hardware-name:{dest}', f'{self.mixer_outputs_default_names[dest]}/{int(nx2)+1}')
+                        for param in ['output:volume-db', 'output:mute', 'output:name', 'output:color']:
+                            self.set(f'{param}:{dest + 1}' ,self.get(f'{param}:{dest}'))
                     else:
                         self.reset(f'output:hardware-name:{dest}')
                 else:
                     # switch mixer selection to stereo channel if previously on future right channel
                     if value == 1 and self.get('mixers:select') == dest:
                         self.set('mixers:select', dest - 1)
+
+            # reset gain/pan/mute
+            for (mixer, sources) in self.mixer_sources.items():
+                for source, source_name in enumerate(sources):
+                    self.reset(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}')
+                    self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest}:{source}')
+                    self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest}:{source}')
+
             self.start_scene(name, sc)
 
     def create_mixer(self, index):

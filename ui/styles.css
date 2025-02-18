@@ -30,7 +30,7 @@
   width: var(--strip-width);
 }
 .strip-selected {
-    filter: brightness(120%)
+    --color-background: rgba(60,70,85,1);
 }
 
 .strip-hidden {
@@ -150,6 +150,7 @@
 */
 .color-menu .text {
   margin: 0 4rem;
+  padding-right:22rem!important;
 }
 .color-menu .item {
   opacity: var(--alpha-fill-on);

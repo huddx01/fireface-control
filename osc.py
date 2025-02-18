@@ -1,5 +1,4 @@
-from subprocess import Popen, PIPE, run, STDOUT
-import json
+from subprocess import Popen, PIPE, run
 
 from mentat import Module
 
@@ -34,9 +33,6 @@ class OSC(Module):
 
         if 'osc' in mod.parameters[name].metadata:
 
-            if 'json' in mod.parameters[name].metadata:
-                value = json.loads(value)
-
             if type(value) is not list:
                 value = [value]
 
@@ -47,12 +43,15 @@ class OSC(Module):
                 self.local_state[name] = value
                 if name == 'mixers:select':
                     self.send_sel_state(value[0])
-                if 'stereo' in name:
-                    self.start_scene('stereo_state', lambda:self.send_stereo_state())
-
 
                 if name in self.remote_state and self.remote_state[name] == value:
                     return
+
+                if 'monitor:' in name:
+                    sfx = ':%i:' % self.ff802.get('mixers:select')
+                    if sfx not in name:
+                        return
+
                 self.remote_state[name] = value
                 self.send(f'/{name}', *value)
 
@@ -72,20 +71,12 @@ class OSC(Module):
         self.send_sel_state(self.ff802.get('mixers:select'))
 
     def send_sel_state(self, index):
-        sfx = ':%i' % index
+        sfx = ':%i:' % index
         if 'mixers:select' in self.local_state:
             self.send('/mixers:select', *self.local_state['mixers:select'])
         for name, value in self.local_state.items():
-            if 'monitor' in name and sfx:
+            if 'monitor' in name and sfx in name:
                 self.send(f'/{name}', *value)
-
-
-    def send_stereo_state(self):
-        self.send('/output-stereo', *self.ff802.get('output-stereo'))
-        for name, value in self.local_state.items():
-            if 'stereo:' in name or 'output:hardware-name' in name:
-                self.send(f'/{name}', *value)
-
 
     def route(self, address, args):
         """
