@@ -7,7 +7,7 @@ from mentat import Engine
 from fireface802 import FireFace802
 from osc import OSC
 
-engine = Engine('AlsaMixer', port=5555, folder=dirname(__file__))
+engine = Engine('AlsaMixer', port=5555, folder=dirname(__file__),debug=1)
 
 ff802 = FireFace802(id=0)
 osc = OSC(protocol='osc', ff802=ff802, port=8080)

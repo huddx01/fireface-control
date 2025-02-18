@@ -248,22 +248,35 @@ class FireFace802(AlsaMixer):
             else:
                 self.start_scene('meters', self.update_meters)
 
-        # rename stereo outputs
+        # stereo output link change
         if 'output:stereo:' in name:
+            dest = int(name.split(':')[-1])
             def sc():
-                dest = int(name.split(':')[-1])
+                # force meter update
+                self.reset(f'output-meter:{int(dest/2)*2}')
+                self.reset(f'output-meter:{int(dest/2)*2+1}')
                 if dest % 2 == 0:
+                    # rename stereo outputs
                     if value == 1:
                         nx2 = self.mixer_outputs_default_names[dest].split(' ')[-1]
                         self.set(f'output:hardware-name:{dest}', f'{self.mixer_outputs_default_names[dest]}/{int(nx2)+1}')
                     else:
                         self.reset(f'output:hardware-name:{dest}')
+                else:
+                    # switch mixer selection to stereo channel if previously on future right channel
+                    if value == 1 and self.get('mixers:select') == dest:
+                        self.set('mixers:select', dest - 1)
             self.start_scene(name, sc)
 
     def create_mixer(self, index):
         """
         Create mixers
         """
+        stereo_index = int(index/2) * 2
+        lambda_is_stereo = lambda: self.get_parameter(f'output:stereo:{stereo_index}') and self.get(f'output:stereo:{stereo_index}') == 1
+        lambda_is_mono = lambda: self.get_parameter(f'output:stereo:{stereo_index}') and self.get(f'output:stereo:{stereo_index}') == 0
+        lambda_volume_mono = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960], mono=True)
+        lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960])
 
         # create gain, mute and pan controls for every input
         # and map them to the appropriate mixer source gains
@@ -285,8 +298,8 @@ class FireFace802(AlsaMixer):
                         f'source-{sourcetype}-hide:{source}',
                     ],
                     dest = f'{mixer}:{index}:{source}',
-                    transform = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960], mono=True),
-                    condition = lambda: self.get_parameter(f'output:stereo:{index}') and self.get(f'output:stereo:{index}') == 0
+                    transform = lambda_volume_mono,
+                    condition = lambda_is_mono
                 )
 
         if index % 2 == 0:
@@ -304,8 +317,8 @@ class FireFace802(AlsaMixer):
                             f'source-{sourcetype}-hide:{source}',
                         ],
                         dest = [f'{mixer}:{index}:{source}', f'{mixer}:{index + 1}:{source}'],
-                        transform = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960]),
-                        condition = lambda:  self.get_parameter(f'output:stereo:{index}') and self.get(f'output:stereo:{index}') == 1
+                        transform = lambda_volume_stereo,
+                        condition = lambda_is_stereo
                     )
 
             # link outputs
@@ -315,7 +328,7 @@ class FireFace802(AlsaMixer):
                     dest = f'{param}:{index + 1}',
                     transform = lambda v: v,
                     inverse = lambda v: v,
-                    condition = lambda: self.get_parameter(f'output:stereo:{index}') and self.get(f'output:stereo:{index}') == 1
+                    condition = lambda_is_stereo
                 )
 
             for param in ['output:stereo']:
@@ -344,11 +357,11 @@ class FireFace802(AlsaMixer):
             g2 *= pan * 2
         elif pan > 0.5:
             g1 *= 2 - 2 * pan
-        
+
         # map to out range
         g1 = g1 * (out_range[1]-out_range[0]) + out_range[0]
         g2 = g2 * (out_range[1]-out_range[0]) + out_range[0]
-        
+
         if mono:
             return g1
         else:

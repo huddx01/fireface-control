@@ -59,6 +59,8 @@
 }
 .strip-meter-left {
   margin-left:0rem!important;
+  min-width: 3rem!important;
+  width: 3rem!important;
 }
 .strip-meter-right {
   margin-left:2rem!important;

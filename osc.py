@@ -27,11 +27,11 @@ class OSC(Module):
                 '-t', '%s/ui/styles.css' % self.engine.folder
             ])
 
-
     def parameter_changed(self, mod, name, value):
         """
         Update GUI when a parameter with the osc flag updates
         """
+
         if 'osc' in mod.parameters[name].metadata:
 
             if 'json' in mod.parameters[name].metadata:
@@ -48,8 +48,8 @@ class OSC(Module):
                 if name == 'mixers:select':
                     self.send_sel_state(value[0])
                 if 'stereo' in name:
-                    self.start_scene('stereo_stat', lambda:self.send_stereo_state())
-                    
+                    self.start_scene('stereo_state', lambda:self.send_stereo_state())
+
 
                 if name in self.remote_state and self.remote_state[name] == value:
                     return
