@@ -15,6 +15,7 @@ class OSC(Module):
         self.ff802 = ff802
         self.local_state = {}
         self.remote_state = {}
+        self.first_connect = False
 
         # run instance of o-s-c (will quit when python process exits if everything goes well)
         if not self.engine.restarted:
@@ -25,11 +26,14 @@ class OSC(Module):
                 '-l', '%s/ui/ui.json' % self.engine.folder,
                 '-t', '%s/ui/styles.css' % self.engine.folder
             ])
+        else:
+            self.first_connect = True
 
     def parameter_changed(self, mod, name, value):
         """
         Update GUI when a parameter with the osc flag updates
         """
+
 
         if 'osc' in mod.parameters[name].metadata:
 
@@ -41,6 +45,10 @@ class OSC(Module):
                 self.send('/SCRIPT', f'set("{name}", {value[0]}, {'{sync: false, send:false}'})')
             else:
                 self.local_state[name] = value
+
+                if not self.first_connect:
+                    return
+
                 if name == 'mixers:select':
                     self.send_sel_state(value[0])
 
@@ -89,6 +97,7 @@ class OSC(Module):
         """
 
         if address == '/connect':
+            self.first_connect = True
             self.send_state()
 
         elif address == '/state':

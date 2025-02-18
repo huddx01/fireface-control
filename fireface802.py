@@ -72,11 +72,18 @@ class FireFace802(AlsaMixer):
             self.add_parameter(f'output:color:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:hide:{dest}', None, types='i', default=0, osc=True)
             self.add_parameter(f'output:stereo:{dest}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:mono:{dest}', None, types='i', default=0, osc=True)
 
             self.add_mapping(
                 src=[f'output:volume-db:{dest}', f'output:mute:{dest}', f'output:hide:{dest}'],
                 dest=f'output:volume:{dest}',
                 transform=lambda v, m, h: v*10 - (m+h) * 900,
+            )
+
+            self.add_mapping(
+                src=f'output:stereo:{dest}',
+                dest=f'output:mono:{dest}',
+                transform=lambda v: not v,
             )
 
 
@@ -306,7 +313,7 @@ class FireFace802(AlsaMixer):
                     ],
                     dest = f'{mixer}:{index}:{source}',
                     transform = lambda_volume_mono,
-                    condition = lambda_is_mono
+                    condition = f'output:mono:{index}'
                 )
 
         if index % 2 == 0:
@@ -325,7 +332,7 @@ class FireFace802(AlsaMixer):
                         ],
                         dest = [f'{mixer}:{index}:{source}', f'{mixer}:{index + 1}:{source}'],
                         transform = lambda_volume_stereo,
-                        condition = lambda_is_stereo
+                        condition = f'output:stereo:{stereo_index}'
                     )
 
             # link outputs
@@ -335,7 +342,7 @@ class FireFace802(AlsaMixer):
                     dest = f'{param}:{index + 1}',
                     transform = lambda v: v,
                     inverse = lambda v: v,
-                    condition = lambda_is_stereo
+                    condition = f'output:stereo:{stereo_index}'
                 )
 
             for param in ['output:stereo']:
