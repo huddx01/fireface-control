@@ -100,10 +100,21 @@ class FireFace802(AlsaMixer):
                 if band != 'middle':
                     self.add_parameter(f'output:eq-{band}-type:{dest}', None, types='i', default=self.default_eq_types[band], osc=True)
 
+            self.add_parameter(f'output:hpf-activate:{dest}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:hpf-activate-conditionnal:{dest}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:hpf-cut-off:{dest}', None, types='i', default=20, osc=True)
+            self.add_parameter(f'output:hpf-roll-off:{dest}', None, types='i', default=0, osc=True)
 
+            # only activate hpf when eq is activated
+            self.add_mapping(
+                src=[f'output:eq-activate:{dest}', f'output:hpf-activate-conditionnal:{dest}'],
+                dest=f'output:hpf-activate:{dest}',
+                transform=lambda eq, hpf: eq and hpf
+            )
+            
 
         # map single output params to array params for alsa
-        output_alsa_params = ['output:volume', 'output:invert-phase', 'output:eq-activate']
+        output_alsa_params = ['output:volume', 'output:invert-phase', 'output:eq-activate', 'output:hpf-activate', 'output:hpf-cut-off', 'output:hpf-roll-off']
 
         for band in ['low', 'middle', 'high']:
             for p in ['type', 'freq', 'gain', 'quality']:
@@ -157,6 +168,16 @@ class FireFace802(AlsaMixer):
                 dest=f'input:{option}',
                 transform=lambda *v: list(v)
             )
+
+        for i in range(8):
+            self.add_parameter(f'input:line-level:{i}', None, types='i', default=1, osc=True)
+
+        self.add_parameter(f'input:line-level', None, types='iiiiiiii', alsa='')
+        self.add_mapping(
+            src=[f'input:line-level:{i}' for i in range(8)],
+            dest=f'input:line-level',
+            transform=lambda *v: list(v)
+        )
 
         """
         Meters
@@ -314,7 +335,7 @@ class FireFace802(AlsaMixer):
         lambda_is_mono = lambda: self.get_parameter(f'output:stereo:{stereo_index}') and self.get(f'output:stereo:{stereo_index}') == 0
 
         # this doesn't work well (https://github.com/alsa-project/snd-firewire-ctl-services/issues/194)
-        # lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960])
+        # lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[0, 40960])
         # instead, we hack the negative gain scale (-65 to 0dB) with some magic power
         lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains_hack(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960])
         
@@ -364,8 +385,19 @@ class FireFace802(AlsaMixer):
                         condition = f'output:stereo:{stereo_index}'
                     )
 
+           
+           
+            linked_params = ['output:volume-db', 'output:mute', 'output:name', 'output:color', 'output:eq-activate', 'output:hpf-activate', 'output:hpf-cut-off', 'output:hpf-roll-off']
+
+            for band in ['low', 'middle', 'high']:
+                for p in ['type', 'freq', 'gain', 'quality']:
+                    if band == 'middle' and p == 'type':
+                        continue
+                    linked_params.append(f'output:eq-{band}-{p}')
+
+
             # link outputs
-            for param in ['output:volume-db', 'output:mute', 'output:name', 'output:color']:
+            for param in linked_params:
                 self.add_mapping(
                     src = f'{param}:{index}',
                     dest = f'{param}:{index + 1}',

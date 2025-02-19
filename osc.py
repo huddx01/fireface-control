@@ -78,17 +78,20 @@ class OSC(Module):
         self.send_sel_state(self.ff802.get('mixers:select'))
 
     def send_sel_state(self, index):
-        sfx = ':%i:' % index
         if 'mixers:select' in self.local_state:
             self.send('/mixers:select', *self.local_state['mixers:select'])
         for name, value in self.local_state.items():
             if 'monitor:' in name and self.filter_param(name) is not False:
                 self.send(f'/{name}', *value)
+            if 'output:eq' in name and self.filter_param(name) is not False:
+                self.send(f'/{name}', *value)
 
 
     def filter_param(self, name):
-        sfx = ':%i:' % self.ff802.get('mixers:select')
-        if 'monitor:' in name and sfx not in name:
+        select =  self.ff802.get('mixers:select')
+        if 'monitor:' in name and f':{select}:' not in name:
+            return False
+        if 'output:eq' in name and 'activate' not in name and f':{select}' not in name:
             return False
 
     def route(self, address, args):
