@@ -2315,7 +2315,7 @@
                             "sensitivity": 1,
                             "steps": "",
                             "origin": "auto",
-                            "onTouch": ""
+                            "onTouch": "if (event.type == 'start') {\n  var sel = 'sel_output_' + getProp('parent', 'variables').output\n  set(sel, getProp(sel, 'on'))\n}"
                           },
                           {
                             "type": "fader",
@@ -2521,7 +2521,7 @@
                         "left": 10,
                         "lock": false,
                         "id": "sel_output_@{parent.variables.output}",
-                        "visible": true,
+                        "visible": false,
                         "interaction": true,
                         "comments": "",
                         "width": "auto",
