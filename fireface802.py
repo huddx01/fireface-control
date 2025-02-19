@@ -33,6 +33,11 @@ class FireFace802(AlsaMixer):
         10: 'RME 2',
         14: 'AES',
     }
+    
+
+    default_eq_freqs = {'low':100, 'middle': 1000, 'high': 10000}
+    default_eq_types = {'low': 1, 'middle': 0, 'high': 1} # 0 = peak, 1 = shelf, 2 = cut
+
 
 
 
@@ -73,6 +78,7 @@ class FireFace802(AlsaMixer):
             self.add_parameter(f'output:hide:{dest}', None, types='i', default=0, osc=True)
             self.add_parameter(f'output:stereo:{dest}', None, types='i', default=0, osc=True)
             self.add_parameter(f'output:mono:{dest}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:invert-phase:{dest}', None, types='i', default=0, osc=True)
 
             self.add_mapping(
                 src=[f'output:volume-db:{dest}', f'output:mute:{dest}', f'output:hide:{dest}'],
@@ -85,16 +91,33 @@ class FireFace802(AlsaMixer):
                 dest=f'output:mono:{dest}',
                 transform=lambda v: not v,
             )
+            
+            self.add_parameter(f'output:eq-activate:{dest}', None, types='i', default=0, osc=True)
+            for band in ['low', 'middle', 'high']:
+                self.add_parameter(f'output:eq-{band}-freq:{dest}', None, types='i', default=self.default_eq_freqs[band], osc=True)
+                self.add_parameter(f'output:eq-{band}-gain:{dest}', None, types='i', default=0, osc=True)
+                self.add_parameter(f'output:eq-{band}-quality:{dest}', None, types='i', default=10, osc=True)
+                if band != 'middle':
+                    self.add_parameter(f'output:eq-{band}-type:{dest}', None, types='i', default=self.default_eq_types[band], osc=True)
 
 
 
-        self.add_parameter(f'output:volume', None, types='i'*len(self.mixer_outputs), alsa='')
+        # map single output params to array params for alsa
+        output_alsa_params = ['output:volume', 'output:invert-phase', 'output:eq-activate']
 
-        self.add_mapping(
-            src=[f'output:volume:{dest}' for dest in self.mixer_outputs],
-            dest='output:volume',
-            transform=lambda *v: list(v)
-        )
+        for band in ['low', 'middle', 'high']:
+            for p in ['type', 'freq', 'gain', 'quality']:
+                if band == 'middle' and p == 'type':
+                    continue
+                output_alsa_params.append(f'output:eq-{band}-{p}')
+
+        for param in output_alsa_params:
+            self.add_parameter(param, None, types='i'*len(self.mixer_outputs), alsa='')
+            self.add_mapping(
+                src=[f'{param}:{dest}' for dest in self.mixer_outputs],
+                dest=param,
+                transform=lambda *v: list(v)
+            )
 
 
 

@@ -95,6 +95,12 @@
     right:0;
 }
 
+.knob-container {
+  --color-knob: rgba(225,225,226,1);
+  --color-widget: rgba(194,208,188,1);
+  --alpha-stroke: 1;
+  --line-width: 2;
+}
 
 
 .strip-matrix > inner > .widget {
@@ -106,7 +112,7 @@
     Buttons, inputs, menus
 */
 
-.menu-container, .input-container, .button-container {
+.menu-container, .input-container, .button-container , .text-container, .dropdown-container  {
   --border-radius:3rem;
   --line-width:1rem;
 }
@@ -117,6 +123,7 @@
  --alpha-stroke:1;
 }
 
+.button-container,
 .option-button {
  --color-fill: rgba(255,255,255,0.06);
  --alpha-fill-on: 1;
@@ -125,8 +132,10 @@
  --line-width:1rem;
  --color-stroke:rgba(0,0,0,0.5);
  --alpha-stroke:1;
+
 }
 
+.button-container.on,
 .option-button.on {
   --color-fill: rgba(33,37,43,0.8)
 }
@@ -167,7 +176,11 @@
     overflow: hidden;
     box-shadow: 0 0 0 1rem inset var(--border-color)
 }
+.color-menu {
+  /* ignore parent scrolling */
+  --parent-scroll-x:0!important;
 
+}
 /*
     horizontal button combo
 */
