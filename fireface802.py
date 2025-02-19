@@ -289,8 +289,14 @@ class FireFace802(AlsaMixer):
         stereo_index = int(index/2) * 2
         lambda_is_stereo = lambda: self.get_parameter(f'output:stereo:{stereo_index}') and self.get(f'output:stereo:{stereo_index}') == 1
         lambda_is_mono = lambda: self.get_parameter(f'output:stereo:{stereo_index}') and self.get(f'output:stereo:{stereo_index}') == 0
-        lambda_volume_mono = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960], mono=True)
-        lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960])
+
+        # this doesn't work well (https://github.com/alsa-project/snd-firewire-ctl-services/issues/194)
+        # lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960])
+        # instead, we hack the negative gain scale (-65 to 0dB) with some magic power
+        lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains_hack(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960])
+        
+        lambda_volume_mono = lambda *a, **k: lambda_volume_stereo(*a, **k)[0]
+
 
         # create gain, mute and pan controls for every input
         # and map them to the appropriate mixer source gains
@@ -354,7 +360,7 @@ class FireFace802(AlsaMixer):
                 )
 
 
-    def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range, mono=False):
+    def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range):
 
         # apply mute
         if mute:
@@ -364,7 +370,7 @@ class FireFace802(AlsaMixer):
 
         # normalise input
         g1 = g2 = (max(in_range[0], min(in_range[1], vol)) - in_range[0]) / (in_range[1] - in_range[0])
-
+        
         # apply simple pan: linear attenuation of the weakest side
         pan = max(0, min(1, pan))
         if pan < 0.5:
@@ -376,7 +382,43 @@ class FireFace802(AlsaMixer):
         g1 = g1 * (out_range[1]-out_range[0]) + out_range[0]
         g2 = g2 * (out_range[1]-out_range[0]) + out_range[0]
 
-        if mono:
-            return g1
+        return [g1, g2]
+
+    def volume_pan_to_gains_hack(self, vol, pan, mute, in_range, out_range):
+
+        # apply mute
+        if mute:
+            return [out_range[0], out_range[0]]
+
+        # normalise input
+        g1 = g2 = (max(in_range[0], min(in_range[1], vol)) - in_range[0]) / (in_range[1] - in_range[0])
+        
+        # apply simple pan: linear attenuation of the weakest side
+        pan = max(0, min(1, pan))
+        if pan < 0.5:
+            g2 *= pan * 2
+        elif pan > 0.5:
+            g1 *= 2 - 2 * pan
+
+        # dirty hack: split in range before 0 and map it to half of out range
+        zerodb = (-in_range[0]) / (in_range[1] - in_range[0])
+        half_out = (out_range[1]-out_range[0]) / 2
+
+        if g1 < zerodb:
+            g1 = g1 / zerodb
+            g1 = pow(g1,4) # very vague way to get a usable scale
+            g1 = g1 * (out_range[1]-out_range[0] - half_out)  + out_range[0]
         else:
-            return [g1, g2]
+            g1 = (g1 - zerodb) / (1 - zerodb) 
+
+            g1 = g1 * (out_range[1]-out_range[0] - half_out) + out_range[0] + half_out
+
+        if g2 < zerodb:
+            g2 = g2 / zerodb
+            g2 = pow(g2,4)
+            g2 = g2 * (out_range[1]-out_range[0] - half_out)  + out_range[0]
+        else:
+            g2 = (g2 - zerodb) / (1 - zerodb) 
+            g2 = g2 * (out_range[1]-out_range[0] - half_out) + out_range[0] + half_out
+
+        return [g1, g2]
