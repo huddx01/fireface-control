@@ -26,7 +26,7 @@ class FireFace802(AlsaMixer):
         'meter:spdif-output': range(2),
         'meter:adat-output': range(16)
     }
-    meter_noisefloor = -85
+    meter_noisefloor = -78
 
     stereo_mixers = {
         8: 'RME 1',
@@ -53,7 +53,7 @@ class FireFace802(AlsaMixer):
             for output in self.mixer_outputs:
 
                 for source, source_name in enumerate(sources):
-                    self.add_parameter(f'{mixer}:{output}:{source}', None, types='i', default=0)
+                    self.add_parameter(f'{mixer}:{output}:{source}', None, types='i', default=32768)
 
 
                 self.add_parameter(f'{mixer}:{output}', None, types='i' * len(sources), alsa=f'name="{mixer}",index={output}')
@@ -189,7 +189,7 @@ class FireFace802(AlsaMixer):
 
             for source, source_name in enumerate(sources):
 
-                self.add_parameter(f'source-{sourcetype}-meter:{source}', None, types='f', default=-90, osc=True)
+                self.add_parameter(f'source-{sourcetype}-meter:{source}', None, types='f', default=-138, osc=True)
 
             self.add_parameter(f'source-{sourcetype}-meters-visible', None, types='i', default=1)
             self.add_mapping(
@@ -204,7 +204,7 @@ class FireFace802(AlsaMixer):
 
             for output in outputs:
                 out_index += 1
-                self.add_parameter(f'output-meter:{out_index}', None, types='f', default=-90, osc=True)
+                self.add_parameter(f'output-meter:{out_index}', None, types='f', default=-138, osc=True)
 
             self.add_parameter(f'output-{outputtype}-meters-visible', None, types='i', default=1)
             self.add_mapping(
@@ -234,7 +234,7 @@ class FireFace802(AlsaMixer):
 
         self.add_parameter('mixers:select', None, types='i', default=0, osc=True)
 
-
+        self.logger.info(f'initialized with {len(self.parameters.items())} parameters and {len(self.mappings)} mappings')
 
 
     def update_meters(self):
@@ -272,10 +272,13 @@ class FireFace802(AlsaMixer):
         """
         Convert meter value to dBs
         """
-        v = 20*log10(max(v / 134217712,0.00001))
-        v = round(v*10) / 10
-        if v < self.meter_noisefloor:
-            v = -90
+        if v == 0:
+            v = -138
+        else:
+            v = 20*log10(v / 134217712)
+            v = round(v*10) / 10
+            if v < self.meter_noisefloor:
+                v = -138
         return v
 
 
@@ -292,7 +295,7 @@ class FireFace802(AlsaMixer):
                 self.stop_scene('meters')
                 for n in self.parameters:
                     if '-meter:' in n:
-                        self.set(n, -90)
+                        self.set(n, -138)
             else:
                 self.start_scene('meters', self.update_meters)
 
@@ -334,11 +337,7 @@ class FireFace802(AlsaMixer):
         lambda_is_stereo = lambda: self.get_parameter(f'output:stereo:{stereo_index}') and self.get(f'output:stereo:{stereo_index}') == 1
         lambda_is_mono = lambda: self.get_parameter(f'output:stereo:{stereo_index}') and self.get(f'output:stereo:{stereo_index}') == 0
 
-        # this doesn't work well (https://github.com/alsa-project/snd-firewire-ctl-services/issues/194)
-        # lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[0, 40960])
-        # instead, we hack the negative gain scale (-65 to 0dB) with some magic power
-        lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains_hack(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960])
-        
+        lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-78,6], out_range=[32768, 40960])
         lambda_volume_mono = lambda *a, **k: lambda_volume_stereo(*a, **k)[0]
 
 
@@ -350,7 +349,7 @@ class FireFace802(AlsaMixer):
 
             for source, source_name in enumerate(sources):
 
-                self.add_parameter(f'{mixer.replace('mixer', 'monitor')}:{index}:{source}', None, types='f', default=-65, osc=True)
+                self.add_parameter(f'{mixer.replace('mixer', 'monitor')}:{index}:{source}', None, types='f', default=-78, osc=True)
                 self.add_parameter(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{index}:{source}', None, types='f', default=0.5, osc=True)
                 self.add_parameter(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{index}:{source}', None, types='i', default=0, osc=True)
 
@@ -419,12 +418,10 @@ class FireFace802(AlsaMixer):
 
         # apply mute
         if mute:
-            if mono:
-                return out_range[0]
             return [out_range[0], out_range[0]]
 
-        # normalise input
-        g1 = g2 = (max(in_range[0], min(in_range[1], vol)) - in_range[0]) / (in_range[1] - in_range[0])
+        # db to linear coef
+        g1 = g2 = pow(10, (vol-6)/20)
         
         # apply simple pan: linear attenuation of the weakest side
         pan = max(0, min(1, pan))
@@ -434,46 +431,7 @@ class FireFace802(AlsaMixer):
             g1 *= 2 - 2 * pan
 
         # map to out range
-        g1 = g1 * (out_range[1]-out_range[0]) + out_range[0]
-        g2 = g2 * (out_range[1]-out_range[0]) + out_range[0]
-
-        return [g1, g2]
-
-    def volume_pan_to_gains_hack(self, vol, pan, mute, in_range, out_range):
-
-        # apply mute
-        if mute:
-            return [out_range[0], out_range[0]]
-
-        # normalise input
-        g1 = g2 = (max(in_range[0], min(in_range[1], vol)) - in_range[0]) / (in_range[1] - in_range[0])
-        
-        # apply simple pan: linear attenuation of the weakest side
-        pan = max(0, min(1, pan))
-        if pan < 0.5:
-            g2 *= pan * 2
-        elif pan > 0.5:
-            g1 *= 2 - 2 * pan
-
-        # dirty hack: split in range before 0 and map it to half of out range
-        zerodb = (-in_range[0]) / (in_range[1] - in_range[0])
-        half_out = (out_range[1]-out_range[0]) / 2
-
-        if g1 < zerodb:
-            g1 = g1 / zerodb
-            g1 = pow(g1,4) # very vague way to get a usable scale
-            g1 = g1 * (out_range[1]-out_range[0] - half_out)  + out_range[0]
-        else:
-            g1 = (g1 - zerodb) / (1 - zerodb) 
-
-            g1 = g1 * (out_range[1]-out_range[0] - half_out) + out_range[0] + half_out
-
-        if g2 < zerodb:
-            g2 = g2 / zerodb
-            g2 = pow(g2,4)
-            g2 = g2 * (out_range[1]-out_range[0] - half_out)  + out_range[0]
-        else:
-            g2 = (g2 - zerodb) / (1 - zerodb) 
-            g2 = g2 * (out_range[1]-out_range[0] - half_out) + out_range[0] + half_out
+        g1 = int(g1 * (out_range[1]-out_range[0])) + out_range[0]
+        g2 = int(g2 * (out_range[1]-out_range[0])) + out_range[0]
 
         return [g1, g2]
