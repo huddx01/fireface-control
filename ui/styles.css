@@ -42,6 +42,10 @@
   --alpha-pips-text:0.6;
   --alpha-pips:1;
   --color-pips: #fff;
+  --color-fill: rgba(188,194,208,0.7);
+  --alpha-stroke: 0!important;
+  --line-width: 8!important;
+  --widget-padding: 4!important;
 }
 .gain-fader canvas {
     font-size:105%!important;
@@ -116,6 +120,9 @@
   --border-radius:3rem;
   --line-width:1rem;
 }
+.dropdown-container  {
+    --widget-padding: -1
+}
 
 .menu-container {
  --line-width:1rem;
@@ -155,8 +162,13 @@
 }
 
 .option-modal {
-    font-size:80%;
     right:0;
+}
+.option-modal > label {
+    font-size:80%;
+}
+.option-modal .popup {
+    font-size:90%;
 }
 
 /*

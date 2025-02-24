@@ -14,12 +14,17 @@ class AlsaMixer(Module):
             self.add_event_callback('parameter_changed', self.parameter_changed)
             self.card_id = str(id)
 
-            if 'Fireface' in check_output(['cat', '/proc/asound/card%s/id' % self.card_id], text=True):
-                self.alsaset_process = Popen(['amixer', '-c', self.card_id, '-s', '-q'], stdin=PIPE, text=True)
-                self.alsa_ok = True
-            else:
-                self.alsaset_process = None
-                self.alsa_ok = False
+            self.alsaset_process = None
+            self.alsa_ok = False
+
+            try:
+                if 'Fireface' in check_output(['cat', '/proc/asound/card%s/id' % self.card_id], text=True):
+                    self.alsaset_process = Popen(['amixer', '-c', self.card_id, '-s', '-q'], stdin=PIPE, text=True)
+                    self.alsa_ok = True
+            except:
+                pass
+
+            if not self.alsa_ok:
                 self.logger.warning('Fireface interface not found')
 
         def parameter_changed(self, mod, name, value):

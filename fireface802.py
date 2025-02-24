@@ -7,7 +7,7 @@ class FireFace802(AlsaMixer):
         'mixer:line-source-gain':  [f'AN {x + 1}' for x in range(8)],
         'mixer:mic-source-gain': [f'MIC {x + 1}' for x in range(4)],
         'mixer:spdif-source-gain': [f'AES {x + 1}' for x in range(2)],
-        'mixer:adat-source-gain': [f'ADAT {x + 1}' for x in range(16)]
+        'mixer:adat-source-gain': [f'ADAT {x + 1}' for x in range(16)],
     }
 
     mixer_outputs = range(30)
@@ -33,7 +33,7 @@ class FireFace802(AlsaMixer):
         10: 'RME 2',
         14: 'AES',
     }
-    
+
 
     default_eq_freqs = {'low':100, 'middle': 1000, 'high': 10000}
     default_eq_types = {'low': 1, 'middle': 0, 'high': 1} # 0 = peak, 1 = shelf, 2 = cut
@@ -91,7 +91,7 @@ class FireFace802(AlsaMixer):
                 dest=f'output:mono:{dest}',
                 transform=lambda v: not v,
             )
-            
+
             self.add_parameter(f'output:eq-activate:{dest}', None, types='i', default=0, osc=True)
             for band in ['low', 'middle', 'high']:
                 self.add_parameter(f'output:eq-{band}-freq:{dest}', None, types='i', default=self.default_eq_freqs[band], osc=True)
@@ -111,7 +111,16 @@ class FireFace802(AlsaMixer):
                 dest=f'output:hpf-activate:{dest}',
                 transform=lambda eq, hpf: eq and hpf
             )
-            
+
+            # stream rerturn : straight rouing from stream sources
+            self.add_parameter(f'output:stream-return:{dest}', None, types='f', default=0, osc=True)
+            self.add_parameter(f'mixer:stream-source-gain:{dest}', None, types='i' * len(self.mixer_outputs), alsa=f'name="{mixer}",index={output}')
+            self.add_mapping(
+                src=f'output:stream-return:{dest}',
+                dest=f'mixer:stream-source-gain:{dest}',
+                transform=lambda vol: [0] * (dest) + [self.volume_pan_to_gains(vol, 0.5, False, in_range=[-65, 6], out_range=[32768, 40960])[0]] + [0] * (len(self.mixer_outputs) - dest - 1)
+            )
+
 
         # map single output params to array params for alsa
         output_alsa_params = ['output:volume', 'output:invert-phase', 'output:eq-activate', 'output:hpf-activate', 'output:hpf-cut-off', 'output:hpf-roll-off']
@@ -129,6 +138,17 @@ class FireFace802(AlsaMixer):
                 dest=param,
                 transform=lambda *v: list(v)
             )
+
+
+        for i in range(8):
+            self.add_parameter(f'output:line-level:{i}', None, types='i', default=1, osc=True)
+
+        self.add_parameter(f'output:line-level', None, types='iiiiiiii', alsa='')
+        self.add_mapping(
+            src=[f'output:line-level:{i}' for i in range(8)],
+            dest=f'output:line-level',
+            transform=lambda *v: list(v)
+        )
 
 
 
@@ -170,7 +190,7 @@ class FireFace802(AlsaMixer):
             )
 
         for i in range(8):
-            self.add_parameter(f'input:line-level:{i}', None, types='i', default=1, osc=True)
+            self.add_parameter(f'input:line-level:{i}', None, types='i', default=0, osc=True)
 
         self.add_parameter(f'input:line-level', None, types='iiiiiiii', alsa='')
         self.add_mapping(
@@ -337,7 +357,7 @@ class FireFace802(AlsaMixer):
         lambda_is_stereo = lambda: self.get_parameter(f'output:stereo:{stereo_index}') and self.get(f'output:stereo:{stereo_index}') == 1
         lambda_is_mono = lambda: self.get_parameter(f'output:stereo:{stereo_index}') and self.get(f'output:stereo:{stereo_index}') == 0
 
-        lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-78,6], out_range=[32768, 40960])
+        lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960])
         lambda_volume_mono = lambda *a, **k: lambda_volume_stereo(*a, **k)[0]
 
 
@@ -349,7 +369,7 @@ class FireFace802(AlsaMixer):
 
             for source, source_name in enumerate(sources):
 
-                self.add_parameter(f'{mixer.replace('mixer', 'monitor')}:{index}:{source}', None, types='f', default=-78, osc=True)
+                self.add_parameter(f'{mixer.replace('mixer', 'monitor')}:{index}:{source}', None, types='f', default=-65, osc=True)
                 self.add_parameter(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{index}:{source}', None, types='f', default=0.5, osc=True)
                 self.add_parameter(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{index}:{source}', None, types='i', default=0, osc=True)
 
@@ -384,9 +404,9 @@ class FireFace802(AlsaMixer):
                         condition = f'output:stereo:{stereo_index}'
                     )
 
-           
-           
-            linked_params = ['output:volume-db', 'output:mute', 'output:name', 'output:color', 'output:eq-activate', 'output:hpf-activate', 'output:hpf-cut-off', 'output:hpf-roll-off']
+
+
+            linked_params = ['output:volume-db', 'output:mute', 'output:name', 'output:color', 'output:eq-activate', 'output:hpf-activate', 'output:hpf-cut-off', 'output:hpf-roll-off', 'output:stream-return']
 
             for band in ['low', 'middle', 'high']:
                 for p in ['type', 'freq', 'gain', 'quality']:
@@ -394,6 +414,8 @@ class FireFace802(AlsaMixer):
                         continue
                     linked_params.append(f'output:eq-{band}-{p}')
 
+            if index < 8:
+                linked_params.append('output:line-level')
 
             # link outputs
             for param in linked_params:
@@ -422,7 +444,7 @@ class FireFace802(AlsaMixer):
 
         # db to linear coef
         g1 = g2 = pow(10, (vol-6)/20)
-        
+
         # apply simple pan: linear attenuation of the weakest side
         pan = max(0, min(1, pan))
         if pan < 0.5:
