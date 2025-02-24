@@ -31,7 +31,6 @@ class AlsaMixer(Module):
             """
             Update Alsa mixer (amixer) when a parameter with the alsa flag updates
             """
-
             if 'alsa' in mod.parameters[name].metadata:
                 lookup = mod.parameters[name].metadata['alsa']
                 if not lookup:
