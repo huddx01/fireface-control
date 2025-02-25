@@ -188,6 +188,21 @@ class FireFace802(AlsaMixer):
                 dest=f'input:{option}',
                 transform=lambda *v: list(v)
             )
+            
+        # prevent mic inst + mic power state (also protected at driver level)
+        for i in range(4):
+            self.add_mapping(
+                src=f'input:mic-instrument:{i}',
+                dest=f'input:mic-power:{i}',
+                transform=lambda v: 1 - v,
+                condition=f'input:mic-instrument:{i}',
+            )
+            self.add_mapping(
+                src=f'input:mic-power:{i}',
+                dest=f'input:mic-instrument:{i}',
+                transform=lambda v: 1 - v,
+                condition=f'input:mic-power:{i}',
+            )
 
         for i in range(8):
             self.add_parameter(f'input:line-level:{i}', None, types='i', default=0, osc=True)
