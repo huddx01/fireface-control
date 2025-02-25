@@ -106,6 +106,31 @@
   --line-width: 2;
 }
 
+.return-fader {
+    --color-widget: white;
+    --alpha-fill-off: 0.05;
+    --alpha-fill-on: 0.1;
+    border-radius: 3rem!important;
+    --line-width: 0;
+    --alpha-stroke: 0;
+    --color-knob:rgba(255,255,255,0.25);
+    --widget-padding:0;
+    --knob-size: 0;
+}
+
+.return-fader canvas {
+    border: 1rem solid var(--border-color);
+    border-radius: 3rem;
+}
+.return-fader .html {
+    position: absolute;
+    top:0;
+    left:0;
+    line-height:32rem;
+    width: 100%;
+    pointer-events: none;
+}
+
 
 .strip-matrix > inner > .widget {
     position:unset!important
@@ -170,6 +195,7 @@
 .option-modal .popup {
     font-size:90%;
 }
+
 
 /*
     Strip color selection menu
