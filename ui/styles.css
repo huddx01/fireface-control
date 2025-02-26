@@ -28,9 +28,9 @@
   --color-background: var(--color-ui-foreground);
   min-width: var(--strip-width);
   width: var(--strip-width);
-  /* force new stacking context to trap option modal in the strip */
-  transform: translateZ(0)
 }
+.strip .navigation {display:none;}
+
 .strip-selected {
     filter: brightness(120%)
 }
@@ -187,13 +187,21 @@
 }
 
 .option-modal {
-    right:0;
-}
-.option-modal > label {
     font-size:80%;
+    --color-widget: rgba(118,178,255,1);
+    --alpha-fill-off:0;
+    --alpha-fill-on:0.5;
+    right: 0;
 }
-.option-modal .popup {
-    font-size:90%;
+.option-modal:after {
+    content:"";
+    position: absolute;
+    width:0;
+    left:0;
+    top:2rem;
+    bottom:2rem;
+    border-left:1rem solid rgba(0,0,0,0.3);
+    border-right:1rem solid rgba(255,255,255,.1);
 }
 
 
@@ -202,7 +210,7 @@
     Additional css generated dynamically in root.css property
 */
 .color-menu .text {
-  margin: 0 4rem;
+  margin: 0 4rem 0 1rem;
   padding-right:22rem!important;
 }
 .color-menu .item {
@@ -213,11 +221,6 @@
     border-radius: 3rem;
     overflow: hidden;
     box-shadow: 0 0 0 1rem inset var(--border-color)
-}
-.color-menu {
-  /* ignore parent scrolling */
-  --parent-scroll-x:0!important;
-
 }
 /*
     horizontal button combo

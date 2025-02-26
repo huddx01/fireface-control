@@ -20,14 +20,14 @@ class OSC(Module):
 
         # run instance of o-s-c (will quit when python process exits if everything goes well)
         if not self.engine.restarted:
-            if not '--nogui' in argv:
+            if '--dev-gui' not in argv:
                 Popen([
                     'open-stage-control',
                     '--port', str(self.port),
                     '-s', '127.0.0.1:%i' % self.engine.port,
                     '-l', '%s/ui/ui.json' % self.engine.folder,
                     '-t', '%s/ui/styles.css' % self.engine.folder
-                ])
+                ] + (['-n'] if '--nogui' in argv else []))
         else:
             self.first_connect = True
 
