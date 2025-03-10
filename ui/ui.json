@@ -1,6 +1,6 @@
 {
   "createdWith": "Open Stage Control",
-  "version": "1.27.6-dev",
+  "version": "1.27.6",
   "type": "session",
   "content": {
     "type": "root",
@@ -864,7 +864,8 @@
                 "tabs": [],
                 "widgetType": "clone",
                 "quantity": "#{(@{sources_types}).length}",
-                "props": "JS{\nvar sourcesTypes = @{sources_types}||[],\n    sourcesIds = @{sources_ids}||[],\n    props = {}\n    \nprops.widgetId = 'input_source_x'\nprops.props = {\n  variables: {\n    source: sourcesIds[$],\n    sourcetype: sourcesTypes[$],\n  }\n}\n\n\nprops.visible = `\nJS_{\nreturn @_{hide_input_${sourcesTypes[$]}_${sourcesIds[$]}}\n  && !@_{show_all} ? false:true  \n}`\n\nreturn props\n}"
+                "props": "JS{\nvar sourcesTypes = @{sources_types}||[],\n    sourcesIds = @{sources_ids}||[],\n    props = {}\n    \nprops.widgetId = 'input_source_x'\nprops.props = {\n  variables: {\n    source: sourcesIds[$],\n    sourcetype: sourcesTypes[$],\n  }\n}\n\n\nprops.visible = `\nJS_{\nreturn @_{hide_input_${sourcesTypes[$]}_${sourcesIds[$]}}\n  && !@_{show_all} ? false:true  \n}`\n\nreturn props\n}",
+                "tabsPosition": "top"
               },
               {
                 "type": "panel",
@@ -3435,7 +3436,8 @@
                 "tabs": [],
                 "widgetType": "clone",
                 "quantity": "JS{\nreturn @{output_ids}.length\n}",
-                "props": "JS{\nvar props = {},\n    output_ids = @{output_ids},\n    output_stereo = @{output_stereo}\n\nvar id = output_ids[$]\nvar show = id % 2 == 0 || !output_stereo[$]\n\nprops.widgetId ='output_x' \nprops.props = {\n  id: 'outstripclone_' + $,\n  variables: {\n    output: id,\n  },\n}\nprops.visible = `\nJS_{\nreturn (${id} % 2 == 0 || !@_{stereo_output_${id}}) && (@_{hide_output_${id}}\n    && !@_{show_all} \n  ? false : true)\n}`\n\nreturn props\n}"
+                "props": "JS{\nvar props = {},\n    output_ids = @{output_ids},\n    output_stereo = @{output_stereo}\n\nvar id = output_ids[$]\nvar show = id % 2 == 0 || !output_stereo[$]\n\nprops.widgetId ='output_x' \nprops.props = {\n  id: 'outstripclone_' + $,\n  variables: {\n    output: id,\n  },\n}\nprops.visible = `\nJS_{\nreturn (${id} % 2 == 0 || !@_{stereo_output_${id}}) && (@_{hide_output_${id}}\n    && !@_{show_all} \n  ? false : true)\n}`\n\nreturn props\n}",
+                "tabsPosition": "top"
               },
               {
                 "type": "panel",
@@ -3616,76 +3618,183 @@
                         "onValue": ""
                       },
                       {
-                        "type": "eq",
-                        "top": 40,
-                        "left": 40,
+                        "type": "panel",
+                        "top": 0,
+                        "left": 30,
                         "lock": false,
-                        "id": "eq_graph",
+                        "id": "panel_2",
                         "visible": true,
+                        "interaction": true,
                         "comments": "",
                         "width": "auto",
-                        "height": 90,
+                        "height": "auto",
                         "expand": true,
                         "colorText": "auto",
-                        "colorWidget": "#{@{color_output_@{mixers_select}}||@{color_output_@{mixers_select}.values.0}}",
-                        "colorStroke": "var(--border-color)",
+                        "colorWidget": "auto",
+                        "colorStroke": "auto",
                         "colorFill": "auto",
-                        "alphaStroke": 1,
-                        "alphaFillOff": 0.1,
+                        "alphaStroke": "auto",
+                        "alphaFillOff": "auto",
                         "alphaFillOn": "auto",
-                        "lineWidth": 1,
-                        "borderRadius": 3,
-                        "padding": 0,
+                        "lineWidth": 0,
+                        "borderRadius": 8,
+                        "padding": "auto",
                         "html": "",
-                        "css": "canvas {\n  margin-bottom:-4rem;\n}",
-                        "dots": false,
-                        "bars": false,
-                        "pips": false,
-                        "rangeX": {
-                          "min": 20,
-                          "max": 22000
-                        },
-                        "rangeY": {
-                          "min": -21,
-                          "max": 20
-                        },
-                        "logScaleX": false,
-                        "logScaleY": false,
-                        "origin": true,
-                        "filters": [
-                          {
-                            "type": "highpass",
-                            "q": "@{eq_rolloff_q}",
-                            "freq": "@{eq_hpf_freq}",
-                            "on": "@{eq_hpf}"
-                          },
-                          {
-                            "type": "#{@{eq_types}.low[@{eq_type_low}] }",
-                            "gain": "#{@{eq_gain_low}/10}",
-                            "q": "#{@{eq_q_low}/10}",
-                            "freq": "@{eq_freq_low}"
-                          },
-                          {
-                            "type": "#{@{eq_types}.middle[@{eq_type_middle}] }",
-                            "gain": "#{@{eq_gain_middle}/10}",
-                            "q": "#{@{eq_q_middle}/10}",
-                            "freq": "@{eq_freq_middle}"
-                          },
-                          {
-                            "type": "#{@{eq_types}.high[@{eq_type_high}] }",
-                            "gain": "#{@{eq_gain_high}/10}",
-                            "q": "#{@{eq_q_high}/10}",
-                            "freq": "@{eq_freq_high}"
-                          }
-                        ],
+                        "css": "",
+                        "colorBg": "auto",
+                        "layout": "default",
+                        "justify": "start",
+                        "gridTemplate": "",
+                        "contain": true,
+                        "scroll": true,
+                        "innerPadding": false,
+                        "tabsPosition": "top",
+                        "variables": "@{parent.variables}",
+                        "traversing": false,
                         "value": "",
                         "default": "",
                         "linkId": "",
                         "address": "auto",
                         "preArgs": "",
+                        "typeTags": "",
+                        "decimals": 2,
                         "target": "",
+                        "ignoreDefaults": false,
+                        "bypass": false,
                         "onCreate": "",
-                        "onValue": ""
+                        "onValue": "",
+                        "widgets": [
+                          {
+                            "type": "eq",
+                            "top": 0,
+                            "left": 0,
+                            "lock": false,
+                            "id": "eq_graph",
+                            "visible": true,
+                            "comments": "",
+                            "width": "100%",
+                            "height": "100%",
+                            "expand": false,
+                            "colorText": "auto",
+                            "colorWidget": "#{@{color_output_@{mixers_select}}||@{color_output_@{mixers_select}.values.0}}",
+                            "colorStroke": "var(--border-color)",
+                            "colorFill": "auto",
+                            "alphaStroke": 1,
+                            "alphaFillOff": 0.1,
+                            "alphaFillOn": "auto",
+                            "lineWidth": 1,
+                            "borderRadius": 3,
+                            "padding": -6,
+                            "html": "<div class=\"pips\">\n  <div class=\"v\"  style=\"left:29%\"><div>100</div></div>\n  <div class=\"v\" style=\"left:59.5%\"><div>1k</div></div>\n  <div class=\"v\"  style=\"left:89.2%\"><div>10k</div></div>\n  <div class=\"h\"  style=\"top:50%\">0 </div>  \n  <div class=\"h\"  style=\"top:25%\">+10 </div>  \n  <div class=\"h\"  style=\"top:75%\">-10 </div>  \n</div>",
+                            "css": ".pips {\n  position:absolute;\n  top:0;left:0;right:0;bottom:0;\n  pointer-events:none;\n  margin:var(--widget-spacing);\n  font-size: 80%;\n}\n.pips .v {\n  position:absolute;\n  top: 1rem;bottom:12rem;\n  border-left:1rem solid grey;\n  opacity:0.25;\n}\n.pips .v div {\n  position:absolute;\n  bottom:-20rem;\n  left:-20rem;\n  width:40rem;\n  text-align:center;\n}\n\n.pips .h {\n  position:absolute;\n  left: 20rem;\n  right: 1rem;\n  border-top:1rem solid grey;\n  opacity:0.25;\n  padding-left:3rem;\n  align-items: end;\n  text-align:right;\n  display:flex;\n  line-height: 0rem;\n  text-indent: -34rem;\n}\n",
+                            "dots": false,
+                            "bars": false,
+                            "pips": false,
+                            "rangeX": {
+                              "min": 20,
+                              "max": 22000
+                            },
+                            "rangeY": {
+                              "min": -20,
+                              "max": 20
+                            },
+                            "logScaleX": false,
+                            "logScaleY": false,
+                            "origin": true,
+                            "filters": [
+                              {
+                                "type": "highpass",
+                                "q": "@{eq_rolloff_q}",
+                                "freq": "@{eq_hpf_freq}",
+                                "on": "@{eq_hpf}"
+                              },
+                              {
+                                "type": "#{@{eq_types}.low[@{eq_type_low}] }",
+                                "gain": "#{@{eq_gain_low}/10}",
+                                "q": "#{@{eq_q_low}/10}",
+                                "freq": "@{eq_freq_low}"
+                              },
+                              {
+                                "type": "#{@{eq_types}.middle[@{eq_type_middle}] }",
+                                "gain": "#{@{eq_gain_middle}/10}",
+                                "q": "#{@{eq_q_middle}/10}",
+                                "freq": "@{eq_freq_middle}"
+                              },
+                              {
+                                "type": "#{@{eq_types}.high[@{eq_type_high}] }",
+                                "gain": "#{@{eq_gain_high}/10}",
+                                "q": "#{@{eq_q_high}/10}",
+                                "freq": "@{eq_freq_high}"
+                              }
+                            ],
+                            "value": "",
+                            "default": "",
+                            "linkId": "",
+                            "address": "auto",
+                            "preArgs": "",
+                            "target": "",
+                            "onCreate": "",
+                            "onValue": ""
+                          },
+                          {
+                            "type": "multixy",
+                            "top": 0,
+                            "left": 0,
+                            "lock": false,
+                            "id": "eq_pads",
+                            "visible": true,
+                            "interaction": true,
+                            "comments": "",
+                            "width": "100%",
+                            "height": "100%",
+                            "expand": false,
+                            "colorText": "rgba(255,255,255,0)",
+                            "colorWidget": "auto",
+                            "colorStroke": "auto",
+                            "colorFill": "auto",
+                            "alphaStroke": 0,
+                            "alphaFillOff": "auto",
+                            "alphaFillOn": 0.5,
+                            "lineWidth": 0,
+                            "borderRadius": "auto",
+                            "padding": -6,
+                            "html": "",
+                            "css": "canvas {\n  --color-stroke: transparent\n}\n.pad-0 {\n  --color-fill: rgba(255,0,150,1)\n}\n.pad-1 {\n  --color-fill: rgba(150,255,0,1)\n}\n.pad-2 {\n  --color-fill: rgba(0,150,255,1)\n}",
+                            "pointSize": 10,
+                            "ephemeral": false,
+                            "pips": true,
+                            "points": 3,
+                            "snap": false,
+                            "spring": false,
+                            "rangeX": {
+                              "min": 20,
+                              "max": 22000
+                            },
+                            "rangeY": {
+                              "min": -200,
+                              "max": 200
+                            },
+                            "logScaleX": true,
+                            "logScaleY": false,
+                            "axisLock": "",
+                            "doubleTap": false,
+                            "sensitivity": 1,
+                            "value": "[\n  @{eq_freq_low}, @{eq_gain_low},\n  @{eq_freq_middle}, @{eq_gain_middle},\n  @{eq_freq_high}, @{eq_gain_high}\n]",
+                            "default": "",
+                            "linkId": "",
+                            "address": "auto",
+                            "preArgs": "",
+                            "typeTags": "",
+                            "decimals": 2,
+                            "target": "",
+                            "ignoreDefaults": false,
+                            "bypass": false,
+                            "onCreate": "locals.ids = [\n  \"eq_freq_low\", \"eq_gain_low\",\n  \"eq_freq_middle\", \"eq_gain_middle\",\n  \"eq_freq_high\", \"eq_gain_high\"\n]",
+                            "onValue": "for (var i in locals.ids) {\n  if (value[i] !== get(locals.ids[i])) {\n    set(locals.ids[i], value[i])\n  }\n}",
+                            "onTouch": ""
+                          }
+                        ],
+                        "tabs": []
                       },
                       {
                         "type": "panel",
