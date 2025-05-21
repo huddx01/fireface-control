@@ -421,7 +421,7 @@ class FireFace802(AlsaMixer):
 
 
 
-            linked_params = ['output:volume-db', 'output:mute', 'output:name', 'output:color', 'output:eq-activate', 'output:hpf-activate', 'output:hpf-cut-off', 'output:hpf-roll-off', 'output:stream-return']
+            linked_params = ['output:hide', 'output:volume-db', 'output:mute', 'output:name', 'output:color', 'output:eq-activate', 'output:hpf-activate', 'output:hpf-cut-off', 'output:hpf-roll-off', 'output:stream-return']
 
             for band in ['low', 'middle', 'high']:
                 for p in ['type', 'freq', 'gain', 'quality']:

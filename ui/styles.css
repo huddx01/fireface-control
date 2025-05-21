@@ -32,7 +32,7 @@
 .strip .navigation {display:none;}
 
 .strip-selected {
-    filter: brightness(120%)
+  --color-background: rgb(62 69 81);
 }
 
 .strip-hidden {
