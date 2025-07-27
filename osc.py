@@ -51,8 +51,10 @@ class OSC(Module):
                 if not self.first_connect:
                     return
 
-                if name == 'mixers:select':
-                    self.send_sel_state(value[0])
+                if name == 'output:select':
+                    self.send_output_sel_state(value[0])
+                if name == 'input:select':
+                    self.send_input_sel_state(value[0])
 
                 if name in self.remote_state and self.remote_state[name] == value:
                     return
@@ -77,23 +79,33 @@ class OSC(Module):
         for name, value in state:
             if self.filter_param(name) is not False:
                 self.send(f'/{name}', *value)
-        self.send_sel_state(self.ff802.get('mixers:select'))
+        self.send_output_sel_state(self.ff802.get('output:select'))
+        self.send_input_sel_state(self.ff802.get('input:select'))
 
-    def send_sel_state(self, index):
-        if 'mixers:select' in self.local_state:
-            self.send('/mixers:select', *self.local_state['mixers:select'])
+    def send_output_sel_state(self, index):
+        if 'output:select' in self.local_state:
+            self.send('/output:select', *self.local_state['output:select'])
         for name, value in self.local_state.items():
-            if 'monitor:' in name and self.filter_param(name) is not False:
+            if self.filter_param(name) is not False:
                 self.send(f'/{name}', *value)
-            if 'output:eq' in name and self.filter_param(name) is not False:
+
+    def send_input_sel_state(self, index):
+        if 'input:select' in self.local_state:
+            self.send('/input:select', *self.local_state['input:select'])
+        for name, value in self.local_state.items():
+            if self.filter_param(name) is not False:
                 self.send(f'/{name}', *value)
 
 
     def filter_param(self, name):
-        select =  self.ff802.get('mixers:select')
-        if 'monitor:' in name and f':{select}:' not in name:
+        out_select =  self.ff802.get('output:select')
+        if 'monitor:' in name and f':{out_select}:' not in name:
             return False
-        if 'output:eq' in name and 'activate' not in name and f':{select}' not in name:
+        if ('output:eq' in name or 'output:hpf' in name) and 'activate' not in name and f':{out_select}' not in name:
+            return False
+        
+        in_select =  self.ff802.get('input:select')
+        if ('input:eq' in name or 'input:hpf' in name) and 'activate' not in name and f':{in_select}' not in name:
             return False
 
     def route(self, address, args):
@@ -108,10 +120,13 @@ class OSC(Module):
         elif address == '/state':
             if args[0] == 'save':
                 self.ff802.save('test', omit_defaults=True)
+                self.send('/NOTIFY', 'save', 'State saved',)
             elif args[0] == 'load':
                 self.ff802.load('test')
+                self.send('/NOTIFY', 'folder-open', 'State loaded')
             elif args[0] == 'reset':
                 self.ff802.reset()
+                self.send('/NOTIFY', 'undo', 'State reset')
 
         else:
             name = address[1:]

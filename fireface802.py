@@ -10,6 +10,8 @@ class FireFace802(AlsaMixer):
         'mixer:adat-source-gain': [f'ADAT {x + 1}' for x in range(16)],
     }
 
+    mixer_inputs = range(30)
+
     mixer_outputs = range(30)
 
 
@@ -211,8 +213,51 @@ class FireFace802(AlsaMixer):
         self.add_mapping(
             src=[f'input:line-level:{i}' for i in range(8)],
             dest=f'input:line-level',
-            transform=lambda *v: list(v)
+            transform=  lambda *v: list(v)
         )
+
+
+        for inp in self.mixer_inputs:
+            self.add_parameter(f'input:eq-activate:{inp}', None, types='i', default=0, osc=True)
+            for band in ['low', 'middle', 'high']:
+                self.add_parameter(f'input:eq-{band}-freq:{inp}', None, types='i', default=self.default_eq_freqs[band], osc=True)
+                self.add_parameter(f'input:eq-{band}-gain:{inp}', None, types='i', default=0, osc=True)
+                self.add_parameter(f'input:eq-{band}-quality:{inp}', None, types='i', default=10, osc=True)
+                if band != 'middle':
+                    self.add_parameter(f'input:eq-{band}-type:{inp}', None, types='i', default=self.default_eq_types[band], osc=True)
+
+            self.add_parameter(f'input:hpf-activate:{inp}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:hpf-activate-conditionnal:{inp}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:hpf-cut-off:{inp}', None, types='i', default=20, osc=True)
+            self.add_parameter(f'input:hpf-roll-off:{inp}', None, types='i', default=0, osc=True)
+
+            # only activate hpf when eq is activated
+            self.add_mapping(
+                src=[f'input:eq-activate:{inp}', f'input:hpf-activate-conditionnal:{inp}'],
+                dest=f'input:hpf-activate:{inp}',
+                transform=lambda eq, hpf: eq and hpf
+            )
+
+        # map single output params to array params for alsa
+        input_alsa_params = ['input:eq-activate', 'input:hpf-activate', 'input:hpf-cut-off', 'input:hpf-roll-off']
+
+        for band in ['low', 'middle', 'high']:
+            for p in ['type', 'freq', 'gain', 'quality']:
+                if band == 'middle' and p == 'type':
+                    continue
+                input_alsa_params.append(f'input:eq-{band}-{p}')
+
+        for param in input_alsa_params:
+            self.add_parameter(param, None, types='i'*len(self.mixer_inputs), alsa='')
+            self.add_mapping(
+                src=[f'{param}:{inp}' for inp in self.mixer_inputs],
+                dest=param,
+                transform=lambda *v: list(v)
+            )
+
+
+        self.add_parameter('input:select', None, types='i', default=0, osc=True)
+        
 
         """
         Meters
@@ -248,7 +293,7 @@ class FireFace802(AlsaMixer):
                 transform= lambda *hidden: int(0 in hidden)
             )
 
-        self.add_parameter('metering', None, types='s', default='on', alsa='', osc=True)
+        self.add_parameter('metering', None, types='s', default='off', alsa='', osc=True)
 
         """
         Mixers
@@ -267,7 +312,7 @@ class FireFace802(AlsaMixer):
         )
 
 
-        self.add_parameter('mixers:select', None, types='i', default=0, osc=True)
+        self.add_parameter('output:select', None, types='i', default=0, osc=True)
 
         self.logger.info(f'initialized with {len(self.parameters.items())} parameters and {len(self.mappings)} mappings')
 
@@ -352,8 +397,8 @@ class FireFace802(AlsaMixer):
                         self.reset(f'output:hardware-name:{dest}')
                 else:
                     # switch mixer selection to stereo channel if previously on future right channel
-                    if value == 1 and self.get('mixers:select') == dest:
-                        self.set('mixers:select', dest - 1)
+                    if value == 1 and self.get('output:select') == dest:
+                        self.set('output:select', dest - 1)
 
             # reset gain/pan/mute
             for (mixer, sources) in self.mixer_sources.items():
