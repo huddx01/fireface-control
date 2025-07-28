@@ -18,6 +18,7 @@
   --strip-height: 380rem;
 
   --border-color:rgba(0,0,0,0.2);
+  --color-selected: rgb(62 69 81);
 }
 
 /*
@@ -110,18 +111,13 @@
     --color-widget: white;
     --alpha-fill-off: 0.05;
     --alpha-fill-on: 0.1;
-    border-radius: 3rem!important;
     --line-width: 0;
-    --alpha-stroke: 0;
+    --alpha-stroke: 1;
+    --color-stroke: var(--border-color);
     --color-knob:rgba(255,255,255,0.25);
     --widget-padding:0;
     --knob-size: 0;
-}
-
-.return-fader canvas {
-    border: 1rem solid var(--border-color);
-    border-radius: 3rem;
-}
+  }
 .return-fader .html {
     position: absolute;
     top:0;
@@ -211,7 +207,6 @@
 */
 .color-menu .text {
   margin: 0 4rem 0 1rem;
-  padding-right:22rem!important;
 }
 .color-menu .item {
   opacity: var(--alpha-fill-on);

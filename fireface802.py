@@ -117,11 +117,13 @@ class FireFace802(AlsaMixer):
 
             # stream rerturn : straight rouing from stream sources
             self.add_parameter(f'output:stream-return:{dest}', None, types='f', default=0, osc=True)
-            self.add_parameter(f'mixer:stream-source-gain:{dest}', None, types='i' * len(self.mixer_outputs), alsa=f'name="{mixer}",index={output}')
+            self.add_parameter(f'mixer:stream-source-gain:{dest}', None, types='i' * len(self.mixer_outputs), alsa=f'name="mixer:stream-source-gain",index={dest}')
+            def stream_return_mapping_factory(dest):
+                return lambda vol: [0] * (dest) + [self.volume_pan_to_gains(vol, 0.5, False, in_range=[-65, 6], out_range=[32768, 40960])[0]] + [0] * (len(self.mixer_outputs) - dest - 1)
             self.add_mapping(
                 src=f'output:stream-return:{dest}',
                 dest=f'mixer:stream-source-gain:{dest}',
-                transform=lambda vol: [0] * (dest) + [self.volume_pan_to_gains(vol, 0.5, False, in_range=[-65, 6], out_range=[32768, 40960])[0]] + [0] * (len(self.mixer_outputs) - dest - 1)
+                transform=stream_return_mapping_factory(dest)
             )
 
             # dynamics
