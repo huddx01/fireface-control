@@ -94,6 +94,7 @@ class FireFace802(AlsaMixer):
                 transform=lambda v: not v,
             )
 
+            # eq
             self.add_parameter(f'output:eq-activate:{dest}', None, types='i', default=0, osc=True)
             for band in ['low', 'middle', 'high']:
                 self.add_parameter(f'output:eq-{band}-freq:{dest}', None, types='i', default=self.default_eq_freqs[band], osc=True)
@@ -123,9 +124,23 @@ class FireFace802(AlsaMixer):
                 transform=lambda vol: [0] * (dest) + [self.volume_pan_to_gains(vol, 0.5, False, in_range=[-65, 6], out_range=[32768, 40960])[0]] + [0] * (len(self.mixer_outputs) - dest - 1)
             )
 
+            # dynamics
+            self.add_parameter(f'output:dyn-activate:{dest}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:dyn-attack:{dest}', None, types='i', default=10, osc=True)
+            self.add_parameter(f'output:dyn-release:{dest}', None, types='i', default=300, osc=True)
+            self.add_parameter(f'output:dyn-gain:{dest}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:dyn-compressor-threshold:{dest}', None, types='i', default=-300, osc=True)
+            self.add_parameter(f'output:dyn-expander-threshold:{dest}', None, types='i', default=-600, osc=True)
+            self.add_parameter(f'output:dyn-compressor-ratio:{dest}', None, types='i', default=10, osc=True)
+            self.add_parameter(f'output:dyn-expander-ratio:{dest}', None, types='i', default=10, osc=True)
+
 
         # map single output params to array params for alsa
-        output_alsa_params = ['output:volume', 'output:invert-phase', 'output:eq-activate', 'output:hpf-activate', 'output:hpf-cut-off', 'output:hpf-roll-off']
+        output_alsa_params = [
+            'output:volume', 'output:invert-phase', 'output:eq-activate', 'output:hpf-activate', 'output:hpf-cut-off', 'output:hpf-roll-off',
+            'output:dyn-activate',  'output:dyn-attack',  'output:dyn-release',  'output:dyn-gain',
+            'output:dyn-compressor-threshold',  'output:dyn-expander-threshold',  'output:dyn-compressor-ratio',  'output:dyn-expander-ratio',
+            ]
 
         for band in ['low', 'middle', 'high']:
             for p in ['type', 'freq', 'gain', 'quality']:
@@ -216,8 +231,9 @@ class FireFace802(AlsaMixer):
             transform=  lambda *v: list(v)
         )
 
-
         for inp in self.mixer_inputs:
+            
+            # eq
             self.add_parameter(f'input:eq-activate:{inp}', None, types='i', default=0, osc=True)
             for band in ['low', 'middle', 'high']:
                 self.add_parameter(f'input:eq-{band}-freq:{inp}', None, types='i', default=self.default_eq_freqs[band], osc=True)
@@ -238,8 +254,23 @@ class FireFace802(AlsaMixer):
                 transform=lambda eq, hpf: eq and hpf
             )
 
+            # dynamics
+            self.add_parameter(f'input:dyn-activate:{inp}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:dyn-attack:{inp}', None, types='i', default=10, osc=True)
+            self.add_parameter(f'input:dyn-release:{inp}', None, types='i', default=300, osc=True)
+            self.add_parameter(f'input:dyn-gain:{inp}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:dyn-compressor-threshold:{inp}', None, types='i', default=-300, osc=True)
+            self.add_parameter(f'input:dyn-expander-threshold:{inp}', None, types='i', default=-600, osc=True)
+            self.add_parameter(f'input:dyn-compressor-ratio:{inp}', None, types='i', default=10, osc=True)
+            self.add_parameter(f'input:dyn-expander-ratio:{inp}', None, types='i', default=10, osc=True)
+
+
         # map single output params to array params for alsa
-        input_alsa_params = ['input:eq-activate', 'input:hpf-activate', 'input:hpf-cut-off', 'input:hpf-roll-off']
+        input_alsa_params = [
+            'input:eq-activate', 'input:hpf-activate', 'input:hpf-cut-off', 'input:hpf-roll-off',
+            'input:dyn-activate',  'input:dyn-attack',  'input:dyn-release',  'input:dyn-gain',
+            'input:dyn-compressor-threshold',  'input:dyn-expander-threshold',  'input:dyn-compressor-ratio',  'input:dyn-expander-ratio',
+        ]
 
         for band in ['low', 'middle', 'high']:
             for p in ['type', 'freq', 'gain', 'quality']:
