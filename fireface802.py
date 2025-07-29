@@ -329,7 +329,15 @@ class FireFace802(AlsaMixer):
                 transform= lambda *hidden: int(0 in hidden)
             )
 
-        self.add_parameter('metering', None, types='s', default='off', alsa='', osc=True)
+        self.add_parameter('input-metering', None, types='i', default=0, alsa='', osc=True)
+        self.add_parameter('output-metering', None, types='i', default=0, alsa='', osc=True)
+        self.add_parameter('metering', None, types='i', default=0, alsa='', osc=True)
+        self.add_mapping(
+            src=['input-metering', 'output-metering'],
+            dest='metering',
+            transform= lambda i,o: int(i or o)
+        )
+
 
         """
         Mixers
@@ -350,6 +358,13 @@ class FireFace802(AlsaMixer):
 
         self.add_parameter('output:select', None, types='i', default=0, osc=True)
 
+
+        """
+        Misc gui options
+        """
+        self.add_parameter('show-fx', None, types='i', default=1, osc=True)
+
+
         self.logger.info(f'initialized with {len(self.parameters.items())} parameters and {len(self.mappings)} mappings')
 
 
@@ -360,29 +375,31 @@ class FireFace802(AlsaMixer):
         while True:
             self.wait(1/20, 's')
 
-            for (mixer, sources) in self.mixer_sources.items():
+            if self.get('input-metering'):
+                for (mixer, sources) in self.mixer_sources.items():
 
-                sourcetype = mixer.split(':')[1].split('-')[0]
-                if self.get(f'source-{sourcetype}-meters-visible') == 1:
+                    sourcetype = mixer.split(':')[1].split('-')[0]
+                    if self.get(f'source-{sourcetype}-meters-visible') == 1:
 
-                    meters = self.alsa_get(f'meter:{sourcetype}-input', f'name="meter:{sourcetype}-input",iface=CARD')
-                    if meters:
-                        for i, v in enumerate(meters):
-                            self.set(f'source-{sourcetype}-meter:{i}', self.meter_abs_to_db(v))
-
-
-            out_index = -1
-            for (output_meter, outputs) in self.output_meters.items():
-
-                    outputtype = output_meter.split(':')[1].split('-')[0]
-                    if self.get(f'output-{outputtype}-meters-visible') == 1:
-                        meters = self.alsa_get(output_meter, f'name="{output_meter}",iface=CARD')
+                        meters = self.alsa_get(f'meter:{sourcetype}-input', f'name="meter:{sourcetype}-input",iface=CARD')
                         if meters:
                             for i, v in enumerate(meters):
-                                out_index += 1
-                                self.set(f'output-meter:{out_index}', self.meter_abs_to_db(v))
-                    else:
-                        out_index += len(outputs)
+                                self.set(f'source-{sourcetype}-meter:{i}', self.meter_abs_to_db(v))
+
+
+            if self.get('output-metering'):
+                out_index = -1
+                for (output_meter, outputs) in self.output_meters.items():
+
+                        outputtype = output_meter.split(':')[1].split('-')[0]
+                        if self.get(f'output-{outputtype}-meters-visible') == 1:
+                            meters = self.alsa_get(output_meter, f'name="{output_meter}",iface=CARD')
+                            if meters:
+                                for i, v in enumerate(meters):
+                                    out_index += 1
+                                    self.set(f'output-meter:{out_index}', self.meter_abs_to_db(v))
+                        else:
+                            out_index += len(outputs)
 
     def meter_abs_to_db(self, v):
         """
@@ -407,7 +424,7 @@ class FireFace802(AlsaMixer):
 
         # Start/stop metering thread and reset meters when it stops
         if name == 'metering':
-            if value == 'off':
+            if value == 0:
                 self.stop_scene('meters')
                 for n in self.parameters:
                     if '-meter:' in n:
