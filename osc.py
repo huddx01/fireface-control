@@ -116,10 +116,9 @@ class OSC(Module):
     def filter_param(self, name):
         """
         Filter out unneeded value to reduce traffic:
+            - input parameters for unselected input
             - monitor mix for unselected output
-            - input parameters for unselected inputs
-
-        This could be done better but does the job for now
+            - output fx for unselect output
         """
         output_select = str(self.ff802.get('output:select'))
         input_select = str(self.ff802.get('input:select'))
@@ -129,6 +128,10 @@ class OSC(Module):
 
         if 'monitor:' in name and name.split(':')[-2] != output_select:
             return False
+
+        if 'output:' in name and (':eq' in name or ':dyn' in name or ':hpf' in name) and name.split(':')[-1] != output_select:
+            return False
+
 
     def route(self, address, args):
         """
