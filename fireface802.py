@@ -126,6 +126,9 @@ class FireFace802(AlsaMixer):
                 transform=stream_return_mapping_factory(dest)
             )
 
+            # monitor return: global dimmer for monitor mix
+            self.add_parameter(f'output:monitor-return:{dest}', None, types='f', default=0, osc=True)
+
             # dynamics
             self.add_parameter(f'output:dyn-activate:{dest}', None, types='i', default=0, osc=True)
             self.add_parameter(f'output:dyn-attack:{dest}', None, types='i', default=10, osc=True)
@@ -447,10 +450,8 @@ class FireFace802(AlsaMixer):
         Create mixers
         """
         stereo_index = int(index/2) * 2
-        lambda_is_stereo = lambda: self.get_parameter(f'output:stereo:{stereo_index}') and self.get(f'output:stereo:{stereo_index}') == 1
-        lambda_is_mono = lambda: self.get_parameter(f'output:stereo:{stereo_index}') and self.get(f'output:stereo:{stereo_index}') == 0
 
-        lambda_volume_stereo = lambda volume, pan, mute, hide: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960])
+        lambda_volume_stereo = lambda volume, pan, mute, hide, dimmer: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960], dimmer_gain=dimmer)
         lambda_volume_mono = lambda *a, **k: lambda_volume_stereo(*a, **k)[0]
 
 
@@ -472,6 +473,7 @@ class FireFace802(AlsaMixer):
                         f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{index}:{source}',
                         f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{index}:{source}',
                         f'source-{sourcetype}-hide:{source}',
+                        f'output:monitor-return:{index}',
                     ],
                     dest = f'{mixer}:{index}:{source}',
                     transform = lambda_volume_mono,
@@ -491,6 +493,7 @@ class FireFace802(AlsaMixer):
                             f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{index}:{source}',
                             f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{index}:{source}',
                             f'source-{sourcetype}-hide:{source}',
+                            f'output:monitor-return:{index}',
                         ],
                         dest = [f'{mixer}:{index}:{source}', f'{mixer}:{index + 1}:{source}'],
                         transform = lambda_volume_stereo,
@@ -504,7 +507,7 @@ class FireFace802(AlsaMixer):
                 'output:eq-activate', 'output:hpf-activate-conditionnal', 'output:hpf-cut-off', 'output:hpf-roll-off',
                 'output:dyn-activate',  'output:dyn-attack',  'output:dyn-release',  'output:dyn-gain',
                 'output:dyn-compressor-threshold',  'output:dyn-expander-threshold',  'output:dyn-compressor-ratio', 'output:dyn-expander-ratio',
-                'output:stream-return']
+                'output:stream-return', 'output:monitor-return']
 
             for band in ['low', 'middle', 'high']:
                 for p in ['type', 'freq', 'gain', 'quality']:
@@ -534,7 +537,10 @@ class FireFace802(AlsaMixer):
                 )
 
 
-    def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range):
+    def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range, dimmer_gain=0):
+
+        if vol > -65:
+            vol = min(max(vol + dimmer_gain, in_range[0]), in_range[1])
 
         # apply mute
         if mute:
