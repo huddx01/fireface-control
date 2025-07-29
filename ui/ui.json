@@ -390,40 +390,6 @@
               }
             ],
             "tabs": []
-          },
-          {
-            "type": "svg",
-            "top": 10,
-            "left": 40,
-            "lock": false,
-            "id": "svg_1",
-            "visible": true,
-            "interaction": true,
-            "comments": "",
-            "width": "auto",
-            "height": "auto",
-            "expand": false,
-            "colorText": "auto",
-            "colorWidget": "auto",
-            "colorStroke": "auto",
-            "colorFill": "auto",
-            "alphaStroke": "auto",
-            "alphaFillOff": "auto",
-            "alphaFillOn": "auto",
-            "lineWidth": "auto",
-            "borderRadius": "auto",
-            "padding": "auto",
-            "html": "",
-            "css": "",
-            "svg": "<filter id=\"noise\">\n<feTurbulence type=\"fractalNoise\" baseFequency=\"0.65\" numOctaves=\"3\" stichTiles=\"stitch\">\n</feTurbulence>\n</filter>",
-            "value": "",
-            "default": "",
-            "linkId": "",
-            "address": "auto",
-            "preArgs": "",
-            "target": "",
-            "onCreate": "",
-            "onValue": ""
           }
         ],
         "tabs": []
@@ -2046,7 +2012,7 @@
                                 "ignoreDefaults": false,
                                 "label": "%key",
                                 "icon": false,
-                                "values": "{\n  \"Peak\": 0\n  #{@{parent.variables.band} != \"middle\" ? ',\"Shelf\": 1' : ''}\n  #{@{parent.variables.band} == \"high\" ? ',\"Lowpass\": 2' : ''}\n}"
+                                "values": "{\n  \"Peak\": 0\n  #{@{parent.variables.band} != \"middle\" ? ',\"Shelf\": 1' : ''}\n  #{@{parent.variables.band} == \"high\" ? ',\"Cut\": 2' : ''}\n}"
                               },
                               {
                                 "type": "knob",
@@ -4828,7 +4794,7 @@
                             "height": "100%",
                             "expand": true,
                             "colorText": "auto",
-                            "colorWidget": "auto",
+                            "colorWidget": "@{color_input_@{parent.variables.sourcetype}_@{parent.variables.source}}",
                             "colorStroke": "auto",
                             "colorFill": "auto",
                             "alphaStroke": "auto",
