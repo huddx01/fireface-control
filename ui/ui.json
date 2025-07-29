@@ -1,6 +1,6 @@
 {
   "createdWith": "Open Stage Control",
-  "version": "1.29.7",
+  "version": "1.29.6",
   "type": "session",
   "content": {
     "type": "root",
@@ -5390,7 +5390,7 @@
                 "scroll": true,
                 "innerPadding": false,
                 "variables": "@{parent.variables}",
-                "traversing": false,
+                "traversing": "button",
                 "widgets": [],
                 "tabs": [],
                 "widgetType": "clone",
@@ -6780,7 +6780,7 @@
                       }
                     ],
                     "tabs": [],
-                    "onTouch": "if (event.type == 'stop') {\n  var sel = 'sel_output_' + getProp('this', 'variables').output\n  setTimeout(()=>{\n    set(sel, getProp(sel, 'on'))\n  })\n}"
+                    "onTouch": "if (event.type == 'start') {\n  locals.startEvent = event\n}\n\n\nif (event.type == 'stop') {\n  \n  var dX = event.offsetX - locals.startEvent.offsetX,\n      dY = event.offsetY - locals.startEvent.offsetY\n  if (Math.abs(dX) + Math.abs(dY) > 4) return\n  \n  \n  var sel = 'sel_output_' + getProp('this', 'variables').output\n  setTimeout(()=>{\n    set(sel, getProp(sel, 'on'))\n  })\n}"
                   }
                 ],
                 "tabs": []
