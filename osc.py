@@ -7,7 +7,7 @@ class OSC(Module):
 
     def __init__(self, ff802, *args, **kwargs):
         """
-        Open Stage Control manager
+        Open Stage Control manager, runs the server and bridges between ff802's parameters and widget state
         """
 
         super().__init__('OSC', *args, **kwargs)
@@ -36,7 +36,6 @@ class OSC(Module):
         Update GUI when a parameter with the osc flag updates
         """
 
-
         if 'osc' in mod.parameters[name].metadata:
 
             if type(value) is not list:
@@ -50,7 +49,6 @@ class OSC(Module):
 
                 if not self.first_connect:
                     return
-
                 if name == 'output:select':
                     self.send_output_sel_state(value[0])
                 if name == 'input:select':
@@ -68,49 +66,73 @@ class OSC(Module):
 
     def send_state(self):
         """
-        Send local state when a new osc client connects (or if it refreshes)
+        Send local state when a new osc client connects (or if it refreshes).
+        This module doesn't have its own parameters and instead watches ff802's,
+        it uses its own value store to optimize traffic where possible.
         """
 
         super().send_state()
-
 
         state = list(self.local_state.items())
         state.sort(key=lambda item: self.ff802.parameters[item[0]].metadata['osc_order'] if 'osc_order' in self.ff802.parameters[item[0]].metadata else 0)
         for name, value in state:
             if self.filter_param(name) is not False:
                 self.send(f'/{name}', *value)
-        self.send_output_sel_state(self.ff802.get('output:select'))
-        self.send_input_sel_state(self.ff802.get('input:select'))
 
     def send_output_sel_state(self, index):
+        """
+        Send values related to output channel selection:
+            - output fxs
+            - output options
+            - monitor mix for this output
+        """
+
         if 'output:select' in self.local_state:
-            self.send('/output:select', *self.local_state['output:select'])
+            self.send('/output:select', self.ff802.get('output:select'))
+
+        output_select = str(self.ff802.get('output:select'))
         for name, value in self.local_state.items():
-            if self.filter_param(name) is not False:
+            if 'output:' in name and name.split(':')[-1] == output_select:
+                self.send(f'/{name}', *value)
+            elif 'monitor:' in name and name.split(':')[-2] == output_select:
                 self.send(f'/{name}', *value)
 
     def send_input_sel_state(self, index):
+        """
+        Send values related to input channel selection:
+            - input fxs
+            - input options
+        """
+
         if 'input:select' in self.local_state:
-            self.send('/input:select', *self.local_state['input:select'])
+            self.send('/input:select', self.ff802.get('input:select'))
+
+        input_select = str(self.ff802.get('input:select'))
         for name, value in self.local_state.items():
-            if self.filter_param(name) is not False:
+            if 'input:' in name and name.split(':')[-1] == input_select:
                 self.send(f'/{name}', *value)
 
 
     def filter_param(self, name):
-        out_select =  self.ff802.get('output:select')
-        if 'monitor:' in name and f':{out_select}:' not in name:
+        """
+        Filter out unneeded value to reduce traffic:
+            - monitor mix for unselected output
+            - input parameters for unselected inputs
+
+        This could be done better but does the job for now
+        """
+        output_select = str(self.ff802.get('output:select'))
+        input_select = str(self.ff802.get('input:select'))
+
+        if 'input:' in name and name.split(':')[-1] != input_select:
             return False
-        if ('output:eq' in name or 'output:hpf' in name) and 'activate' not in name and f':{out_select}' not in name:
-            return False
-        
-        in_select =  self.ff802.get('input:select')
-        if ('input:eq' in name or 'input:hpf' in name) and 'activate' not in name and f':{in_select}' not in name:
+
+        if 'monitor:' in name and name.split(':')[-2] != output_select:
             return False
 
     def route(self, address, args):
         """
-        Widget routing.
+        Widget routing
         """
 
         if address == '/connect':
