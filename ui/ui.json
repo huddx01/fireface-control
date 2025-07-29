@@ -1175,7 +1175,7 @@
                         "left": "auto",
                         "lock": false,
                         "id": "sel_input_polarity",
-                        "visible": true,
+                        "visible": "#{\n  @{source_select_type} == \"mic\"\n}",
                         "interaction": true,
                         "comments": "",
                         "width": "auto",
