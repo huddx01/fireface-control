@@ -173,7 +173,6 @@ class OSC(Module):
 
         elif address == '/reset':
             strip_type, fx = args
-            self.clipboard[fx] = {}
             select = str(self.ff802.get(f'{strip_type}:select'))
             for name in self.local_state:
                 if f'{strip_type}:' in name and name.split(':')[-1] == select:
