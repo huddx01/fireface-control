@@ -207,7 +207,7 @@ class FireFace802(AlsaMixer):
                 dest=f'input:{option}',
                 transform=lambda *v: list(v)
             )
-            
+
         # prevent mic inst + mic power state (also protected at driver level)
         for i in range(4):
             self.add_mapping(
@@ -234,7 +234,7 @@ class FireFace802(AlsaMixer):
         )
 
         for inp in self.mixer_inputs:
-            
+
             # eq
             self.add_parameter(f'input:eq-activate:{inp}', None, types='i', default=0, osc=True)
             for band in ['low', 'middle', 'high']:
@@ -290,7 +290,7 @@ class FireFace802(AlsaMixer):
 
 
         self.add_parameter('input:select', None, types='i', default=0, osc=True)
-        
+
 
         """
         Meters
@@ -499,7 +499,12 @@ class FireFace802(AlsaMixer):
 
 
 
-            linked_params = ['output:hide', 'output:volume-db', 'output:mute', 'output:name', 'output:color', 'output:eq-activate', 'output:hpf-activate', 'output:hpf-cut-off', 'output:hpf-roll-off', 'output:stream-return']
+            linked_params = [
+                'output:hide', 'output:volume-db', 'output:mute', 'output:name', 'output:color',
+                'output:eq-activate', 'output:hpf-activate-conditionnal', 'output:hpf-cut-off', 'output:hpf-roll-off',
+                'output:dyn-activate',  'output:dyn-attack',  'output:dyn-release',  'output:dyn-gain',
+                'output:dyn-compressor-threshold',  'output:dyn-expander-threshold',  'output:dyn-compressor-ratio', 'output:dyn-expander-ratio',
+                'output:stream-return']
 
             for band in ['low', 'middle', 'high']:
                 for p in ['type', 'freq', 'gain', 'quality']:
