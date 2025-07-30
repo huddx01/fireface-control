@@ -1,3 +1,5 @@
+import os
+
 from subprocess import Popen, PIPE, run
 from sys import argv
 
@@ -19,6 +21,7 @@ class OSC(Module):
         self.first_connect = False
         self.clipboard = {}
 
+        folder = os.path.dirname(os.path.abspath(__file__))
         # run instance of o-s-c (will quit when python process exits if everything goes well)
         if not self.engine.restarted:
             if '--dev-gui' not in argv:
@@ -26,8 +29,8 @@ class OSC(Module):
                     'open-stage-control',
                     '--port', str(self.port),
                     '-s', '127.0.0.1:%i' % self.engine.port,
-                    '-l', '%s/ui/ui.json' % self.engine.folder,
-                    '-t', '%s/ui/styles.css' % self.engine.folder
+                    '-l', '%s/ui/ui.json' % folder,
+                    '-t', '%s/ui/styles.css' % folder
                 ] + (['-n'] if '--nogui' in argv else []))
         else:
             self.first_connect = True
@@ -144,14 +147,28 @@ class OSC(Module):
             self.send_state()
 
         elif address == '/state':
+            state_name = self.ff802.get('current-state')
             if args[0] == 'save':
-                self.ff802.save('test', omit_defaults=True)
-                self.send('/NOTIFY', 'save', 'State saved',)
+                self.ff802.save(state_name, omit_defaults=True)
+                self.start_scene('defered state', lambda: [
+                    self.send('/current-state', self.ff802.get('current-state'))
+                ])
+                self.send('/NOTIFY', 'save', f'State {state_name} saved',)
             elif args[0] == 'load':
-                self.ff802.load('test')
-                self.send('/NOTIFY', 'folder-open', 'State loaded')
+                self.ff802.reset()
+                self.ff802.load(state_name)
+                self.ff802.set('current-state', state_name)
+                self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded')
+            elif args[0] == 'delete':
+                if state_name != 'default':
+                    self.ff802.delete(state_name)
+                    self.ff802.reset('current-state')
+                    self.send('/NOTIFY', 'trash', f'State {state_name} deleted')
+                else:
+                    self.send('/NOTIFY', 'times', f'State {state_name} cannot be deleted')
             elif args[0] == 'reset':
                 self.ff802.reset()
+                self.ff802.set('current-state', state_name)
                 self.send('/NOTIFY', 'undo', 'State reset')
 
         elif address == '/copy':

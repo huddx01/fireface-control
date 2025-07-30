@@ -79,7 +79,7 @@ class FireFace802(AlsaMixer):
             self.add_parameter(f'output:color:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:hide:{dest}', None, types='i', default=0, osc=True)
             self.add_parameter(f'output:stereo:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:mono:{dest}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:mono:{dest}', None, types='i', default=0)
             self.add_parameter(f'output:invert-phase:{dest}', None, types='i', default=0, osc=True)
 
             self.add_mapping(
@@ -247,7 +247,7 @@ class FireFace802(AlsaMixer):
                 if band != 'middle':
                     self.add_parameter(f'input:eq-{band}-type:{inp}', None, types='i', default=self.default_eq_types[band], osc=True)
 
-            self.add_parameter(f'input:hpf-activate:{inp}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:hpf-activate:{inp}', None, types='i', default=0)
             self.add_parameter(f'input:hpf-activate-conditionnal:{inp}', None, types='i', default=0, osc=True)
             self.add_parameter(f'input:hpf-cut-off:{inp}', None, types='i', default=20, osc=True)
             self.add_parameter(f'input:hpf-roll-off:{inp}', None, types='i', default=0, osc=True)
@@ -329,14 +329,7 @@ class FireFace802(AlsaMixer):
                 transform= lambda *hidden: int(0 in hidden)
             )
 
-        self.add_parameter('input-metering', None, types='i', default=0, alsa='', osc=True)
-        self.add_parameter('output-metering', None, types='i', default=0, alsa='', osc=True)
         self.add_parameter('metering', None, types='i', default=0, alsa='', osc=True)
-        self.add_mapping(
-            src=['input-metering', 'output-metering'],
-            dest='metering',
-            transform= lambda i,o: int(i or o)
-        )
 
 
         """
@@ -347,7 +340,7 @@ class FireFace802(AlsaMixer):
 
 
         self.add_parameter('output-ids', None, types='i' * len(self.mixer_outputs), default=list(self.mixer_outputs), osc=True, osc_order=-1)
-        self.add_parameter('output-stereo', None, types='i' * len(self.mixer_outputs), osc=True, osc_order=-1)
+        self.add_parameter('output-stereo', None, types='i' * len(self.mixer_outputs), osc=True, osc_order=-1, skip_state=True)
 
         self.add_mapping(
             src=[f'output:stereo:{index}' for index in self.mixer_outputs],
@@ -364,6 +357,12 @@ class FireFace802(AlsaMixer):
         """
         self.add_parameter('show-fx', None, types='i', default=1, osc=True)
 
+        self.add_parameter('state-slots', None, types='s', default='', osc=True, skip_state=True)
+        self.add_parameter('current-state', None, types='s', default='default', osc=True, skip_state=True)
+
+        self.update_state_list()
+
+
 
         self.logger.info(f'initialized with {len(self.parameters.items())} parameters and {len(self.mappings)} mappings')
 
@@ -375,31 +374,29 @@ class FireFace802(AlsaMixer):
         while True:
             self.wait(1/20, 's')
 
-            if self.get('input-metering'):
-                for (mixer, sources) in self.mixer_sources.items():
+            for (mixer, sources) in self.mixer_sources.items():
 
-                    sourcetype = mixer.split(':')[1].split('-')[0]
-                    if self.get(f'source-{sourcetype}-meters-visible') == 1:
+                sourcetype = mixer.split(':')[1].split('-')[0]
+                if self.get(f'source-{sourcetype}-meters-visible') == 1:
 
-                        meters = self.alsa_get(f'meter:{sourcetype}-input', f'name="meter:{sourcetype}-input",iface=CARD')
+                    meters = self.alsa_get(f'meter:{sourcetype}-input', f'name="meter:{sourcetype}-input",iface=CARD')
+                    if meters:
+                        for i, v in enumerate(meters):
+                            self.set(f'source-{sourcetype}-meter:{i}', self.meter_abs_to_db(v))
+
+
+            out_index = -1
+            for (output_meter, outputs) in self.output_meters.items():
+
+                    outputtype = output_meter.split(':')[1].split('-')[0]
+                    if self.get(f'output-{outputtype}-meters-visible') == 1:
+                        meters = self.alsa_get(output_meter, f'name="{output_meter}",iface=CARD')
                         if meters:
                             for i, v in enumerate(meters):
-                                self.set(f'source-{sourcetype}-meter:{i}', self.meter_abs_to_db(v))
-
-
-            if self.get('output-metering'):
-                out_index = -1
-                for (output_meter, outputs) in self.output_meters.items():
-
-                        outputtype = output_meter.split(':')[1].split('-')[0]
-                        if self.get(f'output-{outputtype}-meters-visible') == 1:
-                            meters = self.alsa_get(output_meter, f'name="{output_meter}",iface=CARD')
-                            if meters:
-                                for i, v in enumerate(meters):
-                                    out_index += 1
-                                    self.set(f'output-meter:{out_index}', self.meter_abs_to_db(v))
-                        else:
-                            out_index += len(outputs)
+                                out_index += 1
+                                self.set(f'output-meter:{out_index}', self.meter_abs_to_db(v))
+                    else:
+                        out_index += len(outputs)
 
     def meter_abs_to_db(self, v):
         """
@@ -578,3 +575,35 @@ class FireFace802(AlsaMixer):
         g2 = int(g2 * (out_range[1]-out_range[0])) + out_range[0]
 
         return [g1, g2]
+
+
+    def get_state(self, *args, **kwargs):
+        """
+        Only save what's needed to manage the app's state.
+        We only need what's controllable from the ui, all the rest is reset
+        to defaults at startup and when loading a state file.
+        """
+
+        state = super().get_state(*args, **kwargs)
+
+        return [p for p in state if 'osc' in self.get_parameter(p[0]).metadata and 'skip_state' not in self.get_parameter(p[0]).metadata]
+
+
+    def save(self, name, omit_defaults):
+
+        super().save(name, omit_defaults)
+
+        self.update_state_list()
+
+    def delete(self, name):
+
+        super().delete(name)
+
+        self.update_state_list()
+
+    def update_state_list(self):
+        slist = list(self.states.keys())
+        slist.sort()
+        slist.remove('default')
+        slist.insert(0, 'default')
+        self.set('state-slots', '::'.join(slist))
