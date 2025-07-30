@@ -667,24 +667,34 @@ class FireFace802(AlsaMixer):
 
 
     def save(self, name, omit_defaults):
-
+        """
+        Keep track of available state
+        """
         super().save(name, omit_defaults)
 
         self.update_state_list()
 
     def delete(self, name):
-
+        """
+        Keep track of available state
+        """
         super().delete(name)
 
         self.update_state_list()
 
     def soft_reset(self):
+        """
+        Soft reset for parameters that should persist (eg current state name)
+        """
         for name in self.parameters:
             p = self.get_parameter(name)
             if 'skip_state' not in p.metadata:
                 self.reset(name)
 
     def update_state_list(self):
+        """
+        Alpha sort state names & always put Default first
+        """
         slist = list(self.states.keys())
         slist.sort()
         slist.remove('default')
