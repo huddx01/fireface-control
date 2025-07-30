@@ -39,7 +39,8 @@ class OSC(Module):
         """
         Update GUI when a parameter with the osc flag updates
         """
-
+        # if 'fx' in name:
+        #     print(name, value)
         if 'osc' in mod.parameters[name].metadata:
 
             if type(value) is not list:

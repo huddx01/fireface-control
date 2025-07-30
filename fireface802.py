@@ -30,6 +30,14 @@ class FireFace802(AlsaMixer):
     }
     meter_noisefloor = -78
 
+
+    output_fx = {
+        'fx:line-output-volume':  range(8),
+        'fx:hp-output-volume': range(4),
+        'fx:spdif-output-volume': range(2),
+        'fx:adat-output-volume': range(16)
+    }
+
     stereo_mixers = {
         8: 'RME 1',
         10: 'RME 2',
@@ -198,6 +206,29 @@ class FireFace802(AlsaMixer):
         self.add_parameter('sources-ids', None, types='i'*len(sources_ids), default=sources_ids, osc=True, osc_order=-2)
 
         """
+        Sources FX Sends
+        """
+        nx = 0
+        for (mixer, sources) in self.mixer_sources.items():
+
+            sourcetype = mixer.split(':')[1].split('-')[0]
+
+            for source, source_name in enumerate(sources):
+                self.add_parameter(f'input:fx-send:{nx}', None, types='f', default=-65, osc=True)
+                nx += 1
+
+            self.add_parameter(f'fx:{sourcetype}-source-gain', None, types='i' * len(sources), alsa='')
+
+            self.add_mapping(
+                src=[f'input:fx-send:{i}' for i in range(nx - len(sources), nx)],
+                dest=f'fx:{sourcetype}-source-gain',
+                transform=  lambda *gains: [x * 10 for x in gains]
+            )
+
+
+
+
+        """
         Input options
         """
         for option in ['invert-phase', 'mic-instrument', 'mic-power']:
@@ -333,6 +364,23 @@ class FireFace802(AlsaMixer):
 
 
         """
+        FX Returns
+        """
+        dest = 0
+        for (fx_outmixer, outputs) in self.output_fx.items():
+            self.add_parameter(fx_outmixer, None, types='i'*len(outputs), alsa='')
+            base = dest
+            for i in range(len(outputs)):
+                self.add_parameter(f'output:fx-return:{dest}', None, types='f', default=-65, osc=True)
+                dest += 1
+            self.add_mapping(
+                src=[f'output:fx-return:{j}' for j in range(base, dest)],
+                dest=fx_outmixer,
+                transform= lambda *return_gains: [x * 10 for x in return_gains]
+            )
+
+
+        """
         Mixers
         """
         for index in self.mixer_outputs:
@@ -348,9 +396,20 @@ class FireFace802(AlsaMixer):
             transform= lambda *stereo: list(stereo)
         )
 
+        # dsp stereo link, needed for stereo fx
+        n_stereo_pairs = int(len(self.mixer_outputs) / 2)
+        self.add_parameter('output:stereo-link', None, types='i' * n_stereo_pairs , alsa='')
+        self.add_mapping(
+            src=[f'output:stereo:{index}' for index in range(0, len(self.mixer_outputs), 2)],
+            dest='output:stereo-link',
+            transform= lambda *stereo: list(stereo)
+        )
+        self.add_parameter('output:stereo-balance', None, types='i' * n_stereo_pairs, default=[0] * n_stereo_pairs, alsa='')
+
+
+
 
         self.add_parameter('output:select', None, types='i', default=0, osc=True)
-
 
         """
         Misc gui options
@@ -360,6 +419,8 @@ class FireFace802(AlsaMixer):
         self.add_parameter('state-slots', None, types='s', default='', osc=True, skip_state=True)
         self.add_parameter('current-state', None, types='s', default='default', osc=True, skip_state=True)
 
+        if 'default' not in self.states:
+            self.save('default', True)
         self.update_state_list()
 
 
@@ -521,7 +582,7 @@ class FireFace802(AlsaMixer):
                 'output:eq-activate', 'output:hpf-activate-conditionnal', 'output:hpf-cut-off', 'output:hpf-roll-off',
                 'output:dyn-activate',  'output:dyn-attack',  'output:dyn-release',  'output:dyn-gain',
                 'output:dyn-compressor-threshold',  'output:dyn-expander-threshold',  'output:dyn-compressor-ratio', 'output:dyn-expander-ratio',
-                'output:stream-return', 'output:monitor-return']
+                'output:stream-return', 'output:monitor-return', 'output:fx-return']
 
             for band in ['low', 'middle', 'high']:
                 for p in ['type', 'freq', 'gain', 'quality']:
@@ -555,6 +616,8 @@ class FireFace802(AlsaMixer):
 
         if vol > -65:
             vol = min(max(vol + dimmer_gain, in_range[0]), in_range[1])
+        elif dimmer_gain <= -65:
+            vol = -65
 
         # apply mute
         if mute:
