@@ -2857,7 +2857,7 @@
                             "address": "auto",
                             "preArgs": "",
                             "typeTags": "",
-                            "decimals": 1,
+                            "decimals": 0,
                             "target": "",
                             "ignoreDefaults": false,
                             "bypass": true,
