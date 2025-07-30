@@ -10,7 +10,7 @@ class FireFace802(AlsaMixer):
         'mixer:adat-source-gain': [f'ADAT {x + 1}' for x in range(16)],
     }
 
-    mixer_inputs = range(30)
+    mixer_inputs = ['line'] * 8 + ['mic'] * 4 + ['spdif'] * 2 + ['adat'] * 16
 
     mixer_outputs = range(30)
 
@@ -196,7 +196,6 @@ class FireFace802(AlsaMixer):
 
                 self.add_parameter(f'source-{sourcetype}-hardware-name:{source}', None, types='s', default=source_name, osc=True)
                 self.add_parameter(f'source-{sourcetype}-name:{source}', None, types='s', default='', osc=True)
-                self.add_parameter(f'source-{sourcetype}-color:{source}', None, types='s', default='', osc=True)
                 self.add_parameter(f'source-{sourcetype}-hide:{source}', None, types='i', default=0, osc=True)
 
                 sources_types.append(sourcetype)
@@ -227,47 +226,45 @@ class FireFace802(AlsaMixer):
 
 
 
-
         """
-        Input options
+        Input options, eq & dyn
         """
-        for option in ['invert-phase', 'mic-instrument', 'mic-power']:
-            for i in range(4):
-                self.add_parameter(f'input:{option}:{i}', None, types='i', default=0, osc=True)
 
-            self.add_parameter(f'input:{option}', None, types='iiii', alsa='')
-            self.add_mapping(
-                src=[f'input:{option}:{i}' for i in range(4)],
-                dest=f'input:{option}',
-                transform=lambda *v: list(v)
-            )
+        n_mic = 0
+        offset_mic = 0
+        n_line = 0
 
-        # prevent mic inst + mic power state (also protected at driver level)
-        for i in range(4):
-            self.add_mapping(
-                src=f'input:mic-instrument:{i}',
-                dest=f'input:mic-power:{i}',
-                transform=lambda v: 1 - v,
-                condition=f'input:mic-instrument:{i}',
-            )
-            self.add_mapping(
-                src=f'input:mic-power:{i}',
-                dest=f'input:mic-instrument:{i}',
-                transform=lambda v: 1 - v,
-                condition=f'input:mic-power:{i}',
-            )
+        for inp, input_type in enumerate(self.mixer_inputs):
 
-        for i in range(8):
-            self.add_parameter(f'input:line-level:{i}', None, types='i', default=0, osc=True)
+            # gui options
+            self.add_parameter(f'input:color:{inp}', None, types='s', default='', osc=True)
 
-        self.add_parameter(f'input:line-level', None, types='iiiiiiii', alsa='')
-        self.add_mapping(
-            src=[f'input:line-level:{i}' for i in range(8)],
-            dest=f'input:line-level',
-            transform=  lambda *v: list(v)
-        )
+            # line options
+            if input_type == 'line':
+                self.add_parameter(f'input:line-level:{inp}', None, types='i', default=0, osc=True)
 
-        for inp in self.mixer_inputs:
+            # mic options
+            if input_type == 'mic':
+                if offset_mic == 0:
+                    offset_mic = inp
+                for option in ['invert-phase', 'mic-instrument', 'mic-power']:
+                    self.add_parameter(f'input:{option}:{inp}', None, types='i', default=0, osc=True)
+                n_mic += 1
+
+                # prevent mic inst + mic power state (also protected at driver level)
+                self.add_mapping(
+                    src=f'input:mic-instrument:{inp}',
+                    dest=f'input:mic-power:{inp}',
+                    transform=lambda v: 1 - v,
+                    condition=f'input:mic-instrument:{inp}',
+                )
+                self.add_mapping(
+                    src=f'input:mic-power:{inp}',
+                    dest=f'input:mic-instrument:{inp}',
+                    transform=lambda v: 1 - v,
+                    condition=f'input:mic-power:{inp}',
+                )
+
 
             # eq
             self.add_parameter(f'input:eq-activate:{inp}', None, types='i', default=0, osc=True)
@@ -319,6 +316,23 @@ class FireFace802(AlsaMixer):
             self.add_mapping(
                 src=[f'{param}:{inp}' for inp in self.mixer_inputs],
                 dest=param,
+                transform=lambda *v: list(v)
+            )
+
+        # line options arrays
+        self.add_parameter(f'input:line-level', None, types='i' * n_line, alsa='')
+        self.add_mapping(
+            src=[f'input:line-level:{i}' for i in range(n_line)],
+            dest=f'input:line-level',
+            transform=  lambda *v: list(v)
+        )
+
+        # mic options arrays
+        for option in ['invert-phase', 'mic-instrument', 'mic-power']:
+            self.add_parameter(f'input:{option}', None, types='i' * n_mic, alsa='')
+            self.add_mapping(
+                src=[f'input:{option}:{i + offset_mic}' for i in range(4)],
+                dest=f'input:{option}',
                 transform=lambda *v: list(v)
             )
 
