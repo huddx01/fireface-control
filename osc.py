@@ -155,19 +155,19 @@ class OSC(Module):
                 ])
                 self.send('/NOTIFY', 'save', f'State {state_name} saved',)
             elif args[0] == 'load':
-                self.ff802.reset()
+                self.ff802.soft_reset()
                 self.ff802.load(state_name)
                 self.ff802.set('current-state', state_name)
                 self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded')
             elif args[0] == 'delete':
                 if state_name != 'default':
                     self.ff802.delete(state_name)
-                    self.ff802.reset('current-state')
+                    self.ff802.soft_reset('current-state')
                     self.send('/NOTIFY', 'trash', f'State {state_name} deleted')
                 else:
                     self.send('/NOTIFY', 'times', f'State {state_name} cannot be deleted')
             elif args[0] == 'reset':
-                self.ff802.reset()
+                self.ff802.soft_reset()
                 self.ff802.set('current-state', state_name)
                 self.send('/NOTIFY', 'undo', 'State reset')
 

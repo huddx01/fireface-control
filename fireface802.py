@@ -601,6 +601,12 @@ class FireFace802(AlsaMixer):
 
         self.update_state_list()
 
+    def soft_reset(self):
+        for name in self.parameters:
+            p = self.get_parameter(name)
+            if 'skip_state' not in p.metadata:
+                self.reset(name)
+
     def update_state_list(self):
         slist = list(self.states.keys())
         slist.sort()
