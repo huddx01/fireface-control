@@ -173,6 +173,15 @@
     --color-fill: rgba(33,37,43,0.8);
     color:var(--color-widget)!important;
 }
+.menu-container menu {
+    box-shadow: 0 0 8rem 0 rgba(33,37,43,1);
+}
+.menu-container .item div {
+  justify-content: start!important;
+}
+.menu-container .item {
+  padding: 0 7rem;
+}
 
 .button-container,
 .option-button {

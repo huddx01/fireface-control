@@ -147,54 +147,54 @@ class OSC(Module):
             self.send_state()
 
         elif address == '/state':
+            cmd = args[0].lower()
             state_name = self.ff802.get('current-state')
-            if args[0] == 'save':
+            if cmd == 'save':
                 self.ff802.save(state_name, omit_defaults=True)
                 self.start_scene('defered state', lambda: [
                     self.send('/current-state', self.ff802.get('current-state'))
                 ])
                 self.send('/NOTIFY', 'save', f'State {state_name} saved',)
-            elif args[0] == 'load':
+            elif cmd == 'load':
                 self.ff802.soft_reset()
                 self.ff802.load(state_name)
                 self.ff802.set('current-state', state_name)
                 self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded')
-            elif args[0] == 'delete':
+            elif cmd == 'delete':
                 if state_name != 'default':
                     self.ff802.delete(state_name)
-                    self.ff802.soft_reset('current-state')
+                    self.ff802.reset('current-state')
                     self.send('/NOTIFY', 'trash', f'State {state_name} deleted')
                 else:
                     self.send('/NOTIFY', 'times', f'State {state_name} cannot be deleted')
-            elif args[0] == 'reset':
+            elif cmd == 'reset':
                 self.ff802.soft_reset()
                 self.ff802.set('current-state', state_name)
                 self.send('/NOTIFY', 'undo', 'State reset')
 
-        elif address == '/copy':
-            strip_type, fx = args
-            self.clipboard[fx] = {}
-            select = str(self.ff802.get(f'{strip_type}:select'))
-            for name in self.local_state:
-                if f'{strip_type}:' in name and name.split(':')[-1] == select:
-                    if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name):
-                        generic_name = ':'.join(name.split(':')[1:-1])
-                        self.clipboard[fx][generic_name] = self.local_state[name]
 
-        elif address == '/paste':
-            strip_type, fx = args
+        elif address == '/fx':
+            strip_type, fx, cmd = [a.lower() for a in args]
             select = str(self.ff802.get(f'{strip_type}:select'))
-            if fx in self.clipboard:
-                for name in self.clipboard[fx]:
-                    self.ff802.set(f'{strip_type}:{name}:{select}', *self.clipboard[fx][name])
 
-        elif address == '/reset':
-            strip_type, fx = args
-            select = str(self.ff802.get(f'{strip_type}:select'))
-            for name in self.local_state:
-                if f'{strip_type}:' in name and name.split(':')[-1] == select:
-                    if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name):
-                        self.ff802.reset(name)
+            if cmd == 'copy':
+                self.clipboard[fx] = {}
+                for name in self.local_state:
+                    if f'{strip_type}:' in name and name.split(':')[-1] == select:
+                        if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name):
+                            generic_name = ':'.join(name.split(':')[1:-1])
+                            self.clipboard[fx][generic_name] = self.local_state[name]
+
+            elif cmd == 'paste':
+                if fx in self.clipboard:
+                    for name in self.clipboard[fx]:
+                        self.ff802.set(f'{strip_type}:{name}:{select}', *self.clipboard[fx][name])
+
+            elif cmd == 'reset':
+                for name in self.local_state:
+                    if f'{strip_type}:' in name and name.split(':')[-1] == select:
+                        if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name):
+                            self.ff802.reset(name)
 
 
         else:
