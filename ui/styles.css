@@ -114,10 +114,14 @@
 }
 
 .knob-container {
-  --color-knob: rgba(225,225,226,1);
-  --color-widget: rgba(194,208,188,1);
+  --color-knob: rgba(225,225,225,1);
+  --color-widget:  rgba(225,225,225,1);
   --alpha-stroke: 1;
   --line-width: 2;
+}
+.range-container {
+  --color-widget:  rgba(225,225,225,1);
+
 }
 
 .return-fader {
@@ -176,7 +180,10 @@
 .menu-container menu {
     box-shadow: 0 0 8rem 0 rgba(33,37,43,1);
 }
-.menu-container .item div {
+.menu-container.align-left .text {
+  justify-content: start!important;
+}
+.menu-container.align-left-menu .item div {
   justify-content: start!important;
 }
 .menu-container .item {
