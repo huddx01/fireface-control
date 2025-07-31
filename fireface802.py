@@ -325,7 +325,7 @@ class FireFace802(AlsaMixer):
         for param in input_alsa_params:
             self.add_parameter(param, None, types='i'*len(self.mixer_inputs), alsa='')
             self.add_mapping(
-                src=[f'{param}:{inp}' for inp in self.mixer_inputs],
+                src=[f'{param}:{inp}' for inp, inp_type in enumerate(self.mixer_inputs)],
                 dest=param,
                 transform=lambda *v: list(v)
             )
