@@ -121,6 +121,7 @@
   --color-knob: rgba(225,225,225,1);
   --color-widget:  rgba(225,225,225,1);
   --alpha-stroke: 1;
+  --alpha-fill-off: 0.3!important;
   --line-width: 2;
 }
 .range-container {

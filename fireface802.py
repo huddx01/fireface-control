@@ -428,7 +428,8 @@ class FireFace802(AlsaMixer):
         """
         Misc gui options
         """
-        self.add_parameter('show-inserts', None, types='i', default=1, osc=True)
+        self.add_parameter('show-eq', None, types='i', default=1, osc=True)
+        self.add_parameter('show-dyn', None, types='i', default=1, osc=True)
         self.add_parameter('show-fx', None, types='i', default=1, osc=True)
 
         self.add_parameter('state-slots', None, types='s', default='', osc=True, skip_state=True)
