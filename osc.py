@@ -176,27 +176,35 @@ class OSC(Module):
 
         elif address == '/fx':
             strip_type, fx, cmd = [a.lower() for a in args]
-            select = str(self.ff802.get(f'{strip_type}:select'))
+            if strip_type:
+                select = str(self.ff802.get(f'{strip_type}:select'))
 
             if cmd == 'copy':
                 self.clipboard[fx] = {}
                 for name in self.local_state:
-                    if f'{strip_type}:' in name and name.split(':')[-1] == select:
+                    if fx == 'echo' and (':echo' in name) or fx == 'reverb' and (':reverb' in name):
+                        self.clipboard[fx][name] = self.local_state[name]
+                    elif strip_type and f'{strip_type}:' in name and name.split(':')[-1] == select:
                         if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name):
                             generic_name = ':'.join(name.split(':')[1:-1])
                             self.clipboard[fx][generic_name] = self.local_state[name]
-
+                            
             elif cmd == 'paste':
                 if fx in self.clipboard:
                     for name in self.clipboard[fx]:
-                        self.ff802.set(f'{strip_type}:{name}:{select}', *self.clipboard[fx][name])
+                        if fx in ['echo', 'reverb']:
+                            self.ff802.set(f'{name}', *self.clipboard[fx][name])
+                        elif fx in ['eq', 'dyn']:
+                            self.ff802.set(f'{strip_type}:{name}:{select}', *self.clipboard[fx][name])
+
 
             elif cmd == 'reset':
                 for name in self.local_state:
-                    if f'{strip_type}:' in name and name.split(':')[-1] == select:
+                    if fx == 'echo' and (':echo' in name) or fx == 'reverb' and (':reverb' in name):
+                        self.ff802.reset(name)
+                    elif strip_type and f'{strip_type}:' in name and name.split(':')[-1] == select:
                         if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name):
                             self.ff802.reset(name)
-
 
         else:
             name = address[1:]

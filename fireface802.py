@@ -147,12 +147,17 @@ class FireFace802(AlsaMixer):
             self.add_parameter(f'output:dyn-compressor-ratio:{dest}', None, types='i', default=10, osc=True)
             self.add_parameter(f'output:dyn-expander-ratio:{dest}', None, types='i', default=10, osc=True)
 
+            self.add_parameter(f'output:autolevel-activate:{dest}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:autolevel-max-gain:{dest}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:autolevel-head-room:{dest}', None, types='i', default=30, osc=True)
+            self.add_parameter(f'output:autolevel-rise-time:{dest}', None, types='i', default=1, osc=True)
 
         # map single output params to array params for alsa
         output_alsa_params = [
             'output:volume', 'output:invert-phase', 'output:eq-activate', 'output:hpf-activate', 'output:hpf-cut-off', 'output:hpf-roll-off',
             'output:dyn-activate',  'output:dyn-attack',  'output:dyn-release',  'output:dyn-gain',
             'output:dyn-compressor-threshold',  'output:dyn-expander-threshold',  'output:dyn-compressor-ratio',  'output:dyn-expander-ratio',
+            'output:autolevel-activate', 'output:autolevel-max-gain', 'output:autolevel-head-room', 'output:autolevel-rise-time'
             ]
 
         for band in ['low', 'middle', 'high']:
@@ -297,12 +302,18 @@ class FireFace802(AlsaMixer):
             self.add_parameter(f'input:dyn-compressor-ratio:{inp}', None, types='i', default=10, osc=True)
             self.add_parameter(f'input:dyn-expander-ratio:{inp}', None, types='i', default=10, osc=True)
 
+            self.add_parameter(f'input:autolevel-activate:{inp}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:autolevel-max-gain:{inp}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:autolevel-head-room:{inp}', None, types='i', default=30, osc=True)
+            self.add_parameter(f'input:autolevel-rise-time:{inp}', None, types='i', default=1, osc=True)
+
 
         # map single output params to array params for alsa
         input_alsa_params = [
             'input:eq-activate', 'input:hpf-activate', 'input:hpf-cut-off', 'input:hpf-roll-off',
             'input:dyn-activate',  'input:dyn-attack',  'input:dyn-release',  'input:dyn-gain',
             'input:dyn-compressor-threshold',  'input:dyn-expander-threshold',  'input:dyn-compressor-ratio',  'input:dyn-expander-ratio',
+            'input:autolevel-activate', 'input:autolevel-max-gain', 'input:autolevel-head-room', 'input:autolevel-rise-time'
         ]
 
         for band in ['low', 'middle', 'high']:
@@ -335,9 +346,6 @@ class FireFace802(AlsaMixer):
                 dest=f'input:{option}',
                 transform=lambda *v: list(v)
             )
-
-
-        self.add_parameter('input:select', None, types='i', default=0, osc=True)
 
 
         """
@@ -421,9 +429,69 @@ class FireFace802(AlsaMixer):
         self.add_parameter('output:stereo-balance', None, types='i' * n_stereo_pairs, default=[0] * n_stereo_pairs, alsa='')
 
 
+        """
+        FX (reverb & echo)
+        """
+        self.add_parameter('fx:echo-activate', None, types='i', default=0, osc=True, alsa='')
+        self.add_parameter('fx:echo-delay', None, types='i', default=10, osc=True, alsa='')
+        self.add_parameter('fx:echo-feedback', None, types='i', default=0, osc=True, alsa='')
+        self.add_parameter('fx:echo-lpf-freq', None, types='i', default=0, osc=True, alsa='')
+        self.add_parameter('fx:echo-stereo-width', None, types='i', default=100, osc=True, alsa='')
+        self.add_parameter('fx:echo-type', None, types='i', default=0, osc=True, alsa='')
+        self.add_parameter('fx:echo-volume', None, types='i', default=-650, osc=True, alsa='')
+
+        self.add_parameter('fx:echo-volume-db', None, types='i', default=0, osc=True)
+        self.add_parameter('fx:echo-delay-s', None, types='f', default=0.1, osc=True)
+
+        self.add_mapping(
+            src='fx:echo-volume-db',
+            dest='fx:echo-volume',
+            transform= lambda gain: 10 * gain
+        )
+
+        self.add_mapping(
+            src='fx:echo-delay-s',
+            dest='fx:echo-delay',
+            transform= lambda time: 100 * time
+        )
 
 
+        self.add_parameter('fx:reverb-activate', None, types='i', default=0, osc=True, alsa='')
+        self.add_parameter('fx:reverb-attack', None, types='i', default=100, osc=True, alsa='')
+        self.add_parameter('fx:reverb-hold', None, types='i', default=300, osc=True, alsa='')
+        self.add_parameter('fx:reverb-release', None, types='i', default=250, osc=True, alsa='')
+        self.add_parameter('fx:reverb-type', None, types='i', default=0, osc=True, alsa='')
+        self.add_parameter('fx:reverb-room-scale', None, types='i', default=50, osc=True, alsa='')
+        self.add_parameter('fx:reverb-smooth', None, types='i', default=100, osc=True, alsa='')
+        self.add_parameter('fx:reverb-stereo-width', None, types='i', default=100, osc=True, alsa='')
+        self.add_parameter('fx:reverb-time', None, types='i', default=10, osc=True, alsa='')
+        self.add_parameter('fx:reverb-volume', None, types='i', default=0, osc=True, alsa='')
+        self.add_parameter('fx:reverb-damping', None, types='i', default=20000, osc=True, alsa='')
+        self.add_parameter('fx:reverb-post-lpf-freq', None, types='i', default=20000, osc=True, alsa='')
+        self.add_parameter('fx:reverb-pre-delay', None, types='i', default=0, osc=True, alsa='')
+        self.add_parameter('fx:reverb-pre-hpf-freq', None, types='i', default=0, osc=True, alsa='')
+
+        self.add_parameter('fx:reverb-volume-db', None, types='i', default=0, osc=True)
+        self.add_parameter('fx:reverb-time-s', None, types='f', default=1, osc=True)
+
+        self.add_mapping(
+            src='fx:reverb-volume-db',
+            dest='fx:reverb-volume',
+            transform= lambda gain: 10 * gain
+        )
+        self.add_mapping(
+            src='fx:reverb-time-s',
+            dest='fx:reverb-time',
+            transform= lambda time: 10 * time
+        )
+
+        """
+        Channel selection
+        """
+
+        self.add_parameter('input:select', None, types='i', default=0, osc=True)
         self.add_parameter('output:select', None, types='i', default=0, osc=True)
+
 
         """
         Misc gui options
@@ -438,6 +506,7 @@ class FireFace802(AlsaMixer):
         if 'default' not in self.states:
             self.save('default', True)
         self.update_state_list()
+
 
 
 
