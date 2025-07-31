@@ -39,8 +39,7 @@ class OSC(Module):
         """
         Update GUI when a parameter with the osc flag updates
         """
-        # if 'fx' in name:
-        #     print(name, value)
+
         if 'osc' in mod.parameters[name].metadata:
 
             if type(value) is not list:
@@ -158,9 +157,17 @@ class OSC(Module):
                 self.send('/NOTIFY', 'save', f'State {state_name} saved',)
             elif cmd == 'load':
                 self.ff802.soft_reset()
-                self.ff802.load(state_name)
-                self.ff802.set('current-state', state_name)
-                self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded')
+                self.start_scene('stateload', lambda: [
+                    # annoying mentat issue
+                    self.ff802.load(state_name),
+                    self.wait(0.1, 's'),
+                    self.ff802.load(state_name),
+                    self.ff802.set('current-state', state_name),
+                    self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded'),
+                ])
+                # self.ff802.load(state_name),
+                # self.ff802.set('current-state', state_name),
+                # self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded'),
             elif cmd == 'delete':
                 if state_name != 'default':
                     self.ff802.delete(state_name)

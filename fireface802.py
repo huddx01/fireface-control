@@ -82,7 +82,7 @@ class FireFace802(AlsaMixer):
             self.add_parameter(f'output:volume:{dest}', None, types='i', default=0)
             self.add_parameter(f'output:volume-db:{dest}', None, types='f', default=0, osc=True)
             self.add_parameter(f'output:mute:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:hardware-name:{dest}', None, types='s', default=self.mixer_outputs_default_names[dest], osc=True)
+            self.add_parameter(f'output:hardware-name:{dest}', None, types='s', default=self.mixer_outputs_default_names[dest], osc=True, skip_state=True)
             self.add_parameter(f'output:name:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:color:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:hide:{dest}', None, types='i', default=0, osc=True)
@@ -135,7 +135,7 @@ class FireFace802(AlsaMixer):
             )
 
             # monitor return: global dimmer for monitor mix
-            self.add_parameter(f'output:monitor-return:{dest}', None, types='f', default=0, osc=True)
+            self.add_parameter(f'output:monitor-return:{dest}', None, types='f', default=0, osc=True, skip_state=True)
 
             # dynamics
             self.add_parameter(f'output:dyn-activate:{dest}', None, types='i', default=0, osc=True)
@@ -199,7 +199,7 @@ class FireFace802(AlsaMixer):
 
             for source, source_name in enumerate(sources):
 
-                self.add_parameter(f'source-{sourcetype}-hardware-name:{source}', None, types='s', default=source_name, osc=True)
+                self.add_parameter(f'source-{sourcetype}-hardware-name:{source}', None, types='s', default=source_name, osc=True, skip_state=True)
                 self.add_parameter(f'source-{sourcetype}-name:{source}', None, types='s', default='', osc=True)
                 self.add_parameter(f'source-{sourcetype}-hide:{source}', None, types='i', default=0, osc=True)
 
@@ -433,12 +433,12 @@ class FireFace802(AlsaMixer):
         FX (reverb & echo)
         """
         self.add_parameter('fx:echo-activate', None, types='i', default=0, osc=True, alsa='')
-        self.add_parameter('fx:echo-delay', None, types='i', default=10, osc=True, alsa='')
+        self.add_parameter('fx:echo-delay', None, types='i', default=10, alsa='')
         self.add_parameter('fx:echo-feedback', None, types='i', default=0, osc=True, alsa='')
         self.add_parameter('fx:echo-lpf-freq', None, types='i', default=0, osc=True, alsa='')
         self.add_parameter('fx:echo-stereo-width', None, types='i', default=100, osc=True, alsa='')
         self.add_parameter('fx:echo-type', None, types='i', default=0, osc=True, alsa='')
-        self.add_parameter('fx:echo-volume', None, types='i', default=-650, osc=True, alsa='')
+        self.add_parameter('fx:echo-volume', None, types='i', default=0, alsa='')
 
         self.add_parameter('fx:echo-volume-db', None, types='i', default=0, osc=True)
         self.add_parameter('fx:echo-delay-s', None, types='f', default=0.1, osc=True)
@@ -489,8 +489,8 @@ class FireFace802(AlsaMixer):
         Channel selection
         """
 
-        self.add_parameter('input:select', None, types='i', default=0, osc=True)
-        self.add_parameter('output:select', None, types='i', default=0, osc=True)
+        self.add_parameter('input:select', None, types='i', default=0, osc=True, skip_state=True)
+        self.add_parameter('output:select', None, types='i', default=0, osc=True, skip_state=True)
 
 
         """
@@ -611,7 +611,7 @@ class FireFace802(AlsaMixer):
         """
         stereo_index = int(index/2) * 2
 
-        lambda_volume_stereo = lambda volume, pan, mute, hide, dimmer: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960], dimmer_gain=dimmer)
+        lambda_volume_stereo = lambda volume, pan, mute, hide, dimmer: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960], dimmer_gain=0)
         lambda_volume_mono = lambda *a, **k: lambda_volume_stereo(*a, **k)[0]
 
 
