@@ -699,10 +699,10 @@ class FireFace802(AlsaMixer):
 
     def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range, dimmer_gain=0):
 
-        if vol > -65:
+        if vol > in_range[0]:
             vol = min(max(vol + dimmer_gain, in_range[0]), in_range[1])
-        elif dimmer_gain <= -65:
-            vol = -65
+        elif dimmer_gain <= in_range[0] or vol <= in_range[0]:
+            return [out_range[0], out_range[0]]
 
         # apply mute
         if mute:
