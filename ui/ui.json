@@ -1865,7 +1865,7 @@
                 "borderRadius": "auto",
                 "padding": "auto",
                 "html": "",
-                "css": "z-index:10!important;\n#{@{@{parent.variables.stripType}_eq_activate} == 0 ? \"opacity:0.85\":\"\"}",
+                "css": "z-index:10!important;\n#{@{@{this.variables.stripType}_eq_activate} == 0 ? \"opacity:0.85\":\"\"}",
                 "value": "",
                 "default": "",
                 "linkId": "",
