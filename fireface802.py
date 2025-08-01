@@ -590,11 +590,24 @@ class FireFace802(AlsaMixer):
                         self.set('output:select', dest - 1)
 
             # reset gain/pan/mute
-            for (mixer, sources) in self.mixer_sources.items():
-                for source, source_name in enumerate(sources):
-                    self.reset(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}')
-                    self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest}:{source}')
-                    self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest}:{source}')
+            if value == 0 and dest % 2 == 0:
+
+                for (mixer, sources) in self.mixer_sources.items():
+                    for source, source_name in enumerate(sources):
+
+                        mute = self.get(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest}:{source}')
+                        gain = max(self.get(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}'),
+                                    self.get(f'{mixer.replace('mixer', 'monitor')}:{dest+1}:{source}'))
+
+                        # apply mono gain based on pan
+                        self.set(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}', gain)
+                        self.set(f'{mixer.replace('mixer', 'monitor')}:{dest+1}:{source}', gain)
+                        # reset pan
+                        self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest}:{source}')
+                        self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest+1}:{source}')
+                        # copy mute
+                        self.set(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest}:{source}', mute)
+                        self.set(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest+1}:{source}', mute)
 
             self.start_scene(name, sc)
 
