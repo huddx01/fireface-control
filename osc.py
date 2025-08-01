@@ -149,24 +149,21 @@ class OSC(Module):
         elif address == '/state':
             cmd = args[0].lower()
             state_name = self.ff802.get('current-state')
-            if cmd == 'save':
+            if cmd == 'save' and state_name:
                 self.ff802.save(state_name, omit_defaults=True)
                 self.start_scene('defered state', lambda: [
                     self.send('/current-state', self.ff802.get('current-state'))
                 ])
                 self.send('/NOTIFY', 'save', f'State {state_name} saved',)
-            elif cmd == 'load':
+            elif cmd == 'load' and state_name:
                 self.ff802.soft_reset()
                 self.ff802.load(state_name)
                 self.ff802.set('current-state', state_name)
                 self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded'),
-            elif cmd == 'delete':
-                if state_name != 'default':
-                    self.ff802.delete(state_name)
-                    self.ff802.reset('current-state')
-                    self.send('/NOTIFY', 'trash', f'State {state_name} deleted')
-                else:
-                    self.send('/NOTIFY', 'times', f'State {state_name} cannot be deleted')
+            elif cmd == 'delete' and state_name:
+                self.ff802.delete(state_name)
+                self.ff802.reset('current-state')
+                self.send('/NOTIFY', 'trash', f'State {state_name} deleted')
             elif cmd == 'reset':
                 self.ff802.soft_reset()
                 self.ff802.set('current-state', state_name)
@@ -187,7 +184,7 @@ class OSC(Module):
                         if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name):
                             generic_name = ':'.join(name.split(':')[1:-1])
                             self.clipboard[fx][generic_name] = self.local_state[name]
-                            
+
             elif cmd == 'paste':
                 if fx in self.clipboard:
                     for name in self.clipboard[fx]:

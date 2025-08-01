@@ -496,8 +496,6 @@ class FireFace802(AlsaMixer):
         self.add_parameter('state-slots', None, types='s', default='', osc=True, skip_state=True)
         self.add_parameter('current-state', None, types='s', default='default', osc=True, skip_state=True)
 
-        if 'default' not in self.states:
-            self.save('default', True)
         self.update_state_list()
 
 
@@ -768,10 +766,8 @@ class FireFace802(AlsaMixer):
 
     def update_state_list(self):
         """
-        Alpha sort state names & always put Default first
+        Alpha sort state names
         """
         slist = list(self.states.keys())
         slist.sort()
-        slist.remove('default')
-        slist.insert(0, 'default')
         self.set('state-slots', '::'.join(slist))
