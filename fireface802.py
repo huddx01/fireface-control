@@ -38,13 +38,6 @@ class FireFace802(AlsaMixer):
         'fx:adat-output-volume': range(16)
     }
 
-    stereo_mixers = {
-        8: 'RME 1',
-        10: 'RME 2',
-        14: 'AES',
-    }
-
-
     default_eq_freqs = {'low':100, 'middle': 1000, 'high': 10000}
     default_eq_types = {'low': 1, 'middle': 0, 'high': 1} # 0 = peak, 1 = shelf, 2 = cut
 
@@ -63,7 +56,7 @@ class FireFace802(AlsaMixer):
             for output in self.mixer_outputs:
 
                 for source, source_name in enumerate(sources):
-                    self.add_parameter(f'{mixer}:{output}:{source}', None, types='i', default=32768)
+                    self.add_parameter(f'{mixer}:{output}:{source}', None, types='i')
 
 
                 self.add_parameter(f'{mixer}:{output}', None, types='i' * len(sources), alsa=f'name="{mixer}",index={output}')
@@ -135,7 +128,7 @@ class FireFace802(AlsaMixer):
             )
 
             # monitor return: global dimmer for monitor mix
-            self.add_parameter(f'output:monitor-return:{dest}', None, types='f', default=0, osc=True, skip_state=True)
+            self.add_parameter(f'output:monitor-return:{dest}', None, types='f', default=0, osc=True)
 
             # dynamics
             self.add_parameter(f'output:dyn-activate:{dest}', None, types='i', default=0, osc=True)
@@ -698,15 +691,13 @@ class FireFace802(AlsaMixer):
 
 
     def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range, dimmer_gain=0):
-
+        print(vol, pan, mute, in_range, out_range, dimmer_gain)
+        # apply mute
+        if mute or dimmer_gain <= in_range[0] or vol <= in_range[0]:
+            return [out_range[0], out_range[0]]
+        # apply dimmer
         if vol > in_range[0]:
             vol = min(max(vol + dimmer_gain, in_range[0]), in_range[1])
-        elif dimmer_gain <= in_range[0] or vol <= in_range[0]:
-            return [out_range[0], out_range[0]]
-
-        # apply mute
-        if mute:
-            return [out_range[0], out_range[0]]
 
         # db to linear coef
         g1 = g2 = pow(10, (vol-6)/20)
