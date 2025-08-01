@@ -87,7 +87,7 @@ class FireFace802(AlsaMixer):
             self.add_parameter(f'output:color:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:hide:{dest}', None, types='i', default=0, osc=True)
             self.add_parameter(f'output:stereo:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:mono:{dest}', None, types='i', default=0)
+            self.add_parameter(f'output:mono:{dest}', None, types='i', default=1)
             self.add_parameter(f'output:invert-phase:{dest}', None, types='i', default=0, osc=True)
 
             self.add_mapping(
