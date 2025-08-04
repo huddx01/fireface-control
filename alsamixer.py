@@ -7,41 +7,38 @@ from mentat import Module
 
 class AlsaMixer(Module):
 
-        def __init__(self, id=0, *args, **kwargs):
+        def __init__(self, *args, **kwargs):
 
             super().__init__(*args, **kwargs)
-
-            self.add_event_callback('parameter_changed', self.parameter_changed)
-            self.card_id = str(id)
 
             self.alsaset_process = None
             self.alsa_ok = False
 
-            try:
-                if 'Fireface' in check_output(['cat', '/proc/asound/card%s/id' % self.card_id], text=True):
-                    self.alsaset_process = Popen(['amixer', '-c', self.card_id, '-s', '-q'], stdin=PIPE, text=True)
-                    self.alsa_ok = True
-            except:
-                pass
+            self.card_id = 0
+            self.card_model = '802'
+
+            while True:
+                try:
+                    card = check_output(['cat', f'/proc/asound/card{card_index}/id'], text=True)
+                    if 'Fireface' in card:
+                        self.alsa_ok = True
+                        if 'UCX' in card:
+                            self.card_model = 'UCX'
+                        break
+                except:
+                    break
+                self.card_id += 1
+
+            self.card_id = str(self.card_id)
 
             if not self.alsa_ok:
                 self.logger.warning('Fireface interface not found')
-
-        def parameter_changed(self, mod, name, value):
-            """
-            Update Alsa mixer (amixer) when a parameter with the alsa flag updates
-            """
-            if 'alsa' in mod.parameters[name].metadata:
-                lookup = mod.parameters[name].metadata['alsa']
-                if not lookup:
-                    lookup = f'name="{name}"'
-                self.alsa_set(lookup, value)
-
 
         def alsa_set(self, alsa_lookup, value):
             """
             Alsa mixer set function, uses an interactive amixer instance
             """
+
             if not self.alsa_ok:
                 return
 

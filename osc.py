@@ -7,15 +7,15 @@ from mentat import Module
 
 class OSC(Module):
 
-    def __init__(self, ff802, *args, **kwargs):
+    def __init__(self, fireface, *args, **kwargs):
         """
-        Open Stage Control manager, runs the server and bridges between ff802's parameters and widget state
+        Open Stage Control manager, runs the server and bridges between fireface's parameters and widget state
         """
 
         super().__init__('OSC', *args, **kwargs)
 
         self.engine.add_event_callback('parameter_changed', self.parameter_changed)
-        self.ff802 = ff802
+        self.fireface = fireface
         self.local_state = {}
         self.remote_state = {}
         self.first_connect = False
@@ -71,14 +71,14 @@ class OSC(Module):
     def send_state(self):
         """
         Send local state when a new osc client connects (or if it refreshes).
-        This module doesn't have its own parameters and instead watches ff802's,
+        This module doesn't have its own parameters and instead watches fireface's,
         it uses its own value store to optimize traffic where possible.
         """
 
         super().send_state()
 
         state = list(self.local_state.items())
-        state.sort(key=lambda item: self.ff802.parameters[item[0]].metadata['osc_order'] if 'osc_order' in self.ff802.parameters[item[0]].metadata else 0)
+        state.sort(key=lambda item: self.fireface.parameters[item[0]].metadata['osc_order'] if 'osc_order' in self.fireface.parameters[item[0]].metadata else 0)
         for name, value in state:
             if self.filter_param(name) is not False:
                 self.send(f'/{name}', *value)
@@ -92,9 +92,9 @@ class OSC(Module):
         """
 
         if 'output:select' in self.local_state:
-            self.send('/output:select', self.ff802.get('output:select'))
+            self.send('/output:select', self.fireface.get('output:select'))
 
-        output_select = str(self.ff802.get('output:select'))
+        output_select = str(self.fireface.get('output:select'))
         for name, value in self.local_state.items():
             if 'output:' in name and name.split(':')[-1] == output_select:
                 self.send(f'/{name}', *value)
@@ -109,9 +109,9 @@ class OSC(Module):
         """
 
         if 'input:select' in self.local_state:
-            self.send('/input:select', self.ff802.get('input:select'))
+            self.send('/input:select', self.fireface.get('input:select'))
 
-        input_select = str(self.ff802.get('input:select'))
+        input_select = str(self.fireface.get('input:select'))
         for name, value in self.local_state.items():
             if 'input:' in name and name.split(':')[-1] == input_select:
                 self.send(f'/{name}', *value)
@@ -124,8 +124,8 @@ class OSC(Module):
             - monitor mix for unselected output
             - output fx for unselect output
         """
-        output_select = str(self.ff802.get('output:select'))
-        input_select = str(self.ff802.get('input:select'))
+        output_select = str(self.fireface.get('output:select'))
+        input_select = str(self.fireface.get('input:select'))
 
         if 'input:' in name and name.split(':')[-1] != input_select:
             return False
@@ -148,32 +148,32 @@ class OSC(Module):
 
         elif address == '/state':
             cmd = args[0].lower()
-            state_name = self.ff802.get('current-state')
+            state_name = self.fireface.get('current-state')
             if cmd == 'save' and state_name:
-                self.ff802.save(state_name, omit_defaults=True)
+                self.fireface.save(state_name, omit_defaults=True)
                 self.start_scene('defered state', lambda: [
-                    self.send('/current-state', self.ff802.get('current-state'))
+                    self.send('/current-state', self.fireface.get('current-state'))
                 ])
                 self.send('/NOTIFY', 'save', f'State {state_name} saved',)
             elif cmd == 'load' and state_name:
-                self.ff802.soft_reset()
-                self.ff802.load(state_name)
-                self.ff802.set('current-state', state_name)
+                self.fireface.soft_reset()
+                self.fireface.load(state_name)
+                self.fireface.set('current-state', state_name)
                 self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded'),
             elif cmd == 'delete' and state_name:
-                self.ff802.delete(state_name)
-                self.ff802.reset('current-state')
+                self.fireface.delete(state_name)
+                self.fireface.reset('current-state')
                 self.send('/NOTIFY', 'trash', f'State {state_name} deleted')
             elif cmd == 'reset':
-                self.ff802.soft_reset()
-                self.ff802.set('current-state', state_name)
+                self.fireface.soft_reset()
+                self.fireface.set('current-state', state_name)
                 self.send('/NOTIFY', 'undo', 'State reset')
 
 
         elif address == '/fx':
             strip_type, fx, cmd = [a.lower() for a in args]
             if strip_type:
-                select = str(self.ff802.get(f'{strip_type}:select'))
+                select = str(self.fireface.get(f'{strip_type}:select'))
 
             if cmd == 'copy':
                 self.clipboard[fx] = {}
@@ -189,21 +189,21 @@ class OSC(Module):
                 if fx in self.clipboard:
                     for name in self.clipboard[fx]:
                         if fx in ['echo', 'reverb']:
-                            self.ff802.set(f'{name}', *self.clipboard[fx][name])
+                            self.fireface.set(f'{name}', *self.clipboard[fx][name])
                         elif fx in ['eq', 'dyn']:
-                            self.ff802.set(f'{strip_type}:{name}:{select}', *self.clipboard[fx][name])
+                            self.fireface.set(f'{strip_type}:{name}:{select}', *self.clipboard[fx][name])
 
 
             elif cmd == 'reset':
                 for name in self.local_state:
                     if fx == 'echo' and (':echo' in name) or fx == 'reverb' and (':reverb' in name):
-                        self.ff802.reset(name)
+                        self.fireface.reset(name)
                     elif strip_type and f'{strip_type}:' in name and name.split(':')[-1] == select:
                         if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name):
-                            self.ff802.reset(name)
+                            self.fireface.reset(name)
 
         else:
             name = address[1:]
-            if self.ff802.get_parameter(name):
+            if self.fireface.get_parameter(name):
                 self.remote_state[name] = args
-                self.ff802.set(name, *args)
+                self.fireface.set(name, *args)

@@ -1,6 +1,6 @@
 {
   "createdWith": "Open Stage Control",
-  "version": "1.29.7",
+  "version": "1.29.6",
   "type": "session",
   "content": {
     "type": "root",
@@ -186,8 +186,8 @@
             "target": "",
             "ignoreDefaults": false,
             "bypass": false,
-            "onCreate": "set(this, storage.getItem(getProp(this, 'id')))",
-            "onValue": "storage.setItem(getProp(this, 'id'), value)"
+            "onCreate": "",
+            "onValue": ""
           },
           {
             "type": "variable",
