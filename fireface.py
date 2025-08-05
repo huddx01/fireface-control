@@ -151,7 +151,7 @@ class FireFace(Module):
                 transform=lambda eq, hpf: eq and hpf
             )
 
-            # stream rerturn : straight rouing from stream sources
+            # stream rerturn : straight routing from stream sources
             self.add_parameter(f'output:stream-return:{dest}', None, types='f', default=0, osc=True)
             self.add_parameter(f'mixer:stream-source-gain:{dest}', None, types='i' * len(self.mixer_outputs), alsa=f'name="mixer:stream-source-gain",index={dest}')
             def stream_return_mapping_factory(dest):
