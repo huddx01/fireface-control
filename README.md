@@ -1,3 +1,6 @@
+<details>
+  <summary>Work in progress</summary>
+
 # Fireface Control
 
 Totalmix replacement on Linux for RME's latter firewire interfaces 802 and UCX.
@@ -19,8 +22,24 @@ git clone https://github.com/jean-emmanuel/FirefaceControl
 python FirefaceControl
 ```
 
+**Features**
+
+- web based interface accessible over the network
+- customizable channel visibility, color and name
+- eq and dynamics controls for selected channel
+- fx (echo and reverb)
+
+*Key differences with Totalmix*
+
+- software output mixer is replaced with a straight routing and "pc return" controls for hardware outputs
+- inputs are mono only
+- echo fx are mono except pong echo
+
+
 **Notes**
 
 Some settings made in Totalmix may conflict.
 
 UCX has not been tested yet.
+
+</details>
