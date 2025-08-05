@@ -15,15 +15,18 @@ class AlsaMixer(Module):
             self.alsa_ok = False
 
             self.card_id = 0
-            self.card_model = '802'
+            self.card_model = ''
 
             while True:
                 try:
                     card = check_output(['cat', f'/proc/asound/card{card_index}/id'], text=True)
                     if 'Fireface' in card:
                         self.alsa_ok = True
-                        if 'UCX' in card:
+                        if '802' in card:
+                            self.card_model = '802'
+                        elif 'UCX' in card:
                             self.card_model = 'UCX'
+                        self.logger.info(f'Fireface {self.card_model} found')
                         break
                 except:
                     break
@@ -32,7 +35,8 @@ class AlsaMixer(Module):
             self.card_id = str(self.card_id)
 
             if not self.alsa_ok:
-                self.logger.warning('Fireface interface not found')
+                self.card_model = '802'
+                self.logger.warning(f'Fireface interface not found, falling back to offline Fireface {self.card_model}')
 
         def alsa_set(self, alsa_lookup, value):
             """

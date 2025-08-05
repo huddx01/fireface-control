@@ -1,9 +1,10 @@
 import os
 
-from subprocess import Popen, PIPE, run
+from subprocess import Popen, PIPE, run, DEVNULL
 from sys import argv
 
 from mentat import Module
+from __init__ import __version__
 
 class OSC(Module):
 
@@ -24,14 +25,15 @@ class OSC(Module):
         folder = os.path.dirname(os.path.abspath(__file__))
         # run instance of o-s-c (will quit when python process exits if everything goes well)
         if not self.engine.restarted:
-            if '--dev-gui' not in argv:
-                Popen([
-                    'open-stage-control',
-                    '--port', str(self.port),
-                    '-s', '127.0.0.1:%i' % self.engine.port,
-                    '-l', '%s/ui/ui.json' % folder,
-                    '-t', '%s/ui/styles.css' % folder
-                ] + (['-n'] if '--nogui' in argv else []))
+            Popen([
+                'open-stage-control',
+                '--port', f'{self.port}',
+                '-s', f'127.0.0.1:{self.engine.port}',
+                '-l', f'{folder}/ui/ui.json',
+                '-t', f'{folder}/ui/styles.css',
+                '--client-options', f'title={self.engine.name} v{__version__}',
+                '--no-qrcode',
+            ] + (['-n'] if '--nogui' in argv else []), stderr=DEVNULL, stdout=DEVNULL)
         else:
             self.first_connect = True
 
