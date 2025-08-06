@@ -19,7 +19,7 @@ class AlsaMixer(Module):
 
             while True:
                 try:
-                    card = check_output(['cat', f'/proc/asound/card{card_index}/id'], text=True)
+                    card = check_output(['cat', f'/proc/asound/card{self.card_id}/id'], text=True)
                     if 'Fireface' in card:
                         self.card_online = True
                         self.alsaset_process = Popen(['amixer', '-c', self.card_id, '-s', '-q'], stdin=PIPE, text=True)
