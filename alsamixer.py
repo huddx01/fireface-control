@@ -12,8 +12,8 @@ class AlsaMixer(Module):
             super().__init__(*args, **kwargs)
 
             self.alsaset_process = None
-            self.alsa_ok = False
-
+            
+            self.card_online = False
             self.card_id = 0
             self.card_model = ''
 
@@ -21,7 +21,7 @@ class AlsaMixer(Module):
                 try:
                     card = check_output(['cat', f'/proc/asound/card{card_index}/id'], text=True)
                     if 'Fireface' in card:
-                        self.alsa_ok = True
+                        self.card_online = True
                         if '802' in card:
                             self.card_model = '802'
                         elif 'UCX' in card:
@@ -34,7 +34,7 @@ class AlsaMixer(Module):
 
             self.card_id = str(self.card_id)
 
-            if not self.alsa_ok:
+            if not self.card_online:
                 self.card_model = '802'
                 self.logger.warning(f'Fireface interface not found, falling back to offline Fireface {self.card_model}')
 
@@ -43,7 +43,7 @@ class AlsaMixer(Module):
             Alsa mixer set function, uses an interactive amixer instance
             """
 
-            if not self.alsa_ok:
+            if not self.card_online:
                 return
 
             if type(value) is list:
@@ -57,7 +57,7 @@ class AlsaMixer(Module):
             Alsa mixer get function, uses an amixer instance per call
             because it doesn't work with a interactive instance (cget is not supported)
             """
-            if not self.alsa_ok:
+            if not self.card_online:
                 return []
 
             out = run(['amixer', '-c', self.card_id, 'cget', alsa_lookup], stdout=PIPE).stdout.decode('utf-8')

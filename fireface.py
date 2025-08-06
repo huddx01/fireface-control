@@ -11,6 +11,8 @@ class FireFace(Module):
 
         self.add_event_callback('parameter_changed', self.parameter_changed)
 
+        self.add_parameter('card-model', None, types='s', default=self.alsamixer.card_model, osc=True)
+        self.add_parameter('card-status', None, types='i', default=self.alsamixer.card_online, osc=True)
 
         """
         Card spec

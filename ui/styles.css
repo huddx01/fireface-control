@@ -34,8 +34,14 @@
 
   --blue: rgba(109,181,253,1);
   --green: rgba(1,251,180,1);
+  --yellow: rgba(255,236,50);
+  --orange: rgba(255,156,40,1);
   --red: rgba(255,80,50,1);
-  --orange: rgba(255,136,0,1);
+  --purple: rgba(152,71,255,1);
+}
+
+#osc-greeting-header, #main-menu {
+    display: none!important;
 }
 
 /*
