@@ -92,10 +92,6 @@ class OSC(Module):
             - output options
             - monitor mix for this output
         """
-
-        if 'output:select' in self.local_state:
-            self.send('/output:select', self.fireface.get('output:select'))
-
         output_select = str(self.fireface.get('output:select'))
         for name, value in self.local_state.items():
             if 'output:' in name and name.split(':')[-1] == output_select:
@@ -109,10 +105,6 @@ class OSC(Module):
             - input fxs
             - input options
         """
-
-        if 'input:select' in self.local_state:
-            self.send('/input:select', self.fireface.get('input:select'))
-
         input_select = str(self.fireface.get('input:select'))
         for name, value in self.local_state.items():
             if 'input:' in name and name.split(':')[-1] == input_select:

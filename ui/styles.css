@@ -56,7 +56,7 @@
 .strip .navigation {display:none;}
 
 .strip-selected {
-  --color-background: rgb(62 69 81);
+  --color-background: var(--color-selected)
 }
 
 .strip-hidden {
@@ -129,6 +129,14 @@
   --alpha-stroke: 1;
   --alpha-fill-off: 0.3!important;
   --line-width: 2;
+}
+.knob-container.disabled {
+    --color-knob: rgba(142,145,151,1);
+    --color-widget: rgba(142,145,151,1);
+    --alpha-fill-off: 0!important;
+}
+.knob-container.disabled canvas {
+    pointer-events: none;
 }
 .range-container {
   --color-widget:  rgba(225,225,225,1);
