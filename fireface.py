@@ -636,9 +636,8 @@ class FireFace(Module):
                     if value == 1 and self.get('output:select') == dest:
                         self.set('output:select', dest - 1)
 
-            # reset gain/pan/mute
-            if value == 0 and dest % 2 == 0:
-
+            # reset gain/pan/mute when stereo changes
+            if dest % 2 == 0:
                 for (mixer, sources) in self.mixer_sources.items():
                     for source, source_name in enumerate(sources):
 
@@ -646,16 +645,18 @@ class FireFace(Module):
                         gain = max(self.get(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}'),
                                     self.get(f'{mixer.replace('mixer', 'monitor')}:{dest+1}:{source}'))
 
-                        # apply mono gain based on pan
+                        # apply max gain
                         self.set(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}', gain)
                         self.set(f'{mixer.replace('mixer', 'monitor')}:{dest+1}:{source}', gain)
-                        # reset pan
-                        self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest}:{source}')
-                        self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest+1}:{source}')
-                        # copy mute
-                        self.set(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest}:{source}', mute)
-                        self.set(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest+1}:{source}', mute)
+                        if value == 0:
+                            # reset pan
+                            self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest}:{source}')
+                            self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest+1}:{source}')
+                            # copy mute
+                            self.set(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest}:{source}', mute)
+                            self.set(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest+1}:{source}', mute)
 
+            # sc()
             self.start_scene(name, sc)
 
     def create_mixer(self, index):
