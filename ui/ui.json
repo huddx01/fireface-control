@@ -24,7 +24,7 @@
     "gridTemplate": "",
     "contain": true,
     "scroll": true,
-    "innerPadding": true,
+    "innerPadding": false,
     "tabsPosition": "top",
     "hideMenu": true,
     "variables": "@{parent.variables}",
@@ -11419,9 +11419,6 @@
             "padding": 0,
             "html": "",
             "css": "",
-            "vertical": false,
-            "wrap": false,
-            "align": "center",
             "value": "",
             "default": "",
             "linkId": "",
@@ -11431,7 +11428,10 @@
             "target": "",
             "bypass": false,
             "onCreate": "",
-            "onValue": ""
+            "onValue": "",
+            "vertical": false,
+            "wrap": false,
+            "align": "center"
           }
         ],
         "tabs": [],
