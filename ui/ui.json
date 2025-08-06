@@ -24,7 +24,7 @@
     "gridTemplate": "",
     "contain": true,
     "scroll": true,
-    "innerPadding": false,
+    "innerPadding": true,
     "tabsPosition": "top",
     "hideMenu": true,
     "variables": "@{parent.variables}",
@@ -3152,7 +3152,8 @@
                         "values": {
                           "6dB/Oct": 0,
                           "12dB/Oct": 1,
-                          "18dB/Oct": 2
+                          "18dB/Oct": 2,
+                          "24dB/Oct": 3
                         },
                         "size": [
                           110,
@@ -11554,7 +11555,7 @@
                 "borderRadius": "auto",
                 "padding": "auto",
                 "html": "",
-                "css": "",
+                "css": "margin-top: 1rem",
                 "vertical": false,
                 "wrap": false,
                 "align": "center",

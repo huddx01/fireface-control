@@ -22,7 +22,7 @@ class AlsaMixer(Module):
                     card = check_output(['cat', f'/proc/asound/card{self.card_id}/id'], text=True)
                     if 'Fireface' in card:
                         self.card_online = True
-                        self.alsaset_process = Popen(['amixer', '-c', self.card_id, '-s', '-q'], stdin=PIPE, text=True)
+                        self.alsaset_process = Popen(['amixer', '-c', str(self.card_id), '-s', '-q'], stdin=PIPE, text=True)
                         if '802' in card:
                             self.card_model = '802'
                         elif 'UCX' in card:
