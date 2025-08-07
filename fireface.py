@@ -464,7 +464,11 @@ class FireFace(Module):
             transform= lambda *stereo: list(stereo)
         )
         self.add_parameter('output:stereo-balance', None, types='i' * n_stereo_pairs, default=[0] * n_stereo_pairs, alsa='')
-
+        self.add_mapping(
+            src=[f'output:pan:{index}' for index in range(0, len(self.mixer_outputs), 2)],
+            dest='output:stereo-balance',
+            transform= lambda *pan: [p * 200 - 100 for p in pan]
+        )
 
         """
         FX (reverb & echo)
@@ -650,6 +654,7 @@ class FireFace(Module):
                         self.set(f'{mixer.replace('mixer', 'monitor')}:{dest+1}:{source}', gain)
                         if value == 0:
                             # reset pan
+                            self.reset(f'output:pan:{dest}', 0.5)
                             self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest}:{source}')
                             self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest+1}:{source}')
                             # copy mute
@@ -749,6 +754,8 @@ class FireFace(Module):
                     transform = lambda v: v,
                     inverse = lambda v: v,
                 )
+
+            self.add_parameter(f'output:pan:{index}', None, types='f', default=0.5, osc=True)
 
 
     def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range, dimmer_gain=0):
