@@ -11720,6 +11720,6 @@
       }
     ],
     "tabs": [],
-    "onTouch": "if (event.button === 1) {\n  // middle click -> display help\n  event.preventDefault = true\n  set('help', getProp(event.target, 'comments'))\n  setTimeout(()=>{\n    set('help', '')\n  }, 3000)\n}"
+    "onTouch": "if (event.button === 1) {\n  // middle click -> display help\n  event.preventDefault = true\n  if (event.type == 'start') {\n    set('help', getProp(event.target, 'comments'))\n    setTimeout(()=>{\n      set('help', '')\n    }, 3000)\n  }\n}"
   }
 }
