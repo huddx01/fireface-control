@@ -152,9 +152,11 @@ class OSC(Module):
                 self.send('/NOTIFY', 'save', f'State {state_name} saved',)
             elif cmd == 'load' and state_name:
                 self.fireface.soft_reset()
-                self.fireface.load(state_name)
-                self.fireface.set('current-state', state_name)
-                self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded'),
+                self.start_scene('a', lambda: [
+                    self.fireface.load(state_name),
+                    self.fireface.set('current-state', state_name),
+                    self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded'),
+                ])
             elif cmd == 'delete' and state_name:
                 self.fireface.delete(state_name)
                 self.fireface.reset('current-state')

@@ -1,4 +1,4 @@
-from subprocess import Popen, PIPE, run, check_output
+from subprocess import Popen, PIPE, run, check_output, DEVNULL
 from threading import RLock
 from time import sleep
 from os import set_blocking
@@ -11,47 +11,105 @@ class AlsaMixer(Module):
 
             super().__init__(*args, **kwargs)
 
+            self.snd_process = None
             self.alsaset_process = None
             
             self.card_online = False
-            self.card_id = 0
             self.card_model = ''
 
-            while True:
+            self.state = {}
+
+            for model in ['802', 'UCX']:
                 try:
-                    card = check_output(['cat', f'/proc/asound/card{self.card_id}/id'], text=True)
-                    if 'Fireface' in card:
-                        self.card_online = True
-                        self.alsaset_process = Popen(['amixer', '-c', str(self.card_id), '-s', '-q'], stdin=PIPE, text=True)
-                        if '802' in card:
-                            self.card_model = '802'
-                        elif 'UCX' in card:
-                            self.card_model = 'UCX'
+                    status = check_output(['cat', f'/proc/asound/Fireface{model}/firewire/status'], text=True, stderr=DEVNULL)
+                    if status:
+                        self.card_model = model
+                        self.start_alsaset_process()
                         self.logger.info(f'Fireface {self.card_model} found')
                         break
                 except:
-                    break
-                self.card_id += 1
+                    pass
 
-            self.card_id = str(self.card_id)
-
-            if not self.card_online:
+            if not self.card_model:
                 self.card_model = '802'
                 self.logger.warning(f'Fireface interface not found, falling back to offline Fireface {self.card_model}')
+
+            self.start_scene('status_check', self.status_check)
+
+
+            self.engine.add_event_callback('stopping', self.stop)
+
+        def status_check(self):
+            """
+            Detect interface connection status
+            """
+            while True:
+                self.wait(1.5, 's')
+                try:
+                    status = check_output(['cat', f'/proc/asound/Fireface{self.card_model}/firewire/status'], text=True, stderr=DEVNULL)
+                    if status and not self.card_online:
+                        self.logger.warning(f'Fireface {self.card_model} connected')
+                        self.start_alsaset_process()
+                except:
+                    if self.card_online:
+                        self.logger.warning(f'Fireface disconnected, falling back to offline Fireface {self.card_model}')
+                        self.card_online = False
+
+
+        def start_snd_process(self):
+            """
+            Start snd-fireface-ctl-service
+            """
+            cards = check_output(['cat', f'/proc/asound/cards'], text=True)
+            for line in cards.split('\n'):
+                if f'Fireface{self.card_model}' in line:
+                    card_number = line.split('[')[0].strip()
+                    try:
+                        self.snd_process = Popen(['snd-fireface-ctl-service', card_number], text=True)
+                        self.logger.info('snd-firewire-ctl-services started')
+                    except Exception as e:
+                        self.logger.warning(f'error while starting snd-firewire-ctl-services ({e})')
+                    break
+
+        def start_alsaset_process(self):
+            """
+            Start amixer process
+            """
+            try:
+               self.alsaset_process.kill()
+            except:
+                pass
+            try:
+                self.start_snd_process()
+                self.alsaset_process = Popen(['amixer', '-c', f'Fireface{self.card_model}', '-s', '-q'], stdin=PIPE, text=True)
+                self.start_scene('delayed_online', self.delayed_online)
+            except Exception as e:
+                self.logger.warning(f'could not start amixer process\n{e}')
+
+        def delayed_online(self):
+            """
+            snd-firewire-ctl-services takes some time to take over the interface
+            we must wait a little before pushing any value / restoring state
+            """
+            self.wait(1, 's')
+            self.card_online = True
+            for lookup, value in self.state.items():
+                self.alsa_set(lookup, value)
 
         def alsa_set(self, alsa_lookup, value):
             """
             Alsa mixer set function, uses an interactive amixer instance
             """
-
-            if not self.card_online:
-                return
-
             if type(value) is list:
                 value = ",".join([str(x) for x in value])
+            if type(value) is not str:
+                value = str(value)
 
-            self.alsaset_process.stdin.write('cset ' + alsa_lookup + ' ' + str(value) + '\n')
-            self.alsaset_process.stdin.flush()
+            self.state[alsa_lookup] = value
+
+            if self.card_online:
+                self.alsaset_process.stdin.write('cset ' + alsa_lookup + ' ' + value + '\n')
+                self.alsaset_process.stdin.flush()
 
         def alsa_get(self, name, alsa_lookup):
             """
@@ -61,7 +119,7 @@ class AlsaMixer(Module):
             if not self.card_online:
                 return []
 
-            out = run(['amixer', '-c', self.card_id, 'cget', alsa_lookup], stdout=PIPE).stdout.decode('utf-8')
+            out = run(['amixer', '-c', f'Fireface{self.card_model}', 'cget', alsa_lookup], stdout=PIPE, stderr=DEVNULL).stdout.decode('utf-8')
             for line in out.split('\n'):
                 if ': values=' in line:
                     values = line.split('=')[1]
@@ -69,3 +127,13 @@ class AlsaMixer(Module):
                     return values
 
             return []
+
+        def stop(self):
+            """
+            Kill alsa processes when stopping
+            """
+            try:
+               self.snd_process.kill()
+               self.alsaset_process.kill()
+            except:
+                pass

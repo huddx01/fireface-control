@@ -1,3 +1,4 @@
+from time import sleep
 from math import log10
 from mentat import Module
 
@@ -607,7 +608,19 @@ class FireFace(Module):
             lookup = mod.parameters[name].metadata['alsa']
             if not lookup:
                 lookup = f'name="{name}"'
+
+            if name == 'output:stereo-link':
+                # workaround a bug (in driver or firmware ?) that makes stereo balance toward left ignored
+                # when stereo link is off 
+                self.parameter_changed(self, 'output:stereo-balance', [1]* int(len(self.mixer_outputs) / 2))
+
+
             self.alsamixer.alsa_set(lookup, value)
+
+            if name == 'output:stereo-link':
+                # workaround part 2, a tiny delay is required here, go figure
+                sleep(0.01)
+                self.parameter_changed(self, 'output:stereo-balance', self.get('output:stereo-balance'))
 
         # Start/stop metering thread and reset meters when it stops
         if name == 'metering':
@@ -646,15 +659,19 @@ class FireFace(Module):
                     for source, source_name in enumerate(sources):
 
                         mute = self.get(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest}:{source}')
-                        gain = max(self.get(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}'),
-                                    self.get(f'{mixer.replace('mixer', 'monitor')}:{dest+1}:{source}'))
 
-                        # apply max gain
+                        if value == 1:
+                            gain = max(self.get(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}'),
+                                        self.get(f'{mixer.replace('mixer', 'monitor')}:{dest+1}:{source}'))
+                        else:
+                            gain = self.get(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}')
+
+                        # apply gain
                         self.set(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}', gain)
                         self.set(f'{mixer.replace('mixer', 'monitor')}:{dest+1}:{source}', gain)
                         if value == 0:
                             # reset pan
-                            self.reset(f'output:pan:{dest}', 0.5)
+                            self.reset(f'output:pan:{dest}')
                             self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest}:{source}')
                             self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest+1}:{source}')
                             # copy mute

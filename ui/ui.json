@@ -1,6 +1,6 @@
 {
   "createdWith": "Open Stage Control",
-  "version": "1.29.8",
+  "version": "1.29.7",
   "type": "session",
   "content": {
     "type": "root",
@@ -3273,7 +3273,7 @@
                           "min": 20,
                           "max": 500
                         },
-                        "logScale": false,
+                        "logScale": true,
                         "sensitivity": 0.2,
                         "steps": "",
                         "origin": 0,
@@ -3301,7 +3301,7 @@
                         "borderRadius": "auto",
                         "padding": 0,
                         "html": "",
-                        "css": ":host:not(.on) {\n  margin: 5rem 0;\n  margin-left: -30rem;\n  z-index:0;\n}\ninner {\n  padding-left: 16rem;\n}",
+                        "css": "class:option-button;\n:host:not(.on) {\n  margin: 5rem 0;\n  margin-left: -30rem;\n  z-index:0;\n}\ninner {\n  padding-left: 16rem;\n}",
                         "value": "",
                         "default": 0,
                         "linkId": "",
