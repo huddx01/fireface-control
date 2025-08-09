@@ -4,6 +4,7 @@ from subprocess import Popen, PIPE, run, DEVNULL
 from sys import argv
 
 from mentat import Module
+
 from __init__ import __version__
 
 class OSC(Module):
@@ -23,18 +24,31 @@ class OSC(Module):
         self.clipboard = {}
 
         folder = os.path.dirname(os.path.abspath(__file__))
+
+
         # run instance of o-s-c (will quit when python process exits if everything goes well)
-        if not self.engine.restarted:
-            Popen([
-                'open-stage-control',
-                '--port', f'{self.port}',
-                '-s', f'127.0.0.1:{self.engine.port}',
-                '-l', f'{folder}/ui/ui.json',
-                '-t', f'{folder}/ui/styles.css',
-                '--client-options', f'title={self.engine.name} v{__version__}',
-                '--no-qrcode',
-            ] + (['-n'] if '--nogui' in argv else []), stderr=DEVNULL, stdout=DEVNULL)
-        else:
+        cmd = ['open-stage-control']
+        cmd_args = [
+            '--port', f'{self.port}',
+            '-s', f'127.0.0.1:{self.engine.port}',
+            '-l', f'{folder}/ui/ui.json',
+            '-t', f'{folder}/ui/styles.css',
+            '-c', f'{folder}/ui/cm.js',
+            '--no-qrcode',
+            '--client-options', f'title={self.engine.name} v{__version__}',
+        ]
+        self.url = f'http://127.0.0.1:{self.port}'
+
+        if not '--dev' in argv:
+            cmd_args.append('prod=1')
+            cmd_args.append('--read-only')
+            cmd_args.append('--no-gui')
+            self.engine.add_event_callback('stopping', lambda: self.process.kill())
+
+        if not '--dev' in argv or not self.engine.restarted:
+            self.process = Popen(cmd + cmd_args,stderr=DEVNULL, stdout=DEVNULL)
+
+        if '--dev' in argv and not self.engine.restarted:
             self.first_connect = True
 
     def parameter_changed(self, mod, name, value):
@@ -137,7 +151,10 @@ class OSC(Module):
         Widget routing
         """
 
-        if address == '/connect':
+        if address == '/server-ready':
+            self.logger.info(f'web app available at {self.url}')
+
+        elif address == '/connect':
             self.first_connect = True
             self.send_state()
 
