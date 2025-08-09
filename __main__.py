@@ -1,6 +1,6 @@
 from sys import path, argv
 from os.path import dirname
-path.insert(0, dirname(__file__) + '/../')
+path.insert(0, dirname(__file__) + '/lib/mentat/')
 
 from mentat import Engine
 

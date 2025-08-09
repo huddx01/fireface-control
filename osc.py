@@ -27,7 +27,7 @@ class OSC(Module):
 
 
         # run instance of o-s-c (will quit when python process exits if everything goes well)
-        cmd = ['open-stage-control']
+        cmd = ['node', folder + '/lib/open-stage-control']
         cmd_args = [
             '--port', f'{self.port}',
             '-s', f'127.0.0.1:{self.engine.port}',
@@ -39,14 +39,17 @@ class OSC(Module):
         ]
         self.url = f'http://127.0.0.1:{self.port}'
 
-        if not '--dev' in argv:
+        if '--dev' in argv:
+            cmd = ['open-stage-control']
+
+        else:
             cmd_args.append('prod=1')
             cmd_args.append('--read-only')
             cmd_args.append('--no-gui')
             self.engine.add_event_callback('stopping', lambda: self.process.kill())
 
         if not '--dev' in argv or not self.engine.restarted:
-            self.process = Popen(cmd + cmd_args,stderr=DEVNULL, stdout=DEVNULL)
+            self.process = Popen(cmd + cmd_args, stderr=DEVNULL, stdout=DEVNULL)
 
         if '--dev' in argv and not self.engine.restarted:
             self.first_connect = True

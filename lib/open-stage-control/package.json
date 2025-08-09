@@ -1,0 +1,28 @@
+{
+  "name": "open-stage-control",
+  "productName": "Open Stage Control",
+  "description": "Libre and modular OSC / MIDI controller",
+  "version": "1.29.8",
+  "author": {
+    "name": "Jean-Emmanuel Doucet",
+    "email": "jean-emmanuel@ammd.net"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jean-emmanuel/open-stage-control"
+  },
+  "homepage": "http://openstagecontrol.ammd.net/",
+  "license": "GPL-3.0",
+  "engines": {
+    "node": ">=16 <=20"
+  },
+  "bin": "index.js",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron index.js",
+    "start-node": "node index.js"
+  },
+  "optionalDependencies": {
+    "electron": "15.1.0"
+  }
+}

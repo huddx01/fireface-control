@@ -1,3 +1,5 @@
+import os
+
 from pystray import Icon, MenuItem, Menu
 
 from PIL import Image
@@ -6,6 +8,7 @@ from subprocess import Popen
 
 from mentat import Module
 
+from __init__ import __version__
 
 class Tray(Module):
 
@@ -13,8 +16,12 @@ class Tray(Module):
 
         super().__init__('Tray', *args, **kwargs)
 
-        self.icon = Icon(self.engine.name, Image.open('ui/icon.png'), self.engine.name, Menu(
-            MenuItem('Open control app', lambda: Popen(['xdg-open', self.engine.modules['OSC'].url]), default=True),
+        folder = os.path.dirname(os.path.abspath(__file__))
+
+        self.icon = Icon(self.engine.name, Image.open(f'{folder}/ui/logo.png'), self.engine.name, Menu(
+            MenuItem(f'{self.engine.name} v{__version__}', action=lambda:[], enabled=False, default=True),
+            Menu.SEPARATOR,
+            MenuItem('Open control app', lambda: Popen(['xdg-open', self.engine.modules['OSC'].url])),
             MenuItem('Quit', lambda: self.engine.stop())
         ))
 

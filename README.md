@@ -9,11 +9,12 @@ Totalmix replacement on Linux for RME's latter firewire interfaces 802 and UCX.
 
 **Requirements**
 
+```
+python3 python3-pystray python3-liblo python3-pyalsa python3-pyinotify nodejs
+```
+
 - Fireface 802 / UCX (firewire only, usb not supported)
 - https://github.com/alsa-project/snd-firewire-ctl-services/
-- https://github.com/jean-emmanuel/mentat
-- https://github.com/jean-emmanuel/open-stage-control/
-
 
 **Usage**
 
