@@ -8,7 +8,7 @@ from subprocess import Popen
 
 from mentat import Module
 
-from __init__ import __version__
+from . import __version__
 
 class Tray(Module):
 

@@ -1,15 +1,16 @@
 from sys import path, argv
 from os.path import dirname
 
-# use local version of Mentat
-path.insert(0, dirname(__file__) + '/lib/mentat/')
+if __package__ == '':
+    # load local package
+    path.insert(0, './')
 
 from mentat import Engine
 
-from alsamixer import AlsaMixer
-from fireface import FireFace
-from osc import OSC
-from tray import Tray
+from .alsamixer import AlsaMixer
+from .fireface import FireFace
+from .osc import OSC
+from .tray import Tray
 
 engine = Engine('FirefaceControl', port=5555, folder='~/.config/FirefaceControl/', debug='--debug' in argv)
 

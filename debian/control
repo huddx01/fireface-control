@@ -1,0 +1,26 @@
+Source: fireface-control
+Section: audio
+Priority: optional
+Maintainer: Jean-Emmanuel <jean-emmanel@ammd.net>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all (>=3.8),
+               python3-setuptools
+Standards-Version: 4.5.0
+Vcs-Browser: https://github.com/jean-emmanuel/fireface-control
+Vcs-Git: https://github.com/jean-emmanuel/fireface-control.git
+Homepage: https://jean-emmanuel.github.io/fireface-control/
+Rules-Requires-Root: no
+
+Package: fireface-control
+Architecture: all
+Depends: ${misc:Depends},
+         ${python3:Depends},
+         python3-liblo,
+         python3-pyinotify,
+         python3-pyalsa,
+         python3-pystray,
+         alsa-utils,
+         nodejs
+Pre-Depends: ${misc:Pre-Depends}
+Description: Mixer for RME's latter firewire interfaces 802 and UCX

@@ -1,11 +1,12 @@
 import os
 
-from subprocess import Popen, PIPE, run, DEVNULL
+from subprocess import Popen, PIPE, DEVNULL
 from sys import argv
 
 from mentat import Module
 
-from __init__ import __version__
+from .config import config
+from . import __version__
 
 class OSC(Module):
 
@@ -25,9 +26,8 @@ class OSC(Module):
 
         folder = os.path.dirname(os.path.abspath(__file__))
 
-
         # run instance of o-s-c (will quit when python process exits if everything goes well)
-        cmd = ['node', folder + '/lib/open-stage-control']
+        cmd = ['node', f'{folder}/ui/open-stage-control']
         cmd_args = [
             '--port', f'{self.port}',
             '-s', f'127.0.0.1:{self.engine.port}',
