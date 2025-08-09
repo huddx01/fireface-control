@@ -30,6 +30,7 @@ class OSC(Module):
         cmd = ['node', f'{folder}/ui/open-stage-control']
         cmd_args = [
             '--port', f'{self.port}',
+            '--osc-port', f'{self.port}',
             '-s', f'127.0.0.1:{self.engine.port}',
             '-l', f'{folder}/ui/ui.json',
             '-t', f'{folder}/ui/styles.css',
@@ -39,7 +40,7 @@ class OSC(Module):
         ]
         self.url = f'http://127.0.0.1:{self.port}'
 
-        if '--dev' in argv:
+        if config.dev:
             cmd = ['open-stage-control']
 
         else:
@@ -48,10 +49,14 @@ class OSC(Module):
             cmd_args.append('--no-gui')
             self.engine.add_event_callback('stopping', lambda: self.process.kill())
 
-        if not '--dev' in argv or not self.engine.restarted:
-            self.process = Popen(cmd + cmd_args, stderr=DEVNULL, stdout=DEVNULL)
+        if not config.dev or not self.engine.restarted:
+            self.process = Popen(
+                cmd + cmd_args,
+                stderr=None if config.debug else DEVNULL,
+                stdout=None if config.debug else DEVNULL
+            )
 
-        if '--dev' in argv and not self.engine.restarted:
+        if config.dev and not self.engine.restarted:
             self.first_connect = True
 
     def parameter_changed(self, mod, name, value):

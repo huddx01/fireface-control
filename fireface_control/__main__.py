@@ -1,22 +1,43 @@
+import socket
 from sys import path, argv
 from os.path import dirname
 
+# load local package
+# if not installed
 if __package__ == '':
-    # load local package
     path.insert(0, './')
 
 from mentat import Engine
 
+from .config import config
 from .alsamixer import AlsaMixer
 from .fireface import FireFace
 from .osc import OSC
 from .tray import Tray
 
-engine = Engine('FirefaceControl', port=5555, folder='~/.config/FirefaceControl/', debug='--debug' in argv)
+# Check if ports are available
+# and get random ports if 0
+# let it throw if port is not free
+engine_port = config.engine_port
+webapp_port = config.port
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+sock.bind(('', engine_port))
+engine_port = sock.getsockname()[1]
+sock.close()
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+sock.bind(('', webapp_port))
+webapp_port = sock.getsockname()[1]
+sock.close()
+
+engine = Engine('FirefaceControl', port=engine_port, folder='~/.config/FirefaceControl/', debug='--debug' in argv)
 
 alsamixer = AlsaMixer('AlsaMixer')
 fireface = FireFace(name=alsamixer.card_model, alsamixer=alsamixer)
-osc = OSC(protocol='osc', fireface=fireface, port=8080)
+osc = OSC(protocol='osc', fireface=fireface, port=webapp_port)
 tray = Tray(port=None)
 
 engine.add_module(alsamixer)
