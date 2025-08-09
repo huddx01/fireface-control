@@ -1,5 +1,7 @@
 from sys import path, argv
 from os.path import dirname
+
+# use local version of Mentat
 path.insert(0, dirname(__file__) + '/lib/mentat/')
 
 from mentat import Engine

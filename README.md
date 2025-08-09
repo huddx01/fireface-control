@@ -9,19 +9,26 @@ Totalmix replacement on Linux for RME's latter firewire interfaces 802 and UCX.
 
 **Requirements**
 
+*As Debian packages*
+
 ```
-python3 python3-pystray python3-liblo python3-pyalsa python3-pyinotify nodejs
+python3 python3-pystray python3-liblo python3-pyalsa python3-pyinotify nodejs alsa-utils \
 ```
 
-- Fireface 802 / UCX (firewire only, usb not supported)
-- https://github.com/alsa-project/snd-firewire-ctl-services/
+Additionaly `snd-fireface-ctl-service` must be built and installed manually from https://github.com/alsa-project/snd-firewire-ctl-services/.
+
 
 **Usage**
 
 ```
 git clone https://github.com/jean-emmanuel/FirefaceControl
-python FirefaceControl
+cd FirefaceControl
+git submodule update --init
+python .
 ```
+
+To make it start automatically on boot, create a startup script or service running `python path/to/FirefaceControl`
+
 
 **Features**
 
