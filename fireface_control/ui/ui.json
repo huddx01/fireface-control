@@ -147,7 +147,7 @@
             "id": "sources_types",
             "comments": "",
             "value": "",
-            "default": [],
+            "default": "#{(globals.env[\"sources-types\"]||'').split(',')}",
             "linkId": "",
             "address": "/sources-types",
             "preArgs": "",
@@ -156,8 +156,8 @@
             "target": "",
             "ignoreDefaults": false,
             "bypass": false,
-            "onCreate": "set(this, storage.getItem(getProp(this, 'id')), {send:false})",
-            "onValue": "storage.setItem(getProp(this, 'id'), value)"
+            "onCreate": "//set(this, storage.getItem(getProp(this, 'id')), {send:false})",
+            "onValue": ""
           },
           {
             "type": "variable",
@@ -165,7 +165,7 @@
             "id": "sources_ids",
             "comments": "",
             "value": "",
-            "default": [],
+            "default": "#{(globals.env[\"sources-ids\"]||'').split(',').map(x=>Number(x))}",
             "linkId": "",
             "address": "/sources-ids",
             "preArgs": "",
@@ -174,15 +174,15 @@
             "target": "",
             "ignoreDefaults": false,
             "bypass": false,
-            "onCreate": "set(this, storage.getItem(getProp(this, 'id')))",
-            "onValue": "storage.setItem(getProp(this, 'id'), value)"
+            "onCreate": "//set(this, storage.getItem(getProp(this, 'id')))",
+            "onValue": ""
           },
           {
             "type": "variable",
             "lock": false,
             "id": "source_select_type",
             "comments": "",
-            "value": "#{\n  @{sources_types}[@{input_select}]\n}",
+            "value": "#{\n  (@{sources_types}||[])[@{input_select}]\n}",
             "default": "",
             "linkId": "",
             "address": "auto",
@@ -200,7 +200,7 @@
             "lock": false,
             "id": "source_select_id",
             "comments": "",
-            "value": "#{\n  @{sources_ids}[@{input_select}]\n}",
+            "value": "#{\n  (@{sources_ids}||[])[@{input_select}]\n}",
             "default": "",
             "linkId": "",
             "address": "auto",
@@ -237,7 +237,7 @@
             "id": "output_ids",
             "comments": "",
             "value": "",
-            "default": [],
+            "default": "#{(globals.env[\"output-ids\"]||'').split(',').map(x=>Number(x))}",
             "linkId": "",
             "address": "/output-ids",
             "preArgs": "",
@@ -246,8 +246,8 @@
             "target": "",
             "ignoreDefaults": false,
             "bypass": false,
-            "onCreate": "set(this, storage.getItem(getProp(this, 'id')))",
-            "onValue": "storage.setItem(getProp(this, 'id'), value)"
+            "onCreate": "",
+            "onValue": ""
           },
           {
             "type": "variable",
@@ -1426,7 +1426,7 @@
                 "top": 90,
                 "left": 210,
                 "lock": false,
-                "id": "matrix_2",
+                "id": "input_matrix",
                 "visible": true,
                 "interaction": true,
                 "comments": "",
@@ -1470,7 +1470,7 @@
                 "tabs": [],
                 "onTouch": "",
                 "widgetType": "clone",
-                "quantity": "#{(@{sources_types}).length}",
+                "quantity": "#{(@{sources_types}||[]).length}",
                 "props": "JS{\nvar sourcesTypes = @{sources_types}||[],\n    sourcesIds = @{sources_ids}||[],\n    props = {}\n    \nprops.widgetId = 'input_source_x'\nprops.props = {\n  variables: {\n    source: sourcesIds[$],\n    sourcetype: sourcesTypes[$],\n    input: $\n  }\n}\n\n\nprops.visible = `\nJS_{\nreturn @_{hide_input_${sourcesTypes[$]}_${sourcesIds[$]}}\n  && !@_{show_all} ? false:true  \n}`\n\nreturn props\n}"
               },
               {
@@ -7838,7 +7838,7 @@
                 "tabs": [],
                 "onTouch": "",
                 "widgetType": "clone",
-                "quantity": "JS{\nreturn @{output_ids}.length\n}",
+                "quantity": "JS{\nreturn (@{output_ids}||[]).length\n}",
                 "props": "JS{\nvar props = {},\n    output_ids = @{output_ids},\n    output_stereo = @{output_stereo}\n\nvar id = output_ids[$]\nvar show = id % 2 == 0 || !output_stereo[$]\n\nprops.widgetId ='output_x' \nprops.props = {\n  id: 'outstripclone_' + $,\n  variables: {\n    output: id,\n  },\n}\nprops.visible = `\nJS_{\nreturn (${id} % 2 == 0 || !@_{output_stereo}[${id}]) && (@_{hide_output_${id}}\n    && !@_{show_all} \n  ? false : true)\n}`\n\nreturn props\n}"
               },
               {

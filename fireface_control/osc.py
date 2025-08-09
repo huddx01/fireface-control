@@ -40,6 +40,11 @@ class OSC(Module):
         ]
         self.url = f'http://127.0.0.1:{self.port}'
 
+
+        for param in ['sources-types', 'sources-ids', 'output-ids']:
+            # preload some values in gui
+            cmd_args.append(f'{param}={','.join(str(s) for s in self.fireface.get(param))}')
+
         if config.dev:
             cmd = ['open-stage-control']
 
