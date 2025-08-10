@@ -611,19 +611,17 @@ class FireFace(Module):
         lookup = self.parameters[name].metadata['alsa']
         if not lookup:
             lookup = f'name="{name}"'
-        
 
         if name == 'output:stereo-link':
             # workaround a bug (in driver or firmware ?) that makes stereo balance toward left ignored
-            # when stereo link is off 
-            self.parameter_changed(self, 'output:stereo-balance', [1]* int(len(self.mixer_outputs) / 2))
+            # when stereo link is off. part 1: set balance to right
+            self.alsa_send('output:stereo-balance', [1]* int(len(self.mixer_outputs) / 2))
 
         self.alsamixer.alsa_set(lookup, value)
 
         if name == 'output:stereo-link':
-            # workaround part 2, a tiny delay is required here, go figure
-            sleep(0.01)
-            self.parameter_changed(self, 'output:stereo-balance', self.get('output:stereo-balance'))
+            # workaround part 2: set balance to actual value
+            self.alsa_send('output:stereo-balance', self.get('output:stereo-balance'))
 
 
     def parameter_changed(self, mod, name, value):
@@ -643,19 +641,20 @@ class FireFace(Module):
         # card is back online: sync it
         if name == 'card-online' and value == 1:
 
-            self.alsa_send('output:stereo-link', self.get('output:stereo-link'))
-            self.alsa_send('output:stereo-balance', self.get('output:stereo-balance'))
-
             for pname in self.parameters:
-                if 'alsa' in self.parameters[pname].metadata and pname not in self.output_fx and pname not in ['output:stereo-link', 'output:stereo-balance']:
+                if 'alsa' in self.parameters[pname].metadata and 'fx:reverb' not in pname and 'fx:echo' not in pname and pname not in self.output_fx:
                     self.alsa_send(pname, self.get(pname))
            
-           
-            # send fx returns last
-            for pname in self.output_fx:
+            # Weird workaround to force the card to accept fx settings
+            for pname in self.output_fx :
                 self.alsa_send(pname, [-649 for x in self.get(pname)])
-                self.alsa_send(pname, self.get(pname))
+
+            for pname in self.parameters:
+                if 'alsa' in self.parameters[pname].metadata and ('fx:reverb' in pname or 'fx:echo' in pname):
+                    self.alsa_send(pname, self.get(pname))
             
+            for pname in self.output_fx :
+                self.alsa_send(pname, self.get(pname))
 
         # Start/stop metering thread and reset meters when it stops
         if name == 'metering':
@@ -670,7 +669,6 @@ class FireFace(Module):
         # stereo output link change
         if 'output:stereo:' in name:
             dest = int(name.split(':')[-1])
-            # def sc():
             # force meter update
             self.reset(f'output-meter:{int(dest/2)*2}')
             self.reset(f'output-meter:{int(dest/2)*2+1}')
