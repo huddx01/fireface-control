@@ -13,7 +13,7 @@ class PostInstallCommand(install):
         install.run(self)
 
 setup(
-    name='fireface_control',
+    name='fireface-control',
     packages=['fireface_control'],
     package_data={'fireface_control': ['ui/**']},
     version=__version__,

@@ -4,8 +4,8 @@ from os.path import dirname
 
 # load local package
 # if not installed
-if __package__ == '':
-    path.insert(0, './')
+if __package__ == None:
+    __package__ = 'fireface_control'
 
 from mentat import Engine
 
@@ -33,7 +33,7 @@ sock.bind(('', webapp_port))
 webapp_port = sock.getsockname()[1]
 sock.close()
 
-engine = Engine('FirefaceControl', port=engine_port, folder='~/.config/FirefaceControl/', debug='--debug' in argv)
+engine = Engine('FirefaceControl', port=engine_port, folder='~/.config/fireface-control/', debug='--debug' in argv)
 
 alsamixer = AlsaMixer('AlsaMixer')
 fireface = FireFace(name=alsamixer.card_model, alsamixer=alsamixer)
