@@ -13,6 +13,8 @@ python3 python3-pystray python3-liblo python3-pyalsa python3-pyinotify nodejs al
 
 Additionaly `snd-fireface-ctl-service` must be built and installed manually from https://github.com/alsa-project/snd-firewire-ctl-services/.
 
+The web application requires firefox or chromium to work, it's designed for desktop use (high-res tablets may work).
+
 
 **Usage**
 
@@ -20,7 +22,7 @@ Additionaly `snd-fireface-ctl-service` must be built and installed manually from
 git clone https://github.com/jean-emmanuel/fireface-control
 cd fireface-control
 git submodule update --init
-python -m fireface_control
+python -m fireface_control -h
 ```
 
 **Features**
