@@ -77,7 +77,7 @@ class OSC(Module):
             if 'meter:' in name:
                 # optimize meter update (bypass o-s-c's cross-widgets sync checks)
                 if self.first_connect:
-                    self.send('/SCRIPT', f'set("{name}", {value[0]}, {'{sync: false, send:false}'})')
+                    self.send('/SCRIPT', f'set("{name}", {value[0] - 100 * (1 - self.fireface.get('metering'))}, {'{sync: false, send:false}'})')
             else:
                 self.local_state[name] = value
 
