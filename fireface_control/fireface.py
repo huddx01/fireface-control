@@ -13,8 +13,8 @@ class FireFace(Module):
         self.add_event_callback('parameter_changed', self.parameter_changed)
         self.alsamixer.add_event_callback('parameter_changed', self.parameter_changed)
 
-        self.add_parameter('card-model', None, types='s', default=self.alsamixer.get('card-model'), osc=True)
-        self.add_parameter('card-online', None, types='i', default=self.alsamixer.get('card-online'), osc=True)
+        self.add_parameter('card-model', None, types='s', default=self.alsamixer.get('card-model'), osc=True, skip_state=True)
+        self.add_parameter('card-online', None, types='i', default=self.alsamixer.get('card-online'), osc=True, skip_state=True)
 
         """
         Card spec
@@ -527,6 +527,12 @@ class FireFace(Module):
             dest='fx:reverb-time',
             transform= lambda time: 10 * time
         )
+
+        """
+        Other settings
+        """
+        self.add_parameter('effect-on-input', None, types='i', default=0, alsa='', osc=True)
+
 
         """
         Channel selection

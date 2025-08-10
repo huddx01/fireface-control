@@ -37,6 +37,7 @@ class AlsaMixer(Module):
             self.start_scene('status_check', self.status_check)
 
 
+            self.add_event_callback('parameter_changed', self.parameter_changed)
             self.engine.add_event_callback('stopping', self.stop)
 
         def status_check(self):
@@ -92,9 +93,19 @@ class AlsaMixer(Module):
             we must wait a little before pushing any value / restoring state
             """
             self.wait(1, 's')
-            self.set('card-online', 1)
-            for lookup, value in self.state.items():
-                self.alsa_set(lookup, value)
+            self.set('card-online', 1, force_send=True)
+
+
+        def parameter_changed(self, mod, name, value):
+            """
+            Custom parameter update hooks
+            """
+            # device is back online: sync it with local state
+            if name == 'card-online' and value == 1:
+                for lookup, value in self.state.items():
+                    self.alsa_set(lookup, value)
+
+
 
         def alsa_set(self, alsa_lookup, value):
             """
