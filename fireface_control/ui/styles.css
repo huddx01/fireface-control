@@ -31,11 +31,13 @@
   position: absolute;
   top:2rem;
   border-bottom:2rem solid var(--color-background)!important;
+  border-left:28rem solid var(--color-selected);
   left: 0;
   right: 0;
   height: 758rem;
-  background: VAR(--color-ui-foreground);
-  opacity: 0.75;
+  background: VAR(--color-ui-selected);
+  background: repeating-linear-gradient(90deg,  var(--color-background), var(--color-background) 2rem, transparent 2rem, transparent 92rem),
+              repeating-linear-gradient(var(--color-ui-foreground), var(--color-ui-foreground) 378rem, var(--color-background) 378rem, var(--color-background) 380rem);
 }
 /*
     General settings
