@@ -17,6 +17,8 @@ class AlsaMixer(Module):
             self.add_parameter('card-online', None, types='i', default=0)
             self.add_parameter('card-model', None, types='s', default='')
 
+            self.waking_up = False
+
             self.state = {}
 
             for model in ['802', 'UCX']:
@@ -46,6 +48,8 @@ class AlsaMixer(Module):
             """
             while True:
                 self.wait(1.5, 's')
+                if self.waking_up:
+                    continue
                 try:
                     status = check_output(['cat', f'/proc/asound/Fireface{self.get('card-model')}/firewire/status'], text=True, stderr=DEVNULL)
                     if status and not self.get('card-online'):
@@ -83,17 +87,18 @@ class AlsaMixer(Module):
             try:
                 self.start_snd_process()
                 self.alsaset_process = Popen(['amixer', '-c', f'Fireface{self.get('card-model')}', '-s', '-q'], stdin=PIPE, text=True)
-                self.start_scene('delayed_online', self.delayed_online)
+                self.start_scene('wake_up', self.wake_up)
             except Exception as e:
                 self.logger.warning(f'could not start amixer process\n{e}')
 
-        def delayed_online(self):
+        def wake_up(self):
             """
             snd-firewire-ctl-services takes some time to take over the interface
             we must wait a little before pushing any value / restoring state
             """
+            self.waking_up = True
             self.wait(1, 's')
-            self.set('card-online', 1, force_send=True)
+            self.set('card-online', 1)
 
 
         def parameter_changed(self, mod, name, value):
@@ -102,6 +107,7 @@ class AlsaMixer(Module):
             """
             # device is back online: sync it with local state
             if name == 'card-online' and value == 1:
+                self.waking_up = False
                 for lookup, value in self.state.items():
                     self.alsa_set(lookup, value)
 
