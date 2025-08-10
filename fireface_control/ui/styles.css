@@ -272,15 +272,24 @@
     border-right:1rem solid rgba(255,255,255,.1);
 }
 
+#notifications {
+  margin-bottom: 35rem
+}
 #notifications .toast {
     background:var(--color-ui-foreground);
     box-shadow: 0 0 8rem 0 rgba(33,37,43,1);
     border: 1rem solid rgba(0,0,0,0.5);
     border-radius: 3rem;
-    padding: 10rem
+  }
+#notifications .toast .content {
+  margin: 10rem;
+  margin-left: 0;
 }
 #notifications i {
     color: inherit!important;
+}
+#notifications i.fade {
+  opacity 0.5
 }
 
 /*
@@ -311,3 +320,5 @@
   border-bottom-right-radius:3rem;
   margin-left:-1rem;
 }
+
+

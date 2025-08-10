@@ -87,6 +87,9 @@ class OSC(Module):
                     self.send_output_sel_state(value[0])
                 if name == 'input:select':
                     self.send_input_sel_state(value[0])
+                if name == 'card-online':
+                    self.send('/NOTIFY', f'power-off', f'Fireface {'disconnected' if value == [0] else 'connected'}')
+
 
                 if name in self.remote_state and self.remote_state[name] == value:
                     return
