@@ -504,7 +504,7 @@ class FireFace(Module):
         self.add_parameter('fx:reverb-hold', None, types='i', default=300, osc=True, alsa='')
         self.add_parameter('fx:reverb-release', None, types='i', default=250, osc=True, alsa='')
         self.add_parameter('fx:reverb-type', None, types='i', default=0, osc=True, alsa='')
-        self.add_parameter('fx:reverb-room-scale', None, types='i', default=50, osc=True, alsa='')
+        self.add_parameter('fx:reverb-room-scale', None, types='i', default=100, osc=True, alsa='')
         self.add_parameter('fx:reverb-smooth', None, types='i', default=100, osc=True, alsa='')
         self.add_parameter('fx:reverb-stereo-width', None, types='i', default=100, osc=True, alsa='')
         self.add_parameter('fx:reverb-time', None, types='i', default=10, osc=True, alsa='')
