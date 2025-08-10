@@ -21,18 +21,18 @@ from .tray import Tray
 # let it throw if port is not free
 engine_port = config.engine_port
 webapp_port = config.port
-
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 sock.bind(('', engine_port))
 engine_port = sock.getsockname()[1]
 sock.close()
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-sock.bind(('', webapp_port))
-webapp_port = sock.getsockname()[1]
-sock.close()
+if not config.dev:
+    # in dev mode the server is not restarted
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(('', webapp_port))
+    webapp_port = sock.getsockname()[1]
+    sock.close()
 
 engine = Engine('FirefaceControl', port=engine_port, folder='~/.config/fireface-control/', debug='--debug' in argv)
 
