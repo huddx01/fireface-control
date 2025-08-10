@@ -62,7 +62,7 @@ class OSC(Module):
             )
 
         if config.dev and self.engine.restarted:
-            self.send('/RELOAD')
+            self.first_connect = True
 
     def parameter_changed(self, mod, name, value):
         """
@@ -110,6 +110,10 @@ class OSC(Module):
 
         super().send_state()
 
+        self.send('/output:select', self.fireface.get('output:select'))
+        self.send('/input:select', self.fireface.get('input:select'))
+
+
         state = list(self.local_state.items())
         state.sort(key=lambda item: self.fireface.parameters[item[0]].metadata['osc_order'] if 'osc_order' in self.fireface.parameters[item[0]].metadata else 0)
         for name, value in state:
@@ -124,6 +128,7 @@ class OSC(Module):
             - monitor mix for this output
         """
         output_select = str(self.fireface.get('output:select'))
+        self.send('/output:select', self.fireface.get('output:select'))
         for name, value in self.local_state.items():
             if 'output:' in name and name.split(':')[-1] == output_select:
                 self.send(f'/{name}', *value)
@@ -137,6 +142,7 @@ class OSC(Module):
             - input options
         """
         input_select = str(self.fireface.get('input:select'))
+        self.send('/input:select', self.fireface.get('input:select'))
         for name, value in self.local_state.items():
             if 'input:' in name and name.split(':')[-1] == input_select:
                 self.send(f'/{name}', *value)
