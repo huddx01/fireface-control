@@ -635,23 +635,23 @@ class FireFace(Module):
         # stereo output link change
         if 'output:stereo:' in name:
             dest = int(name.split(':')[-1])
-            def sc():
-                # force meter update
-                self.reset(f'output-meter:{int(dest/2)*2}')
-                self.reset(f'output-meter:{int(dest/2)*2+1}')
-                if dest % 2 == 0:
-                    # rename stereo outputs
-                    if value == 1:
-                        nx2 = self.mixer_outputs_default_names[dest].split(' ')[-1]
-                        self.set(f'output:hardware-name:{dest}', f'{self.mixer_outputs_default_names[dest]}/{int(nx2)+1}')
-                        for param in ['output:volume-db', 'output:mute', 'output:name', 'output:color']:
-                            self.set(f'{param}:{dest + 1}' ,self.get(f'{param}:{dest}'))
-                    else:
-                        self.reset(f'output:hardware-name:{dest}')
+            # def sc():
+            # force meter update
+            self.reset(f'output-meter:{int(dest/2)*2}')
+            self.reset(f'output-meter:{int(dest/2)*2+1}')
+            if dest % 2 == 0:
+                # rename stereo outputs
+                if value == 1:
+                    nx2 = self.mixer_outputs_default_names[dest].split(' ')[-1]
+                    self.set(f'output:hardware-name:{dest}', f'{self.mixer_outputs_default_names[dest]}/{int(nx2)+1}')
+                    for param in ['output:volume-db', 'output:mute', 'output:name', 'output:color']:
+                        self.set(f'{param}:{dest + 1}' ,self.get(f'{param}:{dest}'))
                 else:
-                    # switch mixer selection to stereo channel if previously on future right channel
-                    if value == 1 and self.get('output:select') == dest:
-                        self.set('output:select', dest - 1)
+                    self.reset(f'output:hardware-name:{dest}')
+            else:
+                # switch mixer selection to stereo channel if previously on future right channel
+                if value == 1 and self.get('output:select') == dest:
+                    self.set('output:select', dest - 1)
 
             # reset gain/pan/mute when stereo changes
             if dest % 2 == 0:
@@ -677,9 +677,6 @@ class FireFace(Module):
                             # copy mute
                             self.set(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest}:{source}', mute)
                             self.set(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest+1}:{source}', mute)
-
-            # sc()
-            self.start_scene(name, sc)
 
     def create_mixer(self, index):
         """

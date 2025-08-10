@@ -7981,7 +7981,7 @@
                     "value": "",
                     "default": "",
                     "linkId": "",
-                    "address": "/output:stereo:@{output_select}",
+                    "address": "/output:stereo:#{Math.floor(@{output_select}/2)*2}",
                     "preArgs": "",
                     "typeTags": "",
                     "decimals": 2,
