@@ -43,4 +43,6 @@ Some settings made in Totalmix may conflict.
 
 UCX has not been tested yet.
 
+The first UFX model (firewire) might work as well and be seen as a 802 (untested).
+
 </details>
