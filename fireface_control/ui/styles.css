@@ -20,23 +20,27 @@
     width: 1rem;
 }
 
-/* #osc-greeting-header:not(.hidden) + #osc-container {
-    background-image:url(test.jpg);
-    background-size:auto auto;
-    background-position:-250rem -100rem;
-    background-repeat: no-repeat;
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite
-}
-@keyframes pulse {
-  50% {
-    opacity: 0.60;
-  }
-} */
 
+#osc-greeting-header:not(.hidden) + #osc-container{
+  border-top:31rem solid var(--color-ui-foreground)!important;
+  border-bottom:31rem solid var(--color-ui-foreground)!important;
+  background: var(--color-ui-background):
+}
+#osc-greeting-header:not(.hidden) + #osc-container:after{
+  content:"";
+  position: absolute;
+  top:2rem;
+  border-bottom:2rem solid var(--color-background)!important;
+  left: 0;
+  right: 0;
+  height: 758rem;
+  background: VAR(--color-ui-foreground);
+  opacity: 0.75;
+}
 /*
     General settings
 */
-.root-container {
+:root {
   /* font-size:90%; */
   --strip-width: 90rem;
   --strip-max-width: 90rem;
