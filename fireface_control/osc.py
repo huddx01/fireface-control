@@ -62,7 +62,7 @@ class OSC(Module):
             )
 
         if config.dev and self.engine.restarted:
-            self.first_connect = True
+            self.send('/RELOAD')
 
     def parameter_changed(self, mod, name, value):
         """
