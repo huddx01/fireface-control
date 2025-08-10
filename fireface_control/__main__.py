@@ -6,6 +6,7 @@ from os.path import dirname
 # if not installed
 if __package__ == None:
     __package__ = 'fireface_control'
+    path.insert(0, './')
 
 from mentat import Engine
 
