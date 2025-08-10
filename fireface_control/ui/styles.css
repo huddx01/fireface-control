@@ -1,52 +1,12 @@
 /*
-    Dev panel: hidden widget templates duplicated in clone matrices
-*/
-.dev-panel {
-    display: none;
-}
-.editor-enabled .dev-panel {
-    display: flex;
-}
-
-::-webkit-scrollbar {
-    height:8rem;
-    border-bottom: 4rem solid var(--color-background);
-}
-::-webkit-scrollbar-thumb:horizontal {
-    border-bottom: 1rem solid var(--color-background)!important;
-    border-radius: 3rem;
-}
-::-webkit-scrollbar-button:decrement:start, ::-webkit-scrollbar-button:increment:end {
-    width: 1rem;
-}
-
-
-#osc-greeting-header:not(.hidden) + #osc-container{
-  border-top:31rem solid var(--color-ui-foreground)!important;
-  border-bottom:31rem solid var(--color-ui-foreground)!important;
-  background: var(--color-ui-background):
-}
-#osc-greeting-header:not(.hidden) + #osc-container:after{
-  content:"";
-  position: absolute;
-  top:2rem;
-  border-bottom:2rem solid var(--color-background)!important;
-  border-left:28rem solid var(--color-selected);
-  left: 0;
-  right: 0;
-  height: 758rem;
-  background: VAR(--color-ui-selected);
-  background: repeating-linear-gradient(90deg,  var(--color-background), var(--color-background) 2rem, transparent 2rem, transparent 92rem),
-              repeating-linear-gradient(var(--color-ui-foreground), var(--color-ui-foreground) 378rem, var(--color-background) 378rem, var(--color-background) 380rem);
-}
-/*
     General settings
 */
 :root {
-  /* font-size:90%; */
   --strip-width: 90rem;
   --strip-max-width: 90rem;
   --strip-height: 380rem;
+  --insert-width: 230rem;
+  --fx-width: 140rem;
 
   --border-color:rgba(0,0,0,0.2);
   --color-selected: rgb(62 69 81);
@@ -59,8 +19,82 @@
   --purple: rgba(152,71,255,1);
 }
 
+/*
+    Dev panel: hidden widget templates duplicated in clone matrices
+*/
+.dev-panel {
+  display: none;
+}
+.editor-enabled .dev-panel {
+  display: flex;
+}
+
+::-webkit-scrollbar {
+  height:8rem;
+  border-bottom: 4rem solid var(--color-background);
+}
+::-webkit-scrollbar-thumb:horizontal {
+  border-bottom: 1rem solid var(--color-background)!important;
+  border-radius: 3rem;
+}
+::-webkit-scrollbar-button:decrement:start, ::-webkit-scrollbar-button:increment:end {
+  width: 1rem;
+}
+
+
+/*
+  Preload greeter override
+*/
+
 #osc-greeting-header, #main-menu {
-    display: none!important;
+  display: none!important;
+}
+
+#osc-greeting-header:not(.hidden) + #osc-container{
+  border-top:31rem solid var(--color-ui-foreground)!important;
+  border-bottom:31rem solid var(--color-ui-foreground)!important;
+  background: linear-gradient(to top, var(--color-background), var(--color-background) 2rem, transparent 2rem),
+              var(--color-ui-background);
+}
+#osc-greeting-header:not(.hidden) + #osc-container:after{
+  content:"";
+  position: absolute;
+  border-top:2rem solid var(--color-background)!important;
+  border-bottom:2rem solid var(--color-background)!important;
+  left: 0;
+  right: 0;
+  height: 758rem;
+  background: VAR(--color-ui-selected);
+  background: 
+              repeating-linear-gradient(transparent, transparent 378rem, var(--color-background) 378rem, var(--color-background) 380rem),
+              linear-gradient(-90deg,  var(--color-selected), var(--color-selected) var(--strip-width), var(--color-background) var(--strip-width), var(--color-background) calc(var(--strip-width) + 2rem), transparent calc(var(--strip-width) + 2rem)),
+              repeating-linear-gradient(90deg,  var(--color-background), var(--color-background) 2rem, transparent 2rem, transparent 92rem) 28rem,
+              linear-gradient(90deg, var(--color-selected), var(--color-selected) 28rem, transparent 28rem),
+              var(--color-ui-foreground);
+}
+
+/*
+  Notifications
+*/
+
+#notifications {
+  margin-bottom: 35rem
+}
+#notifications .toast {
+    background:var(--color-ui-foreground);
+    box-shadow: 0 0 8rem 0 rgba(33,37,43,1);
+    border: 1rem solid rgba(0,0,0,0.5);
+    border-radius: 3rem;
+  }
+#notifications .toast .content {
+  margin: 10rem;
+  margin-left: 0;
+}
+#notifications i {
+    color: inherit!important;
+}
+#notifications i.fade {
+  opacity 0.5
 }
 
 /*
@@ -72,15 +106,14 @@
   min-width: var(--strip-width);
   width: var(--strip-width);
 }
-.strip .navigation {display:none;}
-
 .strip-selected {
   --color-background: var(--color-selected)
 }
 
-.strip-hidden {
-  --color-widget: #555;
-}
+/*
+  Gain fader
+*/
+
 .gain-fader {
   --alpha-pips-text:0.6;
   --alpha-pips:1;
@@ -90,9 +123,11 @@
   --line-width: 8!important;
   --widget-padding: 4!important;
 }
-.gain-fader canvas {
-    font-size:105%!important;
-}
+
+/*
+  Gain meter
+*/
+
 .strip-meter {
   --line-width:1rem!important;
   --alpha-fill-on:1;
@@ -114,14 +149,34 @@
 .strip-meter-right {
   margin-left:2rem!important;
 }
-.gain-wrapper {
-    margin:-4rem 0
+
+
+/*
+  Knob
+*/
+
+
+.knob-container {
+  --color-knob: rgba(225,225,225,1);
+  --color-widget:  rgba(225,225,225,1);
+  --alpha-stroke: 1;
+  --alpha-fill-off: 0.3!important;
+  --line-width: 2;
+}
+.knob-container.disabled {
+    --color-knob: rgba(142,145,151,1);
+    --color-widget: rgba(142,145,151,1);
+    --alpha-fill-off: 0!important;
+}
+.knob-container.disabled canvas {
+    pointer-events: none;
 }
 
-.pan-fader {
-    /* background-color: rgba(0,0,0,0.2); */
-    margin-bottom: 4rem
-}
+
+/*
+  Pan knob L/R letters
+*/
+
 .pan-label {
     pointer-events:none;
     opacity: 0.6
@@ -141,52 +196,6 @@
     left:auto;
     right:0;
 }
-
-.knob-container {
-  --color-knob: rgba(225,225,225,1);
-  --color-widget:  rgba(225,225,225,1);
-  --alpha-stroke: 1;
-  --alpha-fill-off: 0.3!important;
-  --line-width: 2;
-}
-.knob-container.disabled {
-    --color-knob: rgba(142,145,151,1);
-    --color-widget: rgba(142,145,151,1);
-    --alpha-fill-off: 0!important;
-}
-.knob-container.disabled canvas {
-    pointer-events: none;
-}
-.range-container {
-  --color-widget:  rgba(225,225,225,1);
-
-}
-
-.return-fader {
-    --color-widget: white;
-    --alpha-fill-off: 0.05;
-    --alpha-fill-on: 0.1;
-    --line-width: 0;
-    --alpha-stroke: 1;
-    --color-stroke: var(--border-color);
-    --color-knob:rgba(255,255,255,0.25);
-    --widget-padding:0;
-    --knob-size: 0;
-  }
-.return-fader .html {
-    position: absolute;
-    top:0;
-    left:0;
-    line-height:32rem;
-    width: 100%;
-    pointer-events: none;
-}
-
-
-.strip-matrix > inner > .widget {
-    position:unset!important
-}
-
 
 /*
     Buttons, inputs, menus
@@ -276,26 +285,6 @@
     bottom:2rem;
     border-left:1rem solid rgba(0,0,0,0.3);
     border-right:1rem solid rgba(255,255,255,.1);
-}
-
-#notifications {
-  margin-bottom: 35rem
-}
-#notifications .toast {
-    background:var(--color-ui-foreground);
-    box-shadow: 0 0 8rem 0 rgba(33,37,43,1);
-    border: 1rem solid rgba(0,0,0,0.5);
-    border-radius: 3rem;
-  }
-#notifications .toast .content {
-  margin: 10rem;
-  margin-left: 0;
-}
-#notifications i {
-    color: inherit!important;
-}
-#notifications i.fade {
-  opacity 0.5
 }
 
 /*
