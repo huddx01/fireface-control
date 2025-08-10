@@ -36,7 +36,7 @@ class OSC(Module):
             '-t', f'{folder}/ui/styles.css',
             '-c', f'{folder}/ui/cm.js',
             '--no-qrcode',
-            '--client-options', f'title={self.engine.name} v{__version__}',
+            '--client-options', f'title={self.engine.name} v{__version__}', 'clientSync=0',
         ]
         self.url = f'http://127.0.0.1:{self.port}'
 
