@@ -538,8 +538,8 @@ class FireFace(Module):
         Channel selection
         """
 
-        self.add_parameter('input:select', None, types='i', default=0, osc=True, skip_state=True)
-        self.add_parameter('output:select', None, types='i', default=0, osc=True, skip_state=True)
+        self.add_parameter('input:select', None, types='i', default=0, osc=True)
+        self.add_parameter('output:select', None, types='i', default=0, osc=True)
 
 
         """
@@ -604,6 +604,27 @@ class FireFace(Module):
                 v = -138
         return v
 
+    def alsa_send(self, name, value):
+        """
+        Prepare message for alsamixer
+        """
+        lookup = self.parameters[name].metadata['alsa']
+        if not lookup:
+            lookup = f'name="{name}"'
+        
+
+        if name == 'output:stereo-link':
+            # workaround a bug (in driver or firmware ?) that makes stereo balance toward left ignored
+            # when stereo link is off 
+            self.parameter_changed(self, 'output:stereo-balance', [1]* int(len(self.mixer_outputs) / 2))
+
+        self.alsamixer.alsa_set(lookup, value)
+
+        if name == 'output:stereo-link':
+            # workaround part 2, a tiny delay is required here, go figure
+            sleep(0.01)
+            self.parameter_changed(self, 'output:stereo-balance', self.get('output:stereo-balance'))
+
 
     def parameter_changed(self, mod, name, value):
         """
@@ -617,22 +638,24 @@ class FireFace(Module):
 
         # Update Alsa mixer (amixer) when a parameter with the alsa flag updates
         if 'alsa' in mod.parameters[name].metadata:
-            lookup = mod.parameters[name].metadata['alsa']
-            if not lookup:
-                lookup = f'name="{name}"'
+            self.alsa_send(name, value)
 
-            if name == 'output:stereo-link':
-                # workaround a bug (in driver or firmware ?) that makes stereo balance toward left ignored
-                # when stereo link is off 
-                self.parameter_changed(self, 'output:stereo-balance', [1]* int(len(self.mixer_outputs) / 2))
+        # card is back online: sync it
+        if name == 'card-online' and value == 1:
 
+            self.alsa_send('output:stereo-link', self.get('output:stereo-link'))
+            self.alsa_send('output:stereo-balance', self.get('output:stereo-balance'))
 
-            self.alsamixer.alsa_set(lookup, value)
-
-            if name == 'output:stereo-link':
-                # workaround part 2, a tiny delay is required here, go figure
-                sleep(0.01)
-                self.parameter_changed(self, 'output:stereo-balance', self.get('output:stereo-balance'))
+            for pname in self.parameters:
+                if 'alsa' in self.parameters[pname].metadata and pname not in self.output_fx and pname not in ['output:stereo-link', 'output:stereo-balance']:
+                    self.alsa_send(pname, self.get(pname))
+           
+           
+            # send fx returns last
+            for pname in self.output_fx:
+                self.alsa_send(pname, [-649 for x in self.get(pname)])
+                self.alsa_send(pname, self.get(pname))
+            
 
         # Start/stop metering thread and reset meters when it stops
         if name == 'metering':

@@ -19,8 +19,6 @@ class AlsaMixer(Module):
 
             self.waking_up = False
 
-            self.state = {}
-
             for model in ['802', 'UCX']:
                 try:
                     status = check_output(['cat', f'/proc/asound/Fireface{model}/firewire/status'], text=True, stderr=DEVNULL)
@@ -94,7 +92,7 @@ class AlsaMixer(Module):
         def wake_up(self):
             """
             snd-firewire-ctl-services takes some time to take over the interface
-            we must wait a little before pushing any value / restoring state
+            we must wait a little before pushing any value
             """
             self.waking_up = True
             self.wait(1, 's')
@@ -105,11 +103,9 @@ class AlsaMixer(Module):
             """
             Custom parameter update hooks
             """
-            # device is back online: sync it with local state
+            # device is back online
             if name == 'card-online' and value == 1:
                 self.waking_up = False
-                for lookup, value in self.state.items():
-                    self.alsa_set(lookup, value)
 
 
 
@@ -122,9 +118,8 @@ class AlsaMixer(Module):
             if type(value) is not str:
                 value = str(value)
 
-            self.state[alsa_lookup] = value
-
             if self.get('card-online'):
+                sleep(0.01)
                 self.alsaset_process.stdin.write('cset ' + alsa_lookup + ' ' + value + '\n')
                 self.alsaset_process.stdin.flush()
 

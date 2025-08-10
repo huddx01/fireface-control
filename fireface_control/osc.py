@@ -152,6 +152,9 @@ class OSC(Module):
         output_select = str(self.fireface.get('output:select'))
         input_select = str(self.fireface.get('input:select'))
 
+        if ':select' in name:
+            return True
+
         if 'input:' in name and ('color:' not in name) and name.split(':')[-1] != input_select:
             return False
 
