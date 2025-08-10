@@ -16,16 +16,20 @@ from .fireface import FireFace
 from .osc import OSC
 from .tray import Tray
 
+engine_port = config.engine_port
+# engine port can't be random with autorestart
+if engine_port == 0 and config.dev:
+    engine_port = 5555
 # Check if ports are available
 # and get random ports if 0
 # let it throw if port is not free
-engine_port = config.engine_port
-webapp_port = config.port
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 sock.bind(('', engine_port))
 engine_port = sock.getsockname()[1]
 sock.close()
+
+webapp_port = config.port
 if not config.dev:
     # in dev mode the server is not restarted
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
