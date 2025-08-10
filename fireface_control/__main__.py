@@ -37,7 +37,7 @@ if not config.dev:
 engine = Engine('FirefaceControl', port=engine_port, folder='~/.config/fireface-control/', debug='--debug' in argv)
 
 alsamixer = AlsaMixer('AlsaMixer')
-fireface = FireFace(name=alsamixer.card_model, alsamixer=alsamixer)
+fireface = FireFace(alsamixer=alsamixer)
 osc = OSC(protocol='osc', fireface=fireface, port=webapp_port)
 tray = Tray(port=None)
 

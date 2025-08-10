@@ -922,7 +922,7 @@
                 "value": "",
                 "default": "",
                 "linkId": "",
-                "address": "/card-status",
+                "address": "/card-online",
                 "preArgs": "",
                 "typeTags": "",
                 "decimals": 2,

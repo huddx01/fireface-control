@@ -6,14 +6,15 @@ class FireFace(Module):
 
     def __init__(self, *args, alsamixer, **kwargs):
 
-        super().__init__(name=alsamixer.card_model)
+        super().__init__(name=alsamixer.get('card-model'))
 
         self.alsamixer = alsamixer
 
         self.add_event_callback('parameter_changed', self.parameter_changed)
+        self.alsamixer.add_event_callback('parameter_changed', self.parameter_changed)
 
-        self.add_parameter('card-model', None, types='s', default=self.alsamixer.card_model, osc=True)
-        self.add_parameter('card-status', None, types='i', default=self.alsamixer.card_online, osc=True)
+        self.add_parameter('card-model', None, types='s', default=self.alsamixer.get('card-model'), osc=True)
+        self.add_parameter('card-online', None, types='i', default=self.alsamixer.get('card-online'), osc=True)
 
         """
         Card spec
@@ -602,6 +603,11 @@ class FireFace(Module):
         """
         Custom parameter update hooks
         """
+        # Mirror some parameters of alsamixer module
+        if mod == self.alsamixer:
+            if self.get_parameter(name):
+                self.set(name, value)
+            return
 
         # Update Alsa mixer (amixer) when a parameter with the alsa flag updates
         if 'alsa' in mod.parameters[name].metadata:

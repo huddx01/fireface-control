@@ -14,8 +14,8 @@ class AlsaMixer(Module):
             self.snd_process = None
             self.alsaset_process = None
             
-            self.card_online = False
-            self.card_model = ''
+            self.add_parameter('card-online', None, types='i', default=0)
+            self.add_parameter('card-model', None, types='s', default='')
 
             self.state = {}
 
@@ -23,16 +23,16 @@ class AlsaMixer(Module):
                 try:
                     status = check_output(['cat', f'/proc/asound/Fireface{model}/firewire/status'], text=True, stderr=DEVNULL)
                     if status:
-                        self.card_model = model
+                        self.set('card-model', model)
                         self.start_alsaset_process()
-                        self.logger.info(f'Fireface {self.card_model} found')
+                        self.logger.info(f'Fireface {self.get('card-model')} found')
                         break
                 except:
                     pass
 
-            if not self.card_model:
-                self.card_model = '802'
-                self.logger.warning(f'Fireface interface not found, falling back to offline Fireface {self.card_model}')
+            if not self.get('card-model'):
+                self.set('card-model', '802')
+                self.logger.warning(f'Fireface interface not found, falling back to offline Fireface {self.get('card-model')}')
 
             self.start_scene('status_check', self.status_check)
 
@@ -46,14 +46,14 @@ class AlsaMixer(Module):
             while True:
                 self.wait(1.5, 's')
                 try:
-                    status = check_output(['cat', f'/proc/asound/Fireface{self.card_model}/firewire/status'], text=True, stderr=DEVNULL)
-                    if status and not self.card_online:
-                        self.logger.warning(f'Fireface {self.card_model} connected')
+                    status = check_output(['cat', f'/proc/asound/Fireface{self.get('card-model')}/firewire/status'], text=True, stderr=DEVNULL)
+                    if status and not self.get('card-online'):
+                        self.logger.warning(f'Fireface {self.get('card-model')} connected')
                         self.start_alsaset_process()
                 except:
-                    if self.card_online:
-                        self.logger.warning(f'Fireface disconnected, falling back to offline Fireface {self.card_model}')
-                        self.card_online = False
+                    if self.get('card-online'):
+                        self.logger.warning(f'Fireface disconnected, falling back to offline Fireface {self.get('card-model')}')
+                        self.set('card-online', 0)
 
 
         def start_snd_process(self):
@@ -62,7 +62,7 @@ class AlsaMixer(Module):
             """
             cards = check_output(['cat', f'/proc/asound/cards'], text=True)
             for line in cards.split('\n'):
-                if f'Fireface{self.card_model}' in line:
+                if f'Fireface{self.get('card-model')}' in line:
                     card_number = line.split('[')[0].strip()
                     try:
                         self.snd_process = Popen(['snd-fireface-ctl-service', card_number], text=True)
@@ -81,7 +81,7 @@ class AlsaMixer(Module):
                 pass
             try:
                 self.start_snd_process()
-                self.alsaset_process = Popen(['amixer', '-c', f'Fireface{self.card_model}', '-s', '-q'], stdin=PIPE, text=True)
+                self.alsaset_process = Popen(['amixer', '-c', f'Fireface{self.get('card-model')}', '-s', '-q'], stdin=PIPE, text=True)
                 self.start_scene('delayed_online', self.delayed_online)
             except Exception as e:
                 self.logger.warning(f'could not start amixer process\n{e}')
@@ -92,7 +92,7 @@ class AlsaMixer(Module):
             we must wait a little before pushing any value / restoring state
             """
             self.wait(1, 's')
-            self.card_online = True
+            self.set('card-online', 1)
             for lookup, value in self.state.items():
                 self.alsa_set(lookup, value)
 
@@ -107,7 +107,7 @@ class AlsaMixer(Module):
 
             self.state[alsa_lookup] = value
 
-            if self.card_online:
+            if self.get('card-online'):
                 self.alsaset_process.stdin.write('cset ' + alsa_lookup + ' ' + value + '\n')
                 self.alsaset_process.stdin.flush()
 
@@ -116,10 +116,10 @@ class AlsaMixer(Module):
             Alsa mixer get function, uses an amixer instance per call
             because it doesn't work with a interactive instance (cget is not supported)
             """
-            if not self.card_online:
+            if not self.get('card-online'):
                 return []
 
-            out = run(['amixer', '-c', f'Fireface{self.card_model}', 'cget', alsa_lookup], stdout=PIPE, stderr=DEVNULL).stdout.decode('utf-8')
+            out = run(['amixer', '-c', f'Fireface{self.get('card-model')}', 'cget', alsa_lookup], stdout=PIPE, stderr=DEVNULL).stdout.decode('utf-8')
             for line in out.split('\n'):
                 if ': values=' in line:
                     values = line.split('=')[1]
