@@ -61,7 +61,7 @@ class OSC(Module):
                 stdout=None if config.debug else DEVNULL
             )
 
-        if config.dev and not self.engine.restarted:
+        if config.dev and self.engine.restarted:
             self.first_connect = True
 
     def parameter_changed(self, mod, name, value):
