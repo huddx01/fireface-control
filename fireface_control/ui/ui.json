@@ -10406,7 +10406,7 @@
                             "borderRadius": "auto",
                             "padding": 2,
                             "html": "<div class=\"hpf\">#{Math.round(@{@{parent.variables.fx}_hpf})}Hz</div>\n<div class=\"lpf\">#{Math.round(@{reverb_type}==14?@{@{parent.variables.fx}_damp}:@{@{parent.variables.fx}_lpf})}Hz</div>",
-                            "css": "\n.hpf, .lpf {\n position: absolute;\n top: -4rem;\n font-size: 80%;\n}\n.hpf {\n  left: 6rem;\n}\n.lpf {\n  right: 6rem;\n}\ncanvas {\n  opacity:0.25\n}",
+                            "css": "\n.hpf, .lpf {\n position: absolute;\n top: -4rem;\n font-size: 80%;\n}\n.hpf {\n  left: 6rem;\n}\n.lpf {\n  right: 6rem;\n}\ncanvas {\n  opacity:0.5\n}",
                             "pips": false,
                             "design": "compact",
                             "knobSize": "auto",
