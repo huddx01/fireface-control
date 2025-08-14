@@ -118,9 +118,9 @@
  *
  * debug:
  *   license: MIT (http://opensource.org/licenses/MIT)
- *   author: Josh Junon <josh.junon@protonmail.com>
- *   contributors: TJ Holowaychuk <tj@vision-media.ca>, Nathan Rajlich <nathan@tootallnate.net> (http://n8.io), Andrew Rhyne <rhyneandrew@gmail.com>
- *   version: 4.3.4
+ *   author: TJ Holowaychuk <tj@vision-media.ca>
+ *   contributors: Nathan Rajlich <nathan@tootallnate.net> (http://n8.io), Andrew Rhyne <rhyneandrew@gmail.com>
+ *   version: 2.6.9
  *
  * deep-equal:
  *   license: MIT (http://opensource.org/licenses/MIT)
