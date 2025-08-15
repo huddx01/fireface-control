@@ -167,7 +167,7 @@ class OSC(Module):
         if 'monitor:' in name and name.split(':')[-2] != output_select:
             return False
 
-        if 'output:' in name and (':eq' in name or ':dyn' in name or ':hpf' in name) and name.split(':')[-1] != output_select:
+        if 'output:' in name and (':eq' in name or ':dyn' in name or ':hpf' in name or ':autolevel' in name) and name.split(':')[-1] != output_select:
             return False
 
 
@@ -220,7 +220,7 @@ class OSC(Module):
                     if fx == 'echo' and (':echo' in name) or fx == 'reverb' and (':reverb' in name):
                         self.clipboard[fx][name] = self.local_state[name]
                     elif strip_type and f'{strip_type}:' in name and name.split(':')[-1] == select:
-                        if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name):
+                        if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name) or fx == 'autolevel' and (':autolevel' in name):
                             generic_name = ':'.join(name.split(':')[1:-1])
                             self.clipboard[fx][generic_name] = self.local_state[name]
 
@@ -229,7 +229,7 @@ class OSC(Module):
                     for name in self.clipboard[fx]:
                         if fx in ['echo', 'reverb']:
                             self.fireface.set(f'{name}', *self.clipboard[fx][name])
-                        elif fx in ['eq', 'dyn']:
+                        elif fx in ['eq', 'dyn', 'autolevel']:
                             self.fireface.set(f'{strip_type}:{name}:{select}', *self.clipboard[fx][name])
 
 
@@ -238,7 +238,7 @@ class OSC(Module):
                     if fx == 'echo' and (':echo' in name) or fx == 'reverb' and (':reverb' in name):
                         self.fireface.reset(name)
                     elif strip_type and f'{strip_type}:' in name and name.split(':')[-1] == select:
-                        if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name):
+                        if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name) or fx == 'autolevel' and (':autolevel' in name):
                             self.fireface.reset(name)
 
         else:
