@@ -7589,7 +7589,7 @@
                       }
                     ],
                     "tabs": [],
-                    "onTouch": "if (event.type == 'start') {\n  locals.startEvent = event\n}\n\n\nif (event.type == 'stop') {\n  \n  var dX = event.offsetX - locals.startEvent.offsetX,\n      dY = event.offsetY - locals.startEvent.offsetY\n  if (Math.abs(dX) + Math.abs(dY) > 4) return\n  \n  set('input_select', getProp('this', 'variables').input)\n}"
+                    "onTouch": "if (event.type == 'start' && !event.control) {\n  set('input_select', getProp('this', 'variables').input)\n}"
                   }
                 ],
                 "tabs": []
@@ -11216,7 +11216,7 @@
                       }
                     ],
                     "tabs": [],
-                    "onTouch": "if (event.type == 'start') {\n  locals.startEvent = event\n}\n\n\nif (event.type == 'stop') {\n  \n  var dX = event.offsetX - locals.startEvent.offsetX,\n      dY = event.offsetY - locals.startEvent.offsetY\n  if (Math.abs(dX) + Math.abs(dY) > 4) return\n  \n  \n  set('output_select', getProp('this', 'variables').output)\n\n}"
+                    "onTouch": "if (event.type == 'start' && !event.control) {\n  set('output_select', getProp('this', 'variables').output)\n}"
                   }
                 ],
                 "tabs": [],

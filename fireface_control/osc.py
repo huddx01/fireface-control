@@ -131,7 +131,8 @@ class OSC(Module):
         self.send('/output:select', self.fireface.get('output:select'))
         for name, value in self.local_state.items():
             if 'output:' in name and name.split(':')[-1] == output_select:
-                self.send(f'/{name}', *value)
+                if name.split(':')[1] not in ['mute', 'pan', 'volume-db']:
+                    self.send(f'/{name}', *value)
             elif 'monitor:' in name and name.split(':')[-2] == output_select:
                 self.send(f'/{name}', *value)
 
