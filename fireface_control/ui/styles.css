@@ -65,7 +65,7 @@
   right: 0;
   height: 758rem;
   background: VAR(--color-ui-selected);
-  background: 
+  background:
               repeating-linear-gradient(transparent, transparent 378rem, var(--color-background) 378rem, var(--color-background) 380rem),
               linear-gradient(-90deg,  var(--color-selected), var(--color-selected) var(--strip-width), var(--color-background) var(--strip-width), var(--color-background) calc(var(--strip-width) + 2rem), transparent calc(var(--strip-width) + 2rem)),
               repeating-linear-gradient(90deg,  var(--color-background), var(--color-background) 2rem, transparent 2rem, transparent 90rem) 28rem,
@@ -201,6 +201,10 @@
     Buttons, inputs, menus
 */
 
+.button-container, .menu-container, .modal-container > .toggle {
+    cursor: pointer;
+}
+
 .menu-container, .input-container, .button-container , .text-container, .dropdown-container, .switch-container  {
   --border-radius:3rem;
   --line-width:1rem;
@@ -215,7 +219,6 @@
  --widget-padding: 0;
  --color-fill: rgba(255,255,255,0.06);
  --alpha-fill-off: 1;
- cursor: pointer;
 }
 .menu-container .item:hover div:after {
     opacity: var(--alpha-fill-hover)!important;
@@ -247,7 +250,6 @@
  --color-stroke:rgba(0,0,0,0.5);
  --alpha-stroke:1;
  --widget-padding: 0;
- cursor: pointer;
 }
 
 .button-container.on,
@@ -315,5 +317,3 @@
   border-bottom-right-radius:3rem;
   margin-left:-1rem;
 }
-
-

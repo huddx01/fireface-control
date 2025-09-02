@@ -68,8 +68,10 @@ class OSC(Module):
         """
         Update GUI when a parameter with the osc flag updates
         """
+        if mod.name == 'Settings':
+            self.send('/settings', name, value)
 
-        if 'osc' in mod.parameters[name].metadata:
+        elif 'osc' in mod.parameters[name].metadata:
 
             if type(value) is not list:
                 value = [value]
@@ -119,6 +121,9 @@ class OSC(Module):
         for name, value in state:
             if self.filter_param(name) is not False:
                 self.send(f'/{name}', *value)
+
+        for name, value in self.engine.modules['Settings'].get_state():
+            self.send('/settings', name, value)
 
     def send_output_sel_state(self, index):
         """
@@ -241,6 +246,9 @@ class OSC(Module):
                     elif strip_type and f'{strip_type}:' in name and name.split(':')[-1] == select:
                         if fx == 'eq' and (':eq' in name or ':hpf' in name) or fx == 'dyn' and (':dyn' in name) or fx == 'autolevel' and (':autolevel' in name):
                             self.fireface.reset(name)
+
+        elif address == '/settings':
+            self.engine.set('Settings', *args)
 
         else:
             name = address[1:]

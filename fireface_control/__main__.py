@@ -11,6 +11,7 @@ if __package__ == None:
 from mentat import Engine
 
 from .config import config
+from .settings import Settings
 from .alsamixer import AlsaMixer
 from .fireface import FireFace
 from .osc import OSC
@@ -40,11 +41,13 @@ if not config.dev:
 
 engine = Engine('FirefaceControl', port=engine_port, folder='~/.config/fireface-control/', debug='--debug' in argv)
 
+settings = Settings('Settings')
 alsamixer = AlsaMixer('AlsaMixer')
 fireface = FireFace(alsamixer=alsamixer)
 osc = OSC(protocol='osc', fireface=fireface, port=webapp_port)
 tray = Tray(port=None)
 
+engine.add_module(settings)
 engine.add_module(alsamixer)
 engine.add_module(fireface)
 engine.add_module(osc)

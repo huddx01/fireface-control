@@ -644,7 +644,7 @@ class FireFace(Module):
             for pname in self.parameters:
                 if 'alsa' in self.parameters[pname].metadata and 'fx:reverb' not in pname and 'fx:echo' not in pname and pname not in self.output_fx:
                     self.alsa_send(pname, self.get(pname))
-           
+
             # Weird workaround to force the card to accept fx settings
             for pname in self.output_fx :
                 self.alsa_send(pname, [-649 for x in self.get(pname)])
@@ -652,7 +652,7 @@ class FireFace(Module):
             for pname in self.parameters:
                 if 'alsa' in self.parameters[pname].metadata and ('fx:reverb' in pname or 'fx:echo' in pname):
                     self.alsa_send(pname, self.get(pname))
-            
+
             for pname in self.output_fx :
                 self.alsa_send(pname, self.get(pname))
 
