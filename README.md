@@ -9,7 +9,7 @@ python3 python3-pystray python3-liblo python3-pyalsa python3-pyinotify nodejs al
 ```
 
 - `snd-fireface-ctl-service` must be built and installed manually from https://github.com/alsa-project/snd-firewire-ctl-services/. `snd-fireface-ctl-service` binary must be available (it is launched automatically and should not be started)
-- `mentat` (https://jean-emmanuel.github.io/mentat/) must be installed as well
+- `mentat` (https://github.com/jean-emmanuel/mentat/) must be installed as well
 
 The web application requires firefox or chromium to work, it's designed for desktop use (high-res tablets may work).
 
