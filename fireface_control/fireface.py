@@ -550,7 +550,10 @@ class FireFace(Module):
         self.add_parameter('show-fx', None, types='i', default=1, osc=True)
 
         self.add_parameter('state-slots', None, types='s', default='', osc=True, skip_state=True)
-        self.add_parameter('current-state', None, types='s', default='default', osc=True, skip_state=True)
+        self.add_parameter('current-state', None, types='s', default='', osc=True, skip_state=True)
+
+        self.add_parameter('gui-clients', None, types='i', default=0, skip_state=True)
+
 
         self.update_state_list()
 
@@ -566,6 +569,10 @@ class FireFace(Module):
         """
         while True:
             self.wait(1/20, 's')
+
+            if self.get('gui-clients') == 0:
+                # bypass meter polling if there's no client connected
+                continue
 
             for (mixer, sources) in self.mixer_sources.items():
 

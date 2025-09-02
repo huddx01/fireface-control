@@ -102,6 +102,8 @@ class OSC(Module):
                 self.remote_state[name] = value
                 self.send(f'/{name}', *value)
 
+        elif name == 'gui-clients':
+            self.logger.debug(f'osc clients connected = {value}')
 
     def send_state(self):
         """

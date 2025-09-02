@@ -1,11 +1,14 @@
-var clients = {}
+var clients = {},
+    [mentat_host, mentat_port] = settings.read('send')[0].split(':')
 
 app.on('open', (data, client)=>{
     clients[client.id] = true
+    send(mentat_host, mentat_port, '/gui-clients', Object.values(clients).length)
 })
 
 app.on('close', (data, client)=>{
     delete clients[client.id]
+    send(mentat_host, mentat_port, '/gui-clients', Object.values(clients).length)
 })
 
 module.exports = {
@@ -22,7 +25,7 @@ module.exports = {
     },
 
     init: ()=>{
-        send(...settings.read('send')[0].split(':'), '/server-ready')
+        send(mentat_host, mentat_port, '/server-ready')
     }
 
 }
