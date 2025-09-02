@@ -19,7 +19,6 @@ The web application requires firefox or chromium to work, it's designed for desk
 ```
 git clone https://github.com/jean-emmanuel/fireface-control
 cd fireface-control
-git submodule update --init
 python -m fireface_control -h
 ```
 

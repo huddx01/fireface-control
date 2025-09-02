@@ -1,3 +1,0 @@
-[submodule "lib/mentat"]
-	path = lib/mentat
-	url = git@github.com:jean-emmanuel/mentat.git
