@@ -1,6 +1,3 @@
-<details>
-  <summary>Work in progress</summary>
-
 # Fireface Control
 
 Totalmix replacement on Linux for RME's latter firewire interfaces 802 and UCX.
@@ -46,5 +43,3 @@ Some settings made in Totalmix may conflict.
 UCX has not been tested yet.
 
 The first UFX model (firewire) might work as well and be seen as a 802 (untested).
-
-</details>
