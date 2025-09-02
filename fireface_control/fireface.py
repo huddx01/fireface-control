@@ -557,10 +557,23 @@ class FireFace(Module):
 
         self.update_state_list()
 
-
-
+        self.engine.add_event_callback('started', lambda: self.start_scene('engine_started', self.engine_started))
 
         self.logger.info(f'initialized with {len(self.parameters.items())} parameters and {len(self.mappings)} mappings')
+
+    def engine_started(self):
+        """
+        Engine started callback
+        """
+        if not self.engine.restarted:
+
+            # auto load last state ?
+            if self.engine.get('Settings', 'autoload-state'):
+                statename = self.engine.get('Settings', 'last-state')
+                if statename in self.states:
+                    self.load(statename)
+
+
 
 
     def update_meters(self):
@@ -849,20 +862,35 @@ class FireFace(Module):
 
         return [p for p in state if 'osc' in self.get_parameter(p[0]).metadata and 'skip_state' not in self.get_parameter(p[0]).metadata]
 
+    def load(self, name, force_send=False, preload=False):
+        """
+        Keep track of last state
+        """
+        super().load(name, force_send, preload)
+
+        if not preload:
+            self.set('current-state', name)
+            self.engine.set('Settings', 'last-state', name)
 
     def save(self, name, omit_defaults):
         """
-        Keep track of available state
+        Keep track of available states & last state
         """
         super().save(name, omit_defaults)
+
+        self.set('current-state', name)
+        self.engine.set('Settings', 'last-state', name)
 
         self.update_state_list()
 
     def delete(self, name):
         """
-        Keep track of available state
+        Keep track of available states
         """
         super().delete(name)
+
+        if self.engine.get('Settings', 'last-state') == name:
+            self.engine.set('Settings', 'last-state', '')
 
         self.update_state_list()
 
