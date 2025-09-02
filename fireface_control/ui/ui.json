@@ -1202,7 +1202,7 @@
                 "target": "",
                 "bypass": false,
                 "onCreate": "",
-                "onValue": "set(this, -1, {send: false})",
+                "onValue": "if (value == 'save' && !get('state_select_menu')) {\n  set('new_state_modal', 1)\n}\n\nset(this, -1, {send: false})",
                 "label": "^bars",
                 "typeTags": "",
                 "ignoreDefaults": false,
