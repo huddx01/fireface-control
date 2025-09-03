@@ -250,7 +250,14 @@ class OSC(Module):
                             self.fireface.reset(name)
 
         elif address == '/settings':
-            self.engine.set('Settings', *args)
+            settings = self.engine.modules['Settings']
+            if args[0] == 'save':
+                settings.save('default')
+                self.send('/NOTIFY', 'save', f'Settings saved',)
+            elif args[0] == 'load':
+                settings.load('default')
+            else:
+                self.engine.set('Settings', *args)
 
         else:
             name = address[1:]

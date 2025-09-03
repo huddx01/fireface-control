@@ -9,10 +9,3 @@ class Settings(Module):
         self.add_parameter('autoload-state', None, types='i', default=0)
 
         self.load('default')
-
-        self.add_event_callback('parameter_changed', self.parameter_changed)
-
-
-    def parameter_changed(self, mod, name, value):
-
-        self.save('default')
