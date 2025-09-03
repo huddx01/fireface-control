@@ -253,11 +253,15 @@ class OSC(Module):
             settings = self.engine.modules['Settings']
             if args[0] == 'save':
                 settings.save('default')
+                settings.may_cancel = False
                 self.send('/NOTIFY', 'save', f'Settings saved',)
             elif args[0] == 'load':
-                settings.load('default')
+                if settings.may_cancel:
+                    settings.load('default')
+                    settings.may_cancel = False
             else:
-                self.engine.set('Settings', *args)
+                settings.set(*args)
+                settings.may_cancel = True
 
         else:
             name = address[1:]
