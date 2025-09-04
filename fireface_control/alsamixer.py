@@ -24,8 +24,8 @@ class AlsaMixer(Module):
                     status = check_output(['cat', f'/proc/asound/Fireface{model}/firewire/status'], text=True, stderr=DEVNULL)
                     if status:
                         self.set('card-model', model)
-                        self.start_alsaset_process()
                         self.logger.info(f'Fireface {self.get('card-model')} found')
+                        self.start_alsaset_process()
                         break
                 except:
                     pass
@@ -51,7 +51,7 @@ class AlsaMixer(Module):
                 try:
                     status = check_output(['cat', f'/proc/asound/Fireface{self.get('card-model')}/firewire/status'], text=True, stderr=DEVNULL)
                     if status and not self.get('card-online'):
-                        self.logger.warning(f'Fireface {self.get('card-model')} connected')
+                        self.logger.info(f'Fireface {self.get('card-model')} found')
                         self.start_alsaset_process()
                 except:
                     if self.get('card-online'):
@@ -95,7 +95,13 @@ class AlsaMixer(Module):
             we must wait a little before pushing any value
             """
             self.waking_up = True
-            self.wait(1, 's')
+            while True:
+                try:
+                    test = check_output(['amixer', '-c', f'Fireface{self.get('card-model')}', 'cget', 'iface=CARD,name=\'active-clock-rate\'' ], text=True, stderr=DEVNULL)
+                    break
+                except:
+                    self.wait(0.1, 's')
+
             self.set('card-online', 1)
 
 

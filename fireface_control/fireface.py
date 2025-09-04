@@ -565,16 +565,11 @@ class FireFace(Module):
         """
         Engine started callback
         """
-        if not self.engine.restarted:
-
-            # auto load last state ?
-            if self.engine.get('Settings', 'autoload-state'):
-                statename = self.engine.get('Settings', 'last-state')
-                if statename in self.states:
-                    self.load(statename)
-
-
-
+        # auto load last state ?
+        if self.engine.get('Settings', 'autoload-state'):
+            statename = self.engine.get('Settings', 'last-state')
+            if statename in self.states:
+                self.load(statename)
 
     def update_meters(self):
         """
@@ -660,9 +655,10 @@ class FireFace(Module):
 
         # card is back online: sync it
         if name == 'card-online' and value == 1:
+            self.logger.info('card is online, syncing')
 
             for pname in self.parameters:
-                if 'alsa' in self.parameters[pname].metadata and 'fx:reverb' not in pname and 'fx:echo' not in pname and pname not in self.output_fx:
+                if 'alsa' in self.parameters[pname].metadata:# and 'fx:reverb' not in pname and 'fx:echo' not in pname and pname not in self.output_fx:
                     self.alsa_send(pname, self.get(pname))
 
             # Weird workaround to force the card to accept fx settings
