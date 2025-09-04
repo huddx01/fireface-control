@@ -56,6 +56,7 @@ class AlsaMixer(Module):
                 except:
                     if self.get('card-online'):
                         self.logger.warning(f'Fireface disconnected, falling back to offline mode')
+                        self.stop()
                         self.set('card-online', 0)
 
 

@@ -819,7 +819,7 @@ class FireFace(Module):
                     inverse = lambda v: v,
                 )
 
-            self.add_parameter(f'output:pan:{index}', None, types='f', default=0.5, osc=True)
+            self.add_parameter(f'output:pan:{index}', None, types='f', default=0.5, osc=True, osc_order=-9)
 
 
     def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range, dimmer_gain=0):
