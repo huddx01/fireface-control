@@ -202,7 +202,7 @@ class OSC(Module):
                 self.send('/NOTIFY', 'save', f'State {state_name} saved',)
             elif cmd == 'load' and state_name:
                 self.fireface.soft_reset()
-                self.start_scene('a', lambda: [
+                self.start_scene('state_loading', lambda: [
                     self.fireface.load(state_name),
                     self.fireface.set('current-state', state_name),
                     self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded'),

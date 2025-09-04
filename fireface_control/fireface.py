@@ -118,7 +118,7 @@ class FireFace(Module):
             self.add_parameter(f'output:name:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:color:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:hide:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:stereo:{dest}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:stereo:{dest}', None, types='i', default=0, osc=True, osc_order=-10)
             self.add_parameter(f'output:mono:{dest}', None, types='i', default=1)
             self.add_parameter(f'output:invert-phase:{dest}', None, types='i', default=0, osc=True)
 
@@ -239,8 +239,8 @@ class FireFace(Module):
                 sources_types.append(sourcetype)
                 sources_ids.append(source)
 
-        self.add_parameter('sources-types', None, types='s'*len(sources_types), default=sources_types, osc=True, osc_order=-2)
-        self.add_parameter('sources-ids', None, types='i'*len(sources_ids), default=sources_ids, osc=True, osc_order=-2)
+        self.add_parameter('sources-types', None, types='s'*len(sources_types), default=sources_types, osc=True, skip_state=True, osc_order=-2)
+        self.add_parameter('sources-ids', None, types='i'*len(sources_ids), default=sources_ids, osc=True, skip_state=True, osc_order=-2)
 
         """
         Sources FX Sends
@@ -448,7 +448,7 @@ class FireFace(Module):
             self.create_mixer(index)
 
 
-        self.add_parameter('output-ids', None, types='i' * len(self.mixer_outputs), default=list(self.mixer_outputs), osc=True, osc_order=-1)
+        self.add_parameter('output-ids', None, types='i' * len(self.mixer_outputs), default=list(self.mixer_outputs), osc=True, osc_order=-1, skip_state=True)
         self.add_parameter('output-stereo', None, types='i' * len(self.mixer_outputs), osc=True, osc_order=-1, skip_state=True)
 
         self.add_mapping(
@@ -707,7 +707,7 @@ class FireFace(Module):
                     self.set('output:select', dest - 1)
 
             # reset gain/pan/mute when stereo changes
-            if dest % 2 == 0:
+            if dest % 2 == 0 and value == 0:
                 for (mixer, sources) in self.mixer_sources.items():
                     for source, source_name in enumerate(sources):
 
@@ -763,7 +763,8 @@ class FireFace(Module):
                     ],
                     dest = f'{mixer}:{index}:{source}',
                     transform = lambda_volume_mono,
-                    condition = f'output:mono:{index}'
+                    condition = f'output:stereo:{stereo_index}',
+                    condition_test = lambda stereo: not stereo
                 )
 
         if index % 2 == 0:
@@ -810,7 +811,7 @@ class FireFace(Module):
                     src = f'{param}:{index}',
                     dest = f'{param}:{index + 1}',
                     transform = lambda v: v,
-                    inverse = lambda v: v,
+                    # inverse = lambda v: v, # should not be needed
                     condition = f'output:stereo:{stereo_index}'
                 )
 
@@ -859,8 +860,11 @@ class FireFace(Module):
         """
 
         state = super().get_state(*args, **kwargs)
+        state = [p for p in state if 'osc' in self.get_parameter(p[0]).metadata and 'skip_state' not in self.get_parameter(p[0]).metadata]
 
-        return [p for p in state if 'osc' in self.get_parameter(p[0]).metadata and 'skip_state' not in self.get_parameter(p[0]).metadata]
+        state = sorted(state, key=lambda p: self.get_parameter(p[0]).metadata['osc_order'] if 'osc_order' in self.get_parameter(p[0]).metadata else 0)
+
+        return state
 
     def load(self, name, force_send=False, preload=False):
         """
@@ -872,7 +876,7 @@ class FireFace(Module):
             self.set('current-state', name)
             self.engine.set('Settings', 'last-state', name)
 
-    def save(self, name, omit_defaults):
+    def save(self, name, omit_defaults=False):
         """
         Keep track of available states & last state
         """
@@ -898,10 +902,18 @@ class FireFace(Module):
         """
         Soft reset for parameters that should persist (eg current state name)
         """
+        state = []
         for name in self.parameters:
             p = self.get_parameter(name)
-            if 'skip_state' not in p.metadata:
-                self.reset(name)
+            if 'skip_state' not in p.metadata and p.default is not None:
+                state.append([name, p.default])
+
+        state = sorted(state, key=lambda p: self.get_parameter(p[0]).metadata['osc_order'] if 'osc_order' in self.get_parameter(p[0]).metadata else 0)
+        for p in state:
+            if isinstance(p[1], list):
+                self.set(p[0], *p[1])
+            else:
+                self.set(*p)
 
     def update_state_list(self):
         """
