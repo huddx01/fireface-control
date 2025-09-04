@@ -8,8 +8,9 @@ Totalmix replacement on Linux for RME's latter firewire interfaces 802 and UCX.
 python3 python3-pystray python3-liblo python3-pyalsa python3-pyinotify nodejs alsa-utils
 ```
 
-- `snd-fireface-ctl-service` must be built and installed manually from https://github.com/alsa-project/snd-firewire-ctl-services/. `snd-fireface-ctl-service` binary must be available (it is launched automatically and should not be started)
+- `snd-fireface-ctl-service` must be built and installed manually from https://github.com/alsa-project/snd-firewire-ctl-services/. `snd-fireface-ctl-service` binary must be available (it is launched automatically and doesn't need to be started manually)
 - `mentat` (https://github.com/jean-emmanuel/mentat/) must be installed as well
+- `alsactl` service should be disabled to avoid conflicts (https://github.com/alsa-project/snd-firewire-ctl-services/issues/9)
 
 The web application requires firefox or chromium to work, it's designed for desktop use (high-res tablets may work).
 
