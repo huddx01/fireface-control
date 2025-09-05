@@ -2,6 +2,7 @@ from subprocess import Popen, PIPE, run, check_output, DEVNULL
 from threading import RLock
 from time import sleep
 from os import set_blocking
+from queue import Queue
 
 from mentat import Module
 
@@ -13,6 +14,7 @@ class AlsaMixer(Module):
 
             self.snd_process = None
             self.alsaset_process = None
+            self.alsa_set_queue = Queue()
 
             self.add_parameter('card-online', None, types='i', default=0)
             self.add_parameter('card-model', None, types='s', default='')
@@ -35,6 +37,7 @@ class AlsaMixer(Module):
                 self.logger.warning(f'Fireface interface not found, falling back to offline Fireface {self.get('card-model')}')
 
             self.start_scene('status_check', self.status_check)
+            self.start_scene('alsaset_loop', self.alsaset_loop)
 
 
             self.add_event_callback('parameter_changed', self.parameter_changed)
@@ -124,9 +127,7 @@ class AlsaMixer(Module):
             if type(value) is not str:
                 value = str(value)
 
-            if self.get('card-online'):
-                self.alsaset_process.stdin.write('cset ' + alsa_lookup + ' ' + value + '\n')
-                self.alsaset_process.stdin.flush()
+            self.alsa_set_queue.put('cset ' + alsa_lookup + ' ' + value + '\n')
 
         def alsa_get(self, name, alsa_lookup):
             """
@@ -144,6 +145,18 @@ class AlsaMixer(Module):
                     return values
 
             return []
+
+
+        def alsaset_loop(self):
+            while True:
+                self.wait(0.001, 's')
+                while not self.alsa_set_queue.empty():
+                    if self.get('card-online'):
+                        cmd = self.alsa_set_queue.get()
+                        self.alsaset_process.stdin.write(cmd)
+                        self.alsaset_process.stdin.flush()
+                    self.wait(0.001, 's')
+
 
         def stop(self):
             """
