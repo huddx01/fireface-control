@@ -196,17 +196,13 @@ class OSC(Module):
             state_name = self.fireface.get('current-state')
             if cmd == 'save' and state_name:
                 self.fireface.save(state_name, omit_defaults=True)
-                self.start_scene('defered state', lambda: [
-                    self.send('/current-state', self.fireface.get('current-state'))
-                ])
+                self.send('/current-state', self.fireface.get('current-state'))
                 self.send('/NOTIFY', 'save', f'State {state_name} saved',)
             elif cmd == 'load' and state_name:
                 self.fireface.soft_reset()
-                self.start_scene('state_loading', lambda: [
-                    self.fireface.load(state_name),
-                    self.fireface.set('current-state', state_name),
-                    self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded'),
-                ])
+                self.fireface.load(state_name),
+                self.fireface.set('current-state', state_name),
+                self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded'),
             elif cmd == 'delete' and state_name:
                 self.fireface.delete(state_name)
                 self.fireface.reset('current-state')

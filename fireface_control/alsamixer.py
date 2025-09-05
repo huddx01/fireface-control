@@ -13,7 +13,7 @@ class AlsaMixer(Module):
 
             self.snd_process = None
             self.alsaset_process = None
-            
+
             self.add_parameter('card-online', None, types='i', default=0)
             self.add_parameter('card-model', None, types='s', default='')
 
@@ -79,13 +79,9 @@ class AlsaMixer(Module):
             """
             Start amixer process
             """
-            try:
-               self.alsaset_process.kill()
-            except:
-                pass
+            self.stop()
             try:
                 self.start_snd_process()
-                self.alsaset_process = Popen(['amixer', '-c', f'Fireface{self.get('card-model')}', '-s', '-q'], stdin=PIPE, text=True)
                 self.start_scene('wake_up', self.wake_up)
             except Exception as e:
                 self.logger.warning(f'could not start amixer process\n{e}')
@@ -96,12 +92,15 @@ class AlsaMixer(Module):
             we must wait a little before pushing any value
             """
             self.waking_up = True
+
             while True:
                 try:
                     test = check_output(['amixer', '-c', f'Fireface{self.get('card-model')}', 'cget', 'iface=CARD,name=\'active-clock-rate\'' ], text=True, stderr=DEVNULL)
                     break
                 except:
                     self.wait(0.1, 's')
+
+            self.alsaset_process = Popen(['amixer', '-c', f'Fireface{self.get('card-model')}', '-s', '-q'], stdin=PIPE, text=True)
 
             self.set('card-online', 1)
 
@@ -126,7 +125,6 @@ class AlsaMixer(Module):
                 value = str(value)
 
             if self.get('card-online'):
-                sleep(0.01)
                 self.alsaset_process.stdin.write('cset ' + alsa_lookup + ' ' + value + '\n')
                 self.alsaset_process.stdin.flush()
 
@@ -152,7 +150,11 @@ class AlsaMixer(Module):
             Kill alsa processes when stopping
             """
             try:
-               self.snd_process.kill()
-               self.alsaset_process.kill()
+                if self.snd_process:
+                    self.snd_process.kill()
+                    self.snd_process = None
+                if self.alsaset_process:
+                    self.alsaset_process.kill()
+                    self.alsaset_process = None
             except:
                 pass

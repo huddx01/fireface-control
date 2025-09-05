@@ -118,7 +118,7 @@ class FireFace(Module):
             self.add_parameter(f'output:name:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:color:{dest}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:hide:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:stereo:{dest}', None, types='i', default=0, osc=True, osc_order=-10)
+            self.add_parameter(f'output:stereo:{dest}', None, types='i', default=0, osc=True, state_order=-10)
             self.add_parameter(f'output:mono:{dest}', None, types='i', default=1)
             self.add_parameter(f'output:invert-phase:{dest}', None, types='i', default=0, osc=True)
 
@@ -239,8 +239,8 @@ class FireFace(Module):
                 sources_types.append(sourcetype)
                 sources_ids.append(source)
 
-        self.add_parameter('sources-types', None, types='s'*len(sources_types), default=sources_types, osc=True, skip_state=True, osc_order=-2)
-        self.add_parameter('sources-ids', None, types='i'*len(sources_ids), default=sources_ids, osc=True, skip_state=True, osc_order=-2)
+        self.add_parameter('sources-types', None, types='s'*len(sources_types), default=sources_types, osc=True, skip_state=True, state_order=-2)
+        self.add_parameter('sources-ids', None, types='i'*len(sources_ids), default=sources_ids, osc=True, skip_state=True, state_order=-2)
 
         """
         Sources FX Sends
@@ -448,8 +448,8 @@ class FireFace(Module):
             self.create_mixer(index)
 
 
-        self.add_parameter('output-ids', None, types='i' * len(self.mixer_outputs), default=list(self.mixer_outputs), osc=True, osc_order=-1, skip_state=True)
-        self.add_parameter('output-stereo', None, types='i' * len(self.mixer_outputs), osc=True, osc_order=-1, skip_state=True)
+        self.add_parameter('output-ids', None, types='i' * len(self.mixer_outputs), default=list(self.mixer_outputs), osc=True, state_order=-1, skip_state=True)
+        self.add_parameter('output-stereo', None, types='i' * len(self.mixer_outputs), osc=True, state_order=-1, skip_state=True)
 
         self.add_mapping(
             src=[f'output:stereo:{index}' for index in self.mixer_outputs],
@@ -459,13 +459,13 @@ class FireFace(Module):
 
         # dsp stereo link, needed for stereo fx
         n_stereo_pairs = int(len(self.mixer_outputs) / 2)
-        self.add_parameter('output:stereo-link', None, types='i' * n_stereo_pairs , alsa='')
+        self.add_parameter('output:stereo-link', None, types='i' * n_stereo_pairs , alsa='', state_order=-2)
         self.add_mapping(
             src=[f'output:stereo:{index}' for index in range(0, len(self.mixer_outputs), 2)],
             dest='output:stereo-link',
             transform= lambda *stereo: list(stereo)
         )
-        self.add_parameter('output:stereo-balance', None, types='i' * n_stereo_pairs, default=[0] * n_stereo_pairs, alsa='')
+        self.add_parameter('output:stereo-balance', None, types='i' * n_stereo_pairs, default=[0] * n_stereo_pairs, alsa='', state_order=-1)
         self.add_mapping(
             src=[f'output:pan:{index}' for index in range(0, len(self.mixer_outputs), 2)],
             dest='output:stereo-balance',
@@ -538,8 +538,8 @@ class FireFace(Module):
         Channel selection
         """
 
-        self.add_parameter('input:select', None, types='i', default=0, osc=True)
-        self.add_parameter('output:select', None, types='i', default=0, osc=True)
+        self.add_parameter('input:select', None, types='i', default=0, osc=True, state_order=10)
+        self.add_parameter('output:select', None, types='i', default=0, osc=True, state_order=10)
 
 
         """
@@ -627,16 +627,8 @@ class FireFace(Module):
         if not lookup:
             lookup = f'name="{name}"'
 
-        if name == 'output:stereo-link':
-            # workaround a bug (in driver or firmware ?) that makes stereo balance toward left ignored
-            # when stereo link is off. part 1: set balance to right
-            self.alsa_send('output:stereo-balance', [1]* int(len(self.mixer_outputs) / 2))
-
         self.alsamixer.alsa_set(lookup, value)
 
-        if name == 'output:stereo-link':
-            # workaround part 2: set balance to actual value
-            self.alsa_send('output:stereo-balance', self.get('output:stereo-balance'))
 
 
     def parameter_changed(self, mod, name, value):
@@ -657,20 +649,9 @@ class FireFace(Module):
         if name == 'card-online' and value == 1:
             self.logger.info('card is online, syncing')
 
-            for pname in self.parameters:
-                if 'alsa' in self.parameters[pname].metadata:# and 'fx:reverb' not in pname and 'fx:echo' not in pname and pname not in self.output_fx:
-                    self.alsa_send(pname, self.get(pname))
-
-            # Weird workaround to force the card to accept fx settings
-            for pname in self.output_fx :
-                self.alsa_send(pname, [-649 for x in self.get(pname)])
-
-            for pname in self.parameters:
-                if 'alsa' in self.parameters[pname].metadata and ('fx:reverb' in pname or 'fx:echo' in pname):
-                    self.alsa_send(pname, self.get(pname))
-
-            for pname in self.output_fx :
-                self.alsa_send(pname, self.get(pname))
+            state = self.get_alsa_state()
+            for s in state:
+                self.alsa_send(s[0], s[1:])
 
         # Start/stop metering thread and reset meters when it stops
         if name == 'metering':
@@ -819,7 +800,7 @@ class FireFace(Module):
                     inverse = lambda v: v,
                 )
 
-            self.add_parameter(f'output:pan:{index}', None, types='f', default=0.5, osc=True, osc_order=-9)
+            self.add_parameter(f'output:pan:{index}', None, types='f', default=0.5, osc=True, state_order=-9)
 
 
     def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range, dimmer_gain=0):
@@ -858,9 +839,21 @@ class FireFace(Module):
         state = super().get_state(*args, **kwargs)
         state = [p for p in state if 'osc' in self.get_parameter(p[0]).metadata and 'skip_state' not in self.get_parameter(p[0]).metadata]
 
-        state = sorted(state, key=lambda p: self.get_parameter(p[0]).metadata['osc_order'] if 'osc_order' in self.get_parameter(p[0]).metadata else 0)
+        state = sorted(state, key=lambda p: self.get_parameter(p[0]).metadata['state_order'] if 'state_order' in self.get_parameter(p[0]).metadata else 0)
 
         return state
+
+    def get_alsa_state(self, *args, **kwargs):
+        """
+        Get what's needed to manage the cards's state.
+        """
+
+        state = super().get_state(*args, **kwargs)
+        state = [p for p in state if 'alsa' in self.get_parameter(p[0]).metadata]
+        state = sorted(state, key=lambda p: self.get_parameter(p[0]).metadata['state_order'] if 'state_order' in self.get_parameter(p[0]).metadata else 0)
+
+        return state
+
 
     def load(self, name, force_send=False, preload=False):
         """
@@ -904,7 +897,7 @@ class FireFace(Module):
             if 'skip_state' not in p.metadata and p.default is not None:
                 state.append([name, p.default])
 
-        state = sorted(state, key=lambda p: self.get_parameter(p[0]).metadata['osc_order'] if 'osc_order' in self.get_parameter(p[0]).metadata else 0)
+        state = sorted(state, key=lambda p: self.get_parameter(p[0]).metadata['state_order'] if 'state_order' in self.get_parameter(p[0]).metadata else 0)
         for p in state:
             if isinstance(p[1], list):
                 self.set(p[0], *p[1])
