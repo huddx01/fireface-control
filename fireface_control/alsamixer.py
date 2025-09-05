@@ -26,9 +26,6 @@ class AlsaMixer(Module):
                     status = check_output(['cat', f'/proc/asound/Fireface{model}/firewire/status'], text=True, stderr=DEVNULL)
                     if status:
                         self.set('card-model', model)
-                        self.logger.info(f'Fireface {self.get('card-model')} found')
-                        self.start_alsaset_process()
-                        break
                 except:
                     pass
 
@@ -48,7 +45,6 @@ class AlsaMixer(Module):
             Detect interface connection status
             """
             while True:
-                self.wait(1.5, 's')
                 if self.waking_up:
                     continue
                 try:
@@ -62,6 +58,7 @@ class AlsaMixer(Module):
                         self.stop()
                         self.set('card-online', 0)
 
+                self.wait(1, 's')
 
         def start_snd_process(self):
             """
@@ -122,12 +119,14 @@ class AlsaMixer(Module):
             """
             Alsa mixer set function, uses an interactive amixer instance
             """
-            if type(value) is list:
-                value = ",".join([str(x) for x in value])
-            if type(value) is not str:
-                value = str(value)
+            if self.get('card-online'):
 
-            self.alsa_set_queue.put('cset ' + alsa_lookup + ' ' + value + '\n')
+                if type(value) is list:
+                    value = ",".join([str(x) for x in value])
+                if type(value) is not str:
+                    value = str(value)
+
+                self.alsa_set_queue.put('cset ' + alsa_lookup + ' ' + value + '\n')
 
         def alsa_get(self, name, alsa_lookup):
             """
@@ -150,12 +149,12 @@ class AlsaMixer(Module):
         def alsaset_loop(self):
             while True:
                 self.wait(0.001, 's')
-                while not self.alsa_set_queue.empty():
-                    if self.get('card-online'):
-                        cmd = self.alsa_set_queue.get()
-                        self.alsaset_process.stdin.write(cmd)
-                        self.alsaset_process.stdin.flush()
-                    self.wait(0.001, 's')
+                if self.get('card-online') and not self.alsa_set_queue.empty() and self.alsaset_process:
+                    cmd = self.alsa_set_queue.get()
+                    self.alsaset_process.stdin.write(cmd)
+                    self.alsaset_process.stdin.flush()
+                elif self.alsaset_process:
+                    self.alsaset_process.stdin.flush()
 
 
         def stop(self):

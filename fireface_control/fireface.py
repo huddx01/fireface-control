@@ -559,6 +559,12 @@ class FireFace(Module):
 
         self.engine.add_event_callback('started', lambda: self.start_scene('engine_started', self.engine_started))
 
+
+        self.alsa_parameters = {}
+        for name in self.parameters:
+            if 'alsa' in self.parameters[name].metadata:
+                self.alsa_parameters[name] = self.parameters[name]
+
         self.logger.info(f'initialized with {len(self.parameters.items())} parameters and {len(self.mappings)} mappings')
 
     def engine_started(self):
@@ -627,7 +633,24 @@ class FireFace(Module):
         if not lookup:
             lookup = f'name="{name}"'
 
+        if name == 'output:stereo-link':
+            # workaround a bug (in driver or firmware ?) that makes stereo balance toward left ignored
+            # when stereo link is off. part 1: set balance to right
+            self.alsa_send('output:stereo-balance', [1]* int(len(self.mixer_outputs) / 2))
+
+
+        if 'fx:' in name and 'output-volume' in name:
+            # fx activation seems ignored when there's no fx ouptut leve
+            for name in self.alsa_parameters:
+                if 'fx:reverb' in name or 'fx:echo' in name:
+                    self.alsa_send(name, self.get(name))
+
+
         self.alsamixer.alsa_set(lookup, value)
+
+        if name == 'output:stereo-link':
+            # workaround part 2: set balance to actual value
+            self.alsa_send('output:stereo-balance', self.get('output:stereo-balance'))
 
 
 
