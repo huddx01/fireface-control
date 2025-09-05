@@ -895,14 +895,13 @@ class FireFace(Module):
         for name in self.parameters:
             p = self.get_parameter(name)
             if 'skip_state' not in p.metadata and p.default is not None:
-                state.append([name, p.default])
+                if isinstance(p.default, list):
+                    state.append([name, *p.default])
+                else:
+                    state.append([name, p.default])
 
         state = sorted(state, key=lambda p: self.get_parameter(p[0]).metadata['state_order'] if 'state_order' in self.get_parameter(p[0]).metadata else 0)
-        for p in state:
-            if isinstance(p[1], list):
-                self.set(p[0], *p[1])
-            else:
-                self.set(*p)
+        self.set_state(state)
 
     def update_state_list(self):
         """

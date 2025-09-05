@@ -86,9 +86,10 @@ class OSC(Module):
                 if not self.first_connect:
                     return
                 if name == 'output:select':
-                    self.send_output_sel_state(value[0])
+                    self.send_output_sel_state()
                 if name == 'input:select':
-                    self.send_input_sel_state(value[0])
+                    self.send_input_sel_state()
+
                 if name == 'card-online':
                     self.send('/NOTIFY', f'power-off', f'Fireface {'disconnected' if value == [0] else 'connected'}')
 
@@ -127,7 +128,7 @@ class OSC(Module):
         for name, value in self.engine.modules['Settings'].get_state():
             self.send('/settings', name, value)
 
-    def send_output_sel_state(self, index):
+    def send_output_sel_state(self):
         """
         Send values related to output channel selection:
             - output fxs
@@ -143,18 +144,29 @@ class OSC(Module):
             elif 'monitor:' in name and name.split(':')[-2] == output_select:
                 self.send(f'/{name}', *value)
 
-    def send_input_sel_state(self, index):
+    def send_input_sel_state(self):
         """
         Send values related to input channel selection:
             - input fxs
             - input options
         """
         input_select = str(self.fireface.get('input:select'))
+
         self.send('/input:select', self.fireface.get('input:select'))
         for name, value in self.local_state.items():
             if 'input:' in name and name.split(':')[-1] == input_select:
                 self.send(f'/{name}', *value)
 
+
+    def send_sel_states(self):
+        """
+        Force update gui sel states if they havent changed but general state has
+        """
+        def sc():
+            with self.engine.lock():
+                self.send_input_sel_state()
+                self.send_output_sel_state()
+        self.start_scene('send_sel_states', sc)
 
     def filter_param(self, name):
         """
@@ -200,8 +212,8 @@ class OSC(Module):
                 self.send('/NOTIFY', 'save', f'State {state_name} saved',)
             elif cmd == 'load' and state_name:
                 self.fireface.soft_reset()
-                self.fireface.load(state_name),
-                self.fireface.set('current-state', state_name),
+                self.fireface.load(state_name)
+                self.send_sel_states()
                 self.send('/NOTIFY', 'folder-open', f'State {state_name} loaded'),
             elif cmd == 'delete' and state_name:
                 self.fireface.delete(state_name)
@@ -209,7 +221,7 @@ class OSC(Module):
                 self.send('/NOTIFY', 'trash', f'State {state_name} deleted')
             elif cmd == 'reset':
                 self.fireface.soft_reset()
-                self.fireface.set('current-state', state_name)
+                self.send_sel_states()
                 self.send('/NOTIFY', 'undo', 'State reset')
 
 
