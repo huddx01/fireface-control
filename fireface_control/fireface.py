@@ -556,6 +556,7 @@ class FireFace(Module):
 
 
         self.update_state_list()
+        self.loading_state = False
 
         self.engine.add_event_callback('started', lambda: self.start_scene('engine_started', self.engine_started))
 
@@ -707,7 +708,7 @@ class FireFace(Module):
                     self.set('output:select', dest - 1)
 
             # reset gain/pan/mute when stereo changes
-            if dest % 2 == 0 and value == 0:
+            if not self.loading_state and dest % 2 == 0 and value == 0:
                 for (mixer, sources) in self.mixer_sources.items():
                     for source, source_name in enumerate(sources):
 
@@ -878,10 +879,24 @@ class FireFace(Module):
         return state
 
 
+    def begin_loading_state(self):
+        """
+        We need to prevent some param change callbacks when loading a state
+        """
+        self.loading_state = True
+        def done():
+            with self.engine.lock():
+                self.loading_state = False
+
+        self.start_scene('loading_state', done)
+
     def load(self, name, force_send=False, preload=False):
         """
         Keep track of last state
         """
+        if not preload:
+            self.begin_loading_state()
+
         super().load(name, force_send, preload)
 
         if not preload:
@@ -914,6 +929,8 @@ class FireFace(Module):
         """
         Soft reset for parameters that should persist (eg current state name)
         """
+        self.begin_loading_state()
+
         state = []
         for name in self.parameters:
             p = self.get_parameter(name)
