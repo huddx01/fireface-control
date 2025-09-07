@@ -2,6 +2,7 @@ from subprocess import Popen, PIPE, run, check_output, DEVNULL
 from threading import RLock
 from time import sleep
 from os import set_blocking
+from signal import SIGINT
 from queue import Queue
 
 from mentat import Module
@@ -153,20 +154,16 @@ class AlsaMixer(Module):
                     cmd = self.alsa_set_queue.get()
                     self.alsaset_process.stdin.write(cmd)
                     self.alsaset_process.stdin.flush()
-                elif self.alsaset_process:
-                    self.alsaset_process.stdin.flush()
 
 
         def stop(self):
             """
             Kill alsa processes when stopping
             """
-            try:
-                if self.snd_process:
-                    self.snd_process.kill()
-                    self.snd_process = None
-                if self.alsaset_process:
-                    self.alsaset_process.kill()
-                    self.alsaset_process = None
-            except:
-                pass
+            sleep(.1)
+            if self.alsaset_process:
+                self.alsaset_process.send_signal(SIGINT)
+                self.alsaset_process = None
+            if self.snd_process:
+                self.snd_process.send_signal(SIGINT)
+                self.snd_process = None

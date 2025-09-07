@@ -640,13 +640,6 @@ class FireFace(Module):
             self.alsa_send('output:stereo-balance', [1]* int(len(self.mixer_outputs) / 2))
 
 
-        if 'fx:' in name and 'output-volume' in name:
-            # fx activation seems ignored when there's no fx ouptut leve
-            for name in self.alsa_parameters:
-                if 'fx:reverb' in name or 'fx:echo' in name:
-                    self.alsa_send(name, self.get(name))
-
-
         self.alsamixer.alsa_set(lookup, value)
 
         if name == 'output:stereo-link':
