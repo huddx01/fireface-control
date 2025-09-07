@@ -731,7 +731,7 @@ class FireFace(Module):
         """
         stereo_index = int(index/2) * 2
 
-        lambda_volume_stereo = lambda volume, pan, mute, hide, dimmer: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960], dimmer_gain=0)
+        lambda_volume_stereo = lambda volume, pan, mute, hide, dimmer: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960], dimmer_gain=dimmer)
         lambda_volume_mono = lambda *a, **k: lambda_volume_stereo(*a, **k)[0]
 
 
