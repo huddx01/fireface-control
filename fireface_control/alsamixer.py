@@ -15,7 +15,6 @@ class AlsaMixer(Module):
 
             self.snd_process = None
             self.alsaset_process = None
-            self.alsa_set_queue = Queue()
 
             self.add_parameter('card-online', None, types='i', default=0)
             self.add_parameter('card-model', None, types='s', default='')
