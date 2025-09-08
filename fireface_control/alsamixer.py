@@ -147,11 +147,17 @@ class AlsaMixer(Module):
         def stop(self):
             """
             Kill alsa processes when stopping
+            Note: kill() / terminate() does not quit snd-fireface-ctl-service properly
+            and leaves some things locked, only SIGINT works
             """
-            sleep(.1)
             if self.alsaset_process:
                 self.alsaset_process.send_signal(SIGINT)
                 self.alsaset_process = None
             if self.snd_process:
-                self.snd_process.send_signal(SIGINT)
-                self.snd_process = None
+                if self.engine.is_stopping and not self.engine.is_restarting:
+                    # do nothing, let the process die with main process
+                    # otherwise it locks somehow
+                    pass
+                else:
+                    self.snd_process.send_signal(SIGINT)
+                    self.snd_process = None
