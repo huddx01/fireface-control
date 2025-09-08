@@ -1,7 +1,6 @@
 from subprocess import Popen, PIPE, run, check_output, DEVNULL
 from threading import RLock
 from time import sleep
-from os import set_blocking
 from signal import SIGINT
 from queue import Queue
 

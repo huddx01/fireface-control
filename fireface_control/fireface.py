@@ -636,14 +636,14 @@ class FireFace(Module):
 
         if name == 'output:stereo-link':
             # workaround a bug (in driver or firmware ?) that makes stereo balance toward left ignored
-            # when stereo link is off. part 1: set balance to right
-            self.alsa_send('output:stereo-balance', [1]* int(len(self.mixer_outputs) / 2))
-
+            # when stereo link is off. part 1: reset balance and wait a bit (doesn't work otherwise)
+            self.alsa_send('output:stereo-balance', [0]* int(len(self.mixer_outputs) / 2))
+            sleep(0.1)
 
         self.alsamixer.alsa_set(lookup, value)
 
         if name == 'output:stereo-link':
-            # workaround part 2: set balance to actual value
+            # workaround part 2: retore balance
             self.alsa_send('output:stereo-balance', self.get('output:stereo-balance'))
 
 
