@@ -35,8 +35,6 @@ class AlsaMixer(Module):
                 self.logger.warning(f'Fireface interface not found, falling back to offline Fireface {self.get('card-model')}')
 
             self.start_scene('status_check', self.status_check)
-            self.start_scene('alsaset_loop', self.alsaset_loop)
-
 
             self.add_event_callback('parameter_changed', self.parameter_changed)
             self.engine.add_event_callback('stopping', self.stop)
@@ -120,14 +118,15 @@ class AlsaMixer(Module):
             """
             Alsa mixer set function, uses an interactive amixer instance
             """
-            if self.get('card-online'):
+            if self.get('card-online') and self.alsaset_process:
 
                 if type(value) is list:
                     value = ",".join([str(x) for x in value])
                 if type(value) is not str:
                     value = str(value)
 
-                self.alsa_set_queue.put('cset ' + alsa_lookup + ' ' + value + '\n')
+                self.alsaset_process.stdin.write('cset ' + alsa_lookup + ' ' + value + '\n')
+                self.alsaset_process.stdin.flush()
 
         def alsa_get(self, name, alsa_lookup):
             """
@@ -145,15 +144,6 @@ class AlsaMixer(Module):
                     return values
 
             return []
-
-
-        def alsaset_loop(self):
-            while True:
-                self.wait(0.001, 's')
-                if self.get('card-online') and not self.alsa_set_queue.empty() and self.alsaset_process:
-                    cmd = self.alsa_set_queue.get()
-                    self.alsaset_process.stdin.write(cmd)
-                    self.alsaset_process.stdin.flush()
 
 
         def stop(self):
