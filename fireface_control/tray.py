@@ -21,7 +21,7 @@ class Tray(Module):
         self.icon = Icon(self.engine.name, Image.open(f'{folder}/ui/logo.png'), self.engine.name, Menu(
             MenuItem(f'{self.engine.name} v{__version__}', action=lambda:[], enabled=False, default=True),
             Menu.SEPARATOR,
-            MenuItem('Open control app', lambda: Popen(['xdg-open', self.engine.modules['OSC'].url])),
+            MenuItem('Open control app', lambda: Popen(['xdg-open', self.engine.modules['OSC'].url], start_new_session=True)),
             MenuItem('Quit', lambda: self.engine.stop())
         ))
 
