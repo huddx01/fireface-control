@@ -137,8 +137,21 @@ class AlsaMixer(Module):
             out = run(['amixer', '-c', f'Fireface{self.get('card-model')}', 'cget', alsa_lookup], stdout=PIPE, stderr=DEVNULL).stdout.decode('utf-8')
             for line in out.split('\n'):
                 if ': values=' in line:
-                    values = line.split('=')[1]
-                    values = [int(v) for v in values.split(',')]
+                    values_str = line.split('=')[1]
+                    values = []
+                    for v in values_str.split(','):
+                        try:
+                            # Try to convert to int first
+                            values.append(int(v))
+                        except ValueError:
+                            # If that fails, try to convert to on/off
+                            if v == 'off':
+                                values.append(0)
+                            elif v == 'on':
+                                values.append(1)
+                            else:
+                                # If all conversions fail, append 0 as a fallback
+                                values.append(0)
                     return values
 
             return []
