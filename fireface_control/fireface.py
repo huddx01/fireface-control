@@ -558,7 +558,7 @@ class FireFace(Module):
                           alsa='iface=CARD,name=\'spdif-input-interface\'', osc=True)
         self.add_parameter('spdif-output-format', None, types='i', default=1,
                           alsa='iface=CARD,name=\'spdif-output-format\'', osc=True)
-        self.add_parameter('word-clock-single-speed', None, types='i', default=1,
+        self.add_parameter('word-clock-single-speed', None, types='i', default=0,
                           alsa='iface=CARD,name=\'word-clock-single-speed\'', osc=True)
 
 

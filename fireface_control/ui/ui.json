@@ -7684,14 +7684,8 @@
                     "bypass": false,
                     "icon": true,
                     "values": {
-                      "labels": [
-                        "Single",
-                        "Dbl/Quad"
-                      ],
-                      "values": [
-                        1,
-                        0
-                      ]
+                      "Full Speed": 0,
+                      "Single Speed": 1
                     },
                     "size": "[\n  108,\n  #{2*30}\n]",
                     "ignoreTabs": false,
