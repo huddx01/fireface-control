@@ -538,12 +538,16 @@ class FireFace(Module):
         self.add_parameter('active-clock-source', None, types='i', default=0, access='r',
                           alsa='iface=CARD,name=\'active-clock-source\'', osc=True, skip_state=True)
 
-        self.add_parameter(f'external-source-lock', None, types='iiii', default=[0] * 4, access='r',
-                          alsa='iface=CARD,name=\'external-source-lock\'', osc=True, skip_state=True)
-        self.add_parameter(f'external-source-rate', None, types='iiii', default=[0] * 4, access='r',
-                          alsa='iface=CARD,name=\'external-source-rate\'', osc=True, skip_state=True)
-        self.add_parameter(f'external-source-sync', None, types='iiii', default=[0] * 4, access='r',
-                          alsa='iface=CARD,name=\'external-source-sync\'', osc=True, skip_state=True)
+
+        for name in ['external-source-lock', 'external-source-rate', 'external-source-sync']:
+            for i in range(4):
+                self.add_parameter(f'{name}:{i}', None, types='i', default=0, osc=True, skip_state=True)
+            self.add_parameter(name, None, types='iiii', default=[0] * 4, alsa=f'iface=CARD,name=\'{name}\'', skip_state=True)
+            self.add_mapping(
+                src=name,
+                dest=[f'{name}:{i}' for i in range(4)],
+                transform=lambda lock:lock
+            )
 
         # Writable parameters
         self.add_parameter('primary-clock-source', None, types='i', default=0,
