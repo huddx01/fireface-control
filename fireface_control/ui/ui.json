@@ -7165,7 +7165,7 @@
                     "lock": false,
                     "id": "active-clock-rate",
                     "visible": true,
-                    "interaction": true,
+                    "interaction": false,
                     "comments": "",
                     "width": "auto",
                     "height": "auto",
@@ -7201,7 +7201,7 @@
                     "textAlign": "center",
                     "menuAlignV": "center",
                     "menuAlignH": "center",
-                    "layout": "circular",
+                    "layout": "vertical",
                     "gridTemplate": "",
                     "mode": "default",
                     "values": {
@@ -7309,10 +7309,7 @@
                         4
                       ]
                     },
-                    "size": [
-                      80,
-                      90
-                    ],
+                    "size": "[\n  108,\n  #{5*30}\n]",
                     "ignoreTabs": false,
                     "textAlign": "center",
                     "menuAlignV": "top",
@@ -7408,10 +7405,7 @@
                         1
                       ]
                     },
-                    "size": [
-                      80,
-                      90
-                    ],
+                    "size": "[\n  108,\n  #{2*30}\n]",
                     "ignoreTabs": false,
                     "textAlign": "center",
                     "menuAlignV": "top",
@@ -7507,10 +7501,7 @@
                         1
                       ]
                     },
-                    "size": [
-                      80,
-                      90
-                    ],
+                    "size": "[\n  108,\n  #{2*30}\n]",
                     "ignoreTabs": false,
                     "textAlign": "center",
                     "menuAlignV": "top",
@@ -7606,10 +7597,7 @@
                         1
                       ]
                     },
-                    "size": [
-                      80,
-                      90
-                    ],
+                    "size": "[\n  108,\n  #{2*30}\n]",
                     "ignoreTabs": false,
                     "textAlign": "center",
                     "menuAlignV": "top",
@@ -7705,10 +7693,7 @@
                         0
                       ]
                     },
-                    "size": [
-                      80,
-                      90
-                    ],
+                    "size": "[\n  108,\n  #{2*30}\n]",
                     "ignoreTabs": false,
                     "textAlign": "center",
                     "menuAlignV": "top",
