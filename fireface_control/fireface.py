@@ -554,7 +554,7 @@ class FireFace(Module):
                           alsa='iface=CARD,name=\'primary-clock-source\'', osc=True)
         self.add_parameter('optical-output-signal', None, types='i', default=0,
                           alsa='iface=CARD,name=\'optical-output-signal\'', osc=True)
-        self.add_parameter('spdif-input-interface', None, types='i', default=1,
+        self.add_parameter('spdif-input-interface', None, types='i', default=0,
                           alsa='iface=CARD,name=\'spdif-input-interface\'', osc=True)
         self.add_parameter('spdif-output-format', None, types='i', default=1,
                           alsa='iface=CARD,name=\'spdif-output-format\'', osc=True)
