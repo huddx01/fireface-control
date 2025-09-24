@@ -533,30 +533,28 @@ class FireFace(Module):
         Clock and Sync parameters
         """
         # Read-only parameters
-        self.add_parameter('active-clock-rate', None, types='i', default=2, access='r', 
+        self.add_parameter('active-clock-rate', None, types='i', default=2, access='r',
                           alsa='iface=CARD,name=\'active-clock-rate\'', osc=True, skip_state=True)
-        self.add_parameter('active-clock-source', None, types='i', default=0, access='r', 
+        self.add_parameter('active-clock-source', None, types='i', default=0, access='r',
                           alsa='iface=CARD,name=\'active-clock-source\'', osc=True, skip_state=True)
-        
-        # External source parameters (4 values each)
-        for i in range(4):
-            self.add_parameter(f'external-source-lock-{i}', None, types='i', default=0, access='r', 
-                              alsa='iface=CARD,name=\'external-source-lock\'', osc=True, skip_state=True)
-            self.add_parameter(f'external-source-rate-{i}', None, types='i', default=0, access='r', 
-                              alsa='iface=CARD,name=\'external-source-rate\'', osc=True, skip_state=True)
-            self.add_parameter(f'external-source-sync-{i}', None, types='i', default=0, access='r', 
-                              alsa='iface=CARD,name=\'external-source-sync\'', osc=True, skip_state=True)
+
+        self.add_parameter(f'external-source-lock', None, types='iiii', default=[0] * 4, access='r',
+                          alsa='iface=CARD,name=\'external-source-lock\'', osc=True, skip_state=True)
+        self.add_parameter(f'external-source-rate', None, types='iiii', default=[0] * 4, access='r',
+                          alsa='iface=CARD,name=\'external-source-rate\'', osc=True, skip_state=True)
+        self.add_parameter(f'external-source-sync', None, types='iiii', default=[0] * 4, access='r',
+                          alsa='iface=CARD,name=\'external-source-sync\'', osc=True, skip_state=True)
 
         # Writable parameters
-        self.add_parameter('primary-clock-source', None, types='i', default=0, 
+        self.add_parameter('primary-clock-source', None, types='i', default=0,
                           alsa='iface=CARD,name=\'primary-clock-source\'', osc=True)
-        self.add_parameter('optical-output-signal', None, types='i', default=0, 
+        self.add_parameter('optical-output-signal', None, types='i', default=0,
                           alsa='iface=CARD,name=\'optical-output-signal\'', osc=True)
-        self.add_parameter('spdif-input-interface', None, types='i', default=0, 
+        self.add_parameter('spdif-input-interface', None, types='i', default=0,
                           alsa='iface=CARD,name=\'spdif-input-interface\'', osc=True)
-        self.add_parameter('spdif-output-format', None, types='i', default=0, 
+        self.add_parameter('spdif-output-format', None, types='i', default=0,
                           alsa='iface=CARD,name=\'spdif-output-format\'', osc=True)
-        self.add_parameter('word-clock-single-speed', None, types='i', default=0, 
+        self.add_parameter('word-clock-single-speed', None, types='i', default=0,
                           alsa='iface=CARD,name=\'word-clock-single-speed\'', osc=True)
 
 
@@ -580,6 +578,7 @@ class FireFace(Module):
         self.add_parameter('show-eq', None, types='i', default=1, osc=True)
         self.add_parameter('show-dyn', None, types='i', default=1, osc=True)
         self.add_parameter('show-fx', None, types='i', default=1, osc=True)
+        self.add_parameter('show-hw', None, types='i', default=1, osc=True)
 
         self.add_parameter('state-slots', None, types='s', default='', osc=True, skip_state=True)
         self.add_parameter('current-state', None, types='s', default='', osc=True, skip_state=True)
@@ -606,40 +605,26 @@ class FireFace(Module):
         """
         while True:
             self.wait(1, 's')  # Update every second
-            
-            # Read-only parameters
+
             params = [
-                ('active-clock-rate', 'iface=CARD,name=\'active-clock-rate\''),
-                ('active-clock-source', 'iface=CARD,name=\'active-clock-source\''),
-                ('external-source-lock', 'iface=CARD,name=\'external-source-lock\''),
-                ('external-source-rate', 'iface=CARD,name=\'external-source-rate\''),
-                ('external-source-sync', 'iface=CARD,name=\'external-source-sync\''),
+                # Read-only parameters
+                'active-clock-rate',
+                'active-clock-source',
+                'external-source-lock',
+                'external-source-rate',
+                'external-source-sync',
+                # Writable parameters
+                'primary-clock-source',
+                'optical-output-signal',
+                'spdif-input-interface',
+                'spdif-output-format',
+                'word-clock-single-speed'
             ]
-            
-            for name, lookup in params:
-                values = self.alsamixer.alsa_get(name, lookup)
+
+            for name in params:
+                values = self.alsamixer.alsa_get(name, self.get_parameter(name).metadata['alsa'])
                 if values:
-                    if name in ['external-source-lock', 'external-source-rate', 'external-source-sync']:
-                        # These return 4 values, split into individual parameters
-                        for i in range(4):
-                            if i < len(values):
-                                self.set(f'{name}-{i}', values[i])
-                    else:
-                        self.set(name, values[0])
-            
-            # Writable parameters (sync current values)
-            writable_params = [
-                ('primary-clock-source', 'iface=CARD,name=\'primary-clock-source\''),
-                ('optical-output-signal', 'iface=CARD,name=\'optical-output-signal\''),
-                ('spdif-input-interface', 'iface=CARD,name=\'spdif-input-interface\''),
-                ('spdif-output-format', 'iface=CARD,name=\'spdif-output-format\''),
-                ('word-clock-single-speed', 'iface=CARD,name=\'word-clock-single-speed\''),
-            ]
-            
-            for name, lookup in writable_params:
-                values = self.alsamixer.alsa_get(name, lookup)
-                if values:
-                    self.set(name, values[0])
+                    self.set(name, *values)
 
     def engine_started(self):
         """
@@ -647,7 +632,7 @@ class FireFace(Module):
         """
         # Start clock status update
         self.start_scene('clock_status', self.update_clock_status)
-        
+
         # auto load last state ?
         if self.engine.get('Settings', 'autoload-state'):
             statename = self.engine.get('Settings', 'last-state')
