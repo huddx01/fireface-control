@@ -98,7 +98,7 @@ class FireFace(Module):
                     self.add_parameter(f'{mixer}:{output}:{source}', None, types='i', default=32768)
 
 
-                self.add_parameter(f'{mixer}:{output}', None, types='i' * len(sources), alsa={'name': mixer, 'index': ouptut})
+                self.add_parameter(f'{mixer}:{output}', None, types='i' * len(sources), alsa={'name': mixer, 'index': output})
 
                 self.add_mapping(
                     src=[f'{mixer}:{output}:{source}' for source, source_name in enumerate(sources)],
@@ -157,7 +157,7 @@ class FireFace(Module):
 
             # stream rerturn : straight routing from stream sources
             self.add_parameter(f'output:stream-return:{dest}', None, types='f', default=0, osc=True)
-            self.add_parameter(f'mixer:stream-source-gain:{dest}', None, types='i' * len(self.mixer_outputs), alsa={'name': 'mixer:stream-source-gain', ('index': dest)})
+            self.add_parameter(f'mixer:stream-source-gain:{dest}', None, types='i' * len(self.mixer_outputs), alsa={'name': 'mixer:stream-source-gain', 'index': dest})
             def stream_return_mapping_factory(dest):
                 return lambda vol: [0] * (dest) + [self.volume_pan_to_gains(vol, 0.5, False, in_range=[-65, 6], out_range=[32768, 40960])[0]] + [0] * (len(self.mixer_outputs) - dest - 1)
             self.add_mapping(
@@ -622,7 +622,7 @@ class FireFace(Module):
             ]
 
             for name in params:
-                lookup = self.param_to_alsa_lookup(self.get_parameter(name).metadata['alsa'])
+                lookup = self.param_to_alsa_lookup(name)
                 values = self.alsamixer.alsa_get(name, lookup)
                 if values:
                     self.set(name, *values)
@@ -693,7 +693,7 @@ class FireFace(Module):
         alsadata = self.get_parameter(name).metadata['alsa']
 
         # use cache lookup stinkg
-        if 'loopkup' in alsadata:
+        if 'lookup' in alsadata:
             return alsadata['lookup']
 
         iface = alsadata['iface'] if 'iface' in alsadata else 'MIXER'
@@ -703,7 +703,7 @@ class FireFace(Module):
             lookup += f',index={alsadata['index']}'
 
         # cache lookup stinkg
-        alsadata['loopkup'] = lookup
+        alsadata['lookup'] = lookup
 
         return lookup
 
