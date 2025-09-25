@@ -532,9 +532,9 @@ class FireFace(Module):
         """
         Clock and Sync parameters
         """
-        # Read-only parameters
-        self.add_parameter('active-clock-rate', None, types='i', default=2, alsa={'iface': 'CARD', 'access': 'r'}, osc=True, skip_state=True)
-        self.add_parameter('active-clock-source', None, types='i', default=0, alsa={'iface': 'CARD', 'access': 'r'}, osc=True, skip_state=True)
+        # Read-only parameters (alsa param + skip_state meta = read-only)
+        self.add_parameter('active-clock-rate', None, types='i', default=2, alsa={'iface': 'CARD'}, osc=True, skip_state=True)
+        self.add_parameter('active-clock-source', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, skip_state=True)
 
 
         for name in ['external-source-lock', 'external-source-rate', 'external-source-sync']:
@@ -542,7 +542,7 @@ class FireFace(Module):
             for i in range(4):
                 self.add_parameter(f'{name}:{i}', None, types='i', default=0, osc=True, skip_state=True)
 
-            self.add_parameter(name, None, types='iiii', default=[0] * 4, alsa={'iface': 'CARD', 'access': 'r'}, skip_state=True)
+            self.add_parameter(name, None, types='iiii', default=[0] * 4, alsa={'iface': 'CARD'}, skip_state=True)
 
             self.add_mapping(
                 src=name,
@@ -738,7 +738,7 @@ class FireFace(Module):
             return
 
         # Update Alsa mixer (amixer) when a parameter with the alsa flag updates
-        if 'alsa' in mod.parameters[name].metadata:
+        if 'alsa' in mod.parameters[name].metadata and 'skip_state' not in mod.parameters[name].metadata:
             self.alsa_send(name, value)
 
         # card is back online: sync it
