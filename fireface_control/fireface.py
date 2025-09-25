@@ -533,8 +533,8 @@ class FireFace(Module):
         Clock and Sync parameters
         """
         # Read-only parameters (alsa param + skip_state meta = read-only)
-        self.add_parameter('active-clock-rate', None, types='i', default=2, alsa={'iface': 'CARD'}, osc=True, skip_state=True)
-        self.add_parameter('active-clock-source', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, skip_state=True)
+        self.add_parameter('active-clock-rate', None, types='i', default=2, alsa={'iface': 'CARD'}, osc=True, skip_state=True, poll=True)
+        self.add_parameter('active-clock-source', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, skip_state=True, poll=True)
 
 
         for name in ['external-source-lock', 'external-source-rate', 'external-source-sync']:
@@ -542,7 +542,7 @@ class FireFace(Module):
             for i in range(4):
                 self.add_parameter(f'{name}:{i}', None, types='i', default=0, osc=True, skip_state=True)
 
-            self.add_parameter(name, None, types='iiii', default=[0] * 4, alsa={'iface': 'CARD'}, skip_state=True)
+            self.add_parameter(name, None, types='iiii', default=[0] * 4, alsa={'iface': 'CARD'}, skip_state=True, poll=True)
 
             self.add_mapping(
                 src=name,
@@ -551,11 +551,11 @@ class FireFace(Module):
             )
 
         # Writable parameters
-        self.add_parameter('primary-clock-source', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
-        self.add_parameter('optical-output-signal', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
-        self.add_parameter('spdif-input-interface', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
-        self.add_parameter('spdif-output-format', None, types='i', default=1, alsa={'iface': 'CARD'}, osc=True)
-        self.add_parameter('word-clock-single-speed', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
+        self.add_parameter('primary-clock-source', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, poll=True)
+        self.add_parameter('optical-output-signal', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, poll=True)
+        self.add_parameter('spdif-input-interface', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, poll=True)
+        self.add_parameter('spdif-output-format', None, types='i', default=1, alsa={'iface': 'CARD'}, osc=True, poll=True)
+        self.add_parameter('word-clock-single-speed', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, poll=True)
 
 
         """
@@ -593,52 +593,42 @@ class FireFace(Module):
 
 
         self.alsa_parameters = {}
+        self.alsa_poll_parameters = {}
         for name in self.parameters:
             if 'alsa' in self.parameters[name].metadata:
                 self.alsa_parameters[name] = self.parameters[name]
+                if 'poll' in self.parameters[name].metadata:
+                    self.alsa_poll_parameters[name] = self.parameters[name]
+
 
         self.logger.info(f'initialized with {len(self.parameters.items())} parameters and {len(self.mappings)} mappings')
-
-    def update_clock_status(self):
-        """
-        Periodically update clock and sync status parameters
-        """
-        while True:
-            self.wait(1, 's')  # Update every second
-
-            params = [
-                # Read-only parameters
-                'active-clock-rate',
-                'active-clock-source',
-                'external-source-lock',
-                'external-source-rate',
-                'external-source-sync',
-                # Writable parameters
-                'primary-clock-source',
-                'optical-output-signal',
-                'spdif-input-interface',
-                'spdif-output-format',
-                'word-clock-single-speed'
-            ]
-
-            for name in params:
-                lookup = self.param_to_alsa_lookup(name)
-                values = self.alsamixer.alsa_get(name, lookup)
-                if values:
-                    self.set(name, *values)
 
     def engine_started(self):
         """
         Engine started callback
         """
-        # Start clock status update
-        self.start_scene('clock_status', self.update_clock_status)
+        # Start polling
+        self.start_scene('poll_alsa_parameters', self.poll_alsa_parameters)
 
         # auto load last state ?
         if self.engine.get('Settings', 'autoload-state'):
             statename = self.engine.get('Settings', 'last-state')
             if statename in self.states:
                 self.load(statename)
+
+
+    def poll_alsa_parameters(self):
+        """
+        Periodically update parameters that might change
+        """
+        while True:
+            self.wait(1, 's')  # Update every second
+
+            for name in self.alsa_poll_parameters:
+                lookup = self.param_to_alsa_lookup(name)
+                values = self.alsamixer.alsa_get(name, lookup)
+                if values:
+                    self.set(name, *values)
 
     def update_meters(self):
         """
