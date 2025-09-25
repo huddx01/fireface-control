@@ -692,11 +692,18 @@ class FireFace(Module):
 
         alsadata = self.get_parameter('name').metadata['alsa']
 
+        # use cache lookup stinkg
+        if 'loopkup' in alsadata:
+            return alsadata['lookup']
+
         iface = alsadata['iface'] if 'iface' in alsadata else 'MIXER'
         lookup = f'iface={iface},name={name}'
 
         if 'index' in alsadata:
             lookup += f',index={alsadata['index']}'
+
+        # cache lookup stinkg
+        alsadata['loopkup'] = lookup
 
         return lookup
 
