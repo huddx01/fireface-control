@@ -98,7 +98,7 @@ class FireFace(Module):
                     self.add_parameter(f'{mixer}:{output}:{source}', None, types='i', default=32768)
 
 
-                self.add_parameter(f'{mixer}:{output}', None, types='i' * len(sources), alsa=f'name="{mixer}",index={output}')
+                self.add_parameter(f'{mixer}:{output}', None, types='i' * len(sources), alsa={'name': mixer, 'index': ouptut})
 
                 self.add_mapping(
                     src=[f'{mixer}:{output}:{source}' for source, source_name in enumerate(sources)],
@@ -157,7 +157,7 @@ class FireFace(Module):
 
             # stream rerturn : straight routing from stream sources
             self.add_parameter(f'output:stream-return:{dest}', None, types='f', default=0, osc=True)
-            self.add_parameter(f'mixer:stream-source-gain:{dest}', None, types='i' * len(self.mixer_outputs), alsa=f'name="mixer:stream-source-gain",index={dest}')
+            self.add_parameter(f'mixer:stream-source-gain:{dest}', None, types='i' * len(self.mixer_outputs), alsa={'name': 'mixer:stream-source-gain', ('index': dest)})
             def stream_return_mapping_factory(dest):
                 return lambda vol: [0] * (dest) + [self.volume_pan_to_gains(vol, 0.5, False, in_range=[-65, 6], out_range=[32768, 40960])[0]] + [0] * (len(self.mixer_outputs) - dest - 1)
             self.add_mapping(
@@ -199,7 +199,7 @@ class FireFace(Module):
                 output_alsa_params.append(f'output:eq-{band}-{p}')
 
         for param in output_alsa_params:
-            self.add_parameter(param, None, types='i'*len(self.mixer_outputs), alsa='')
+            self.add_parameter(param, None, types='i'*len(self.mixer_outputs), alsa={})
             self.add_mapping(
                 src=[f'{param}:{dest}' for dest in self.mixer_outputs],
                 dest=param,
@@ -211,7 +211,7 @@ class FireFace(Module):
         for i in range(n_out_lines):
             self.add_parameter(f'output:line-level:{i}', None, types='i', default=1, osc=True)
 
-        self.add_parameter(f'output:line-level', None, types='i' * n_out_lines, alsa='')
+        self.add_parameter(f'output:line-level', None, types='i' * n_out_lines, alsa={})
         self.add_mapping(
             src=[f'output:line-level:{i}' for i in range(n_out_lines)],
             dest=f'output:line-level',
@@ -254,7 +254,7 @@ class FireFace(Module):
                 self.add_parameter(f'input:fx-send:{nx}', None, types='f', default=-65, osc=True)
                 nx += 1
 
-            self.add_parameter(f'fx:{sourcetype}-source-gain', None, types='i' * len(sources), alsa='')
+            self.add_parameter(f'fx:{sourcetype}-source-gain', None, types='i' * len(sources), alsa={})
 
             self.add_mapping(
                 src=[f'input:fx-send:{i}' for i in range(nx - len(sources), nx)],
@@ -362,7 +362,7 @@ class FireFace(Module):
                 input_alsa_params.append(f'input:eq-{band}-{p}')
 
         for param in input_alsa_params:
-            self.add_parameter(param, None, types='i'*len(self.mixer_inputs), alsa='')
+            self.add_parameter(param, None, types='i'*len(self.mixer_inputs), alsa={})
             self.add_mapping(
                 src=[f'{param}:{inp}' for inp, inp_type in enumerate(self.mixer_inputs)],
                 dest=param,
@@ -370,7 +370,7 @@ class FireFace(Module):
             )
 
         # line options arrays
-        self.add_parameter(f'input:line-level', None, types='i' * n_line, alsa='')
+        self.add_parameter(f'input:line-level', None, types='i' * n_line, alsa={})
         self.add_mapping(
             src=[f'input:line-level:{i + offset_line}' for i in range(n_line)],
             dest=f'input:line-level',
@@ -379,7 +379,7 @@ class FireFace(Module):
 
         # mic options arrays
         for option in mic_options:
-            self.add_parameter(f'input:{option}', None, types='i' * n_mic, alsa='')
+            self.add_parameter(f'input:{option}', None, types='i' * n_mic, alsa={})
             self.add_mapping(
                 src=[f'input:{option}:{i + offset_mic}' for i in range(n_mic)],
                 dest=f'input:{option}',
@@ -421,7 +421,7 @@ class FireFace(Module):
                 transform= lambda *hidden: int(0 in hidden)
             )
 
-        self.add_parameter('metering', None, types='i', default=0, alsa='', osc=True)
+        self.add_parameter('metering', None, types='i', default=0, alsa={}, osc=True)
 
 
         """
@@ -429,7 +429,7 @@ class FireFace(Module):
         """
         dest = 0
         for (fx_outmixer, outputs) in self.output_fx.items():
-            self.add_parameter(fx_outmixer, None, types='i'*len(outputs), alsa='')
+            self.add_parameter(fx_outmixer, None, types='i'*len(outputs), alsa={})
             base = dest
             for i in range(len(outputs)):
                 self.add_parameter(f'output:fx-return:{dest}', None, types='f', default=-65, osc=True)
@@ -459,13 +459,13 @@ class FireFace(Module):
 
         # dsp stereo link, needed for stereo fx
         n_stereo_pairs = int(len(self.mixer_outputs) / 2)
-        self.add_parameter('output:stereo-link', None, types='i' * n_stereo_pairs , alsa='', state_order=-2)
+        self.add_parameter('output:stereo-link', None, types='i' * n_stereo_pairs , alsa={}, state_order=-2)
         self.add_mapping(
             src=[f'output:stereo:{index}' for index in range(0, len(self.mixer_outputs), 2)],
             dest='output:stereo-link',
             transform= lambda *stereo: list(stereo)
         )
-        self.add_parameter('output:stereo-balance', None, types='i' * n_stereo_pairs, default=[0] * n_stereo_pairs, alsa='', state_order=-1)
+        self.add_parameter('output:stereo-balance', None, types='i' * n_stereo_pairs, default=[0] * n_stereo_pairs, alsa={}, state_order=-1)
         self.add_mapping(
             src=[f'output:pan:{index}' for index in range(0, len(self.mixer_outputs), 2)],
             dest='output:stereo-balance',
@@ -475,13 +475,13 @@ class FireFace(Module):
         """
         FX (reverb & echo)
         """
-        self.add_parameter('fx:echo-activate', None, types='i', default=0, osc=True, alsa='')
-        self.add_parameter('fx:echo-delay', None, types='i', default=10, alsa='')
-        self.add_parameter('fx:echo-feedback', None, types='i', default=0, osc=True, alsa='')
-        self.add_parameter('fx:echo-lpf-freq', None, types='i', default=0, osc=True, alsa='')
-        self.add_parameter('fx:echo-stereo-width', None, types='i', default=100, osc=True, alsa='')
-        self.add_parameter('fx:echo-type', None, types='i', default=0, osc=True, alsa='')
-        self.add_parameter('fx:echo-volume', None, types='i', default=0, alsa='')
+        self.add_parameter('fx:echo-activate', None, types='i', default=0, osc=True, alsa={})
+        self.add_parameter('fx:echo-delay', None, types='i', default=10, alsa={})
+        self.add_parameter('fx:echo-feedback', None, types='i', default=0, osc=True, alsa={})
+        self.add_parameter('fx:echo-lpf-freq', None, types='i', default=0, osc=True, alsa={})
+        self.add_parameter('fx:echo-stereo-width', None, types='i', default=100, osc=True, alsa={})
+        self.add_parameter('fx:echo-type', None, types='i', default=0, osc=True, alsa={})
+        self.add_parameter('fx:echo-volume', None, types='i', default=0, alsa={})
 
         self.add_parameter('fx:echo-volume-db', None, types='i', default=0, osc=True)
         self.add_parameter('fx:echo-delay-s', None, types='f', default=0.1, osc=True)
@@ -499,20 +499,20 @@ class FireFace(Module):
         )
 
 
-        self.add_parameter('fx:reverb-activate', None, types='i', default=0, osc=True, alsa='')
-        self.add_parameter('fx:reverb-attack', None, types='i', default=100, osc=True, alsa='')
-        self.add_parameter('fx:reverb-hold', None, types='i', default=300, osc=True, alsa='')
-        self.add_parameter('fx:reverb-release', None, types='i', default=250, osc=True, alsa='')
-        self.add_parameter('fx:reverb-type', None, types='i', default=0, osc=True, alsa='')
-        self.add_parameter('fx:reverb-room-scale', None, types='i', default=100, osc=True, alsa='')
-        self.add_parameter('fx:reverb-smooth', None, types='i', default=100, osc=True, alsa='')
-        self.add_parameter('fx:reverb-stereo-width', None, types='i', default=100, osc=True, alsa='')
-        self.add_parameter('fx:reverb-time', None, types='i', default=10, osc=True, alsa='')
-        self.add_parameter('fx:reverb-volume', None, types='i', default=0, osc=True, alsa='')
-        self.add_parameter('fx:reverb-damping', None, types='i', default=20000, osc=True, alsa='')
-        self.add_parameter('fx:reverb-post-lpf-freq', None, types='i', default=20000, osc=True, alsa='')
-        self.add_parameter('fx:reverb-pre-delay', None, types='i', default=0, osc=True, alsa='')
-        self.add_parameter('fx:reverb-pre-hpf-freq', None, types='i', default=0, osc=True, alsa='')
+        self.add_parameter('fx:reverb-activate', None, types='i', default=0, osc=True, alsa={})
+        self.add_parameter('fx:reverb-attack', None, types='i', default=100, osc=True, alsa={})
+        self.add_parameter('fx:reverb-hold', None, types='i', default=300, osc=True, alsa={})
+        self.add_parameter('fx:reverb-release', None, types='i', default=250, osc=True, alsa={})
+        self.add_parameter('fx:reverb-type', None, types='i', default=0, osc=True, alsa={})
+        self.add_parameter('fx:reverb-room-scale', None, types='i', default=100, osc=True, alsa={})
+        self.add_parameter('fx:reverb-smooth', None, types='i', default=100, osc=True, alsa={})
+        self.add_parameter('fx:reverb-stereo-width', None, types='i', default=100, osc=True, alsa={})
+        self.add_parameter('fx:reverb-time', None, types='i', default=10, osc=True, alsa={})
+        self.add_parameter('fx:reverb-volume', None, types='i', default=0, osc=True, alsa={})
+        self.add_parameter('fx:reverb-damping', None, types='i', default=20000, osc=True, alsa={})
+        self.add_parameter('fx:reverb-post-lpf-freq', None, types='i', default=20000, osc=True, alsa={})
+        self.add_parameter('fx:reverb-pre-delay', None, types='i', default=0, osc=True, alsa={})
+        self.add_parameter('fx:reverb-pre-hpf-freq', None, types='i', default=0, osc=True, alsa={})
 
         self.add_parameter('fx:reverb-volume-db', None, types='i', default=0, osc=True)
         self.add_parameter('fx:reverb-time-s', None, types='f', default=1, osc=True)
@@ -533,16 +533,17 @@ class FireFace(Module):
         Clock and Sync parameters
         """
         # Read-only parameters
-        self.add_parameter('active-clock-rate', None, types='i', default=2, access='r',
-                          alsa='iface=CARD,name=\'active-clock-rate\'', osc=True, skip_state=True)
-        self.add_parameter('active-clock-source', None, types='i', default=0, access='r',
-                          alsa='iface=CARD,name=\'active-clock-source\'', osc=True, skip_state=True)
+        self.add_parameter('active-clock-rate', None, types='i', default=2, alsa={'iface': 'CARD', 'access': 'r'}, osc=True, skip_state=True)
+        self.add_parameter('active-clock-source', None, types='i', default=0, alsa={'iface': 'CARD', 'access': 'r'}, osc=True, skip_state=True)
 
 
         for name in ['external-source-lock', 'external-source-rate', 'external-source-sync']:
+
             for i in range(4):
                 self.add_parameter(f'{name}:{i}', None, types='i', default=0, osc=True, skip_state=True)
-            self.add_parameter(name, None, types='iiii', default=[0] * 4, alsa=f'iface=CARD,name=\'{name}\'', skip_state=True)
+
+            self.add_parameter(name, None, types='iiii', default=[0] * 4, alsa={'iface': 'CARD', 'access': 'r'}, skip_state=True)
+
             self.add_mapping(
                 src=name,
                 dest=[f'{name}:{i}' for i in range(4)],
@@ -550,22 +551,17 @@ class FireFace(Module):
             )
 
         # Writable parameters
-        self.add_parameter('primary-clock-source', None, types='i', default=0,
-                          alsa='iface=CARD,name=\'primary-clock-source\'', osc=True)
-        self.add_parameter('optical-output-signal', None, types='i', default=0,
-                          alsa='iface=CARD,name=\'optical-output-signal\'', osc=True)
-        self.add_parameter('spdif-input-interface', None, types='i', default=0,
-                          alsa='iface=CARD,name=\'spdif-input-interface\'', osc=True)
-        self.add_parameter('spdif-output-format', None, types='i', default=1,
-                          alsa='iface=CARD,name=\'spdif-output-format\'', osc=True)
-        self.add_parameter('word-clock-single-speed', None, types='i', default=0,
-                          alsa='iface=CARD,name=\'word-clock-single-speed\'', osc=True)
+        self.add_parameter('primary-clock-source', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
+        self.add_parameter('optical-output-signal', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
+        self.add_parameter('spdif-input-interface', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
+        self.add_parameter('spdif-output-format', None, types='i', default=1, alsa={'iface': 'CARD'}, osc=True)
+        self.add_parameter('word-clock-single-speed', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
 
 
         """
         Other settings
         """
-        self.add_parameter('effect-on-input', None, types='i', default=0, alsa='', osc=True)
+        self.add_parameter('effect-on-input', None, types='i', default=0, alsa={}, osc=True)
 
 
         """
@@ -626,7 +622,8 @@ class FireFace(Module):
             ]
 
             for name in params:
-                values = self.alsamixer.alsa_get(name, self.get_parameter(name).metadata['alsa'])
+                lookup = self.param_to_alsa_lookup(self.get_parameter(name).metadata['alsa'])
+                values = self.alsamixer.alsa_get(name, lookup)
                 if values:
                     self.set(name, *values)
 
@@ -691,13 +688,23 @@ class FireFace(Module):
                 v = -138
         return v
 
+    def param_to_alsa_lookup(self, name):
+
+        alsadata = self.get_parameter('name').metadata['alsa']
+
+        iface = alsadata['iface'] if 'iface' in alsadata else 'MIXER'
+        lookup = f'iface={iface},name={name}'
+
+        if 'index' in alsadata:
+            lookup += f',index={alsadata['index']}'
+
+        return lookup
+
     def alsa_send(self, name, value):
         """
         Prepare message for alsamixer
         """
-        lookup = self.parameters[name].metadata['alsa']
-        if not lookup:
-            lookup = f'name="{name}"'
+        lookup = self.param_to_alsa_lookup(name)
 
         if name == 'output:stereo-link':
             # workaround a bug (in driver or firmware ?) that makes stereo balance toward left ignored

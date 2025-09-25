@@ -110,8 +110,6 @@ class AlsaMixer(Module):
             if name == 'card-online' and value == 1:
                 self.waking_up = False
 
-
-
         def alsa_set(self, alsa_lookup, value):
             """
             Alsa mixer set function, uses an interactive amixer instance
