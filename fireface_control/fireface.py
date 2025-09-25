@@ -690,7 +690,7 @@ class FireFace(Module):
 
     def param_to_alsa_lookup(self, name):
 
-        alsadata = self.get_parameter('name').metadata['alsa']
+        alsadata = self.get_parameter(name).metadata['alsa']
 
         # use cache lookup stinkg
         if 'loopkup' in alsadata:
