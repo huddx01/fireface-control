@@ -686,8 +686,9 @@ class FireFace(Module):
         if 'lookup' in alsadata:
             return alsadata['lookup']
 
+        name = alsadata['name'] if 'name' in alsadata else name
         iface = alsadata['iface'] if 'iface' in alsadata else 'MIXER'
-        lookup = f'iface={iface},name={name}'
+        lookup = f'iface={iface},name="{name}"'
 
         if 'index' in alsadata:
             lookup += f',index={alsadata['index']}'
