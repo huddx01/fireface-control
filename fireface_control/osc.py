@@ -40,11 +40,6 @@ class OSC(Module):
         ]
         self.url = f'http://127.0.0.1:{self.port}'
 
-
-        for param in ['sources-types', 'sources-ids', 'output-ids']:
-            # preload some values in gui
-            cmd_args.append(f'{param}={','.join(str(s) for s in self.fireface.get(param))}')
-
         if config.dev:
             cmd = ['open-stage-control']
 
@@ -151,12 +146,11 @@ class OSC(Module):
             - input options
         """
         input_select = str(self.fireface.get('input:select'))
-
         self.send('/input:select', self.fireface.get('input:select'))
         for name, value in self.local_state.items():
             if 'input:' in name and name.split(':')[-1] == input_select:
-                self.send(f'/{name}', *value)
-
+                if name.split(':')[1] not in ['hide']:
+                    self.send(f'/{name}', *value)
 
     def send_sel_states(self):
         """
@@ -181,7 +175,7 @@ class OSC(Module):
         if ':select' in name:
             return True
 
-        if 'input:' in name and ('color:' not in name) and name.split(':')[-1] != input_select:
+        if 'input:' in name and ('color:' not in name and 'name:' not in name) and name.split(':')[-1] != input_select:
             return False
 
         if 'monitor:' in name and name.split(':')[-2] != output_select:

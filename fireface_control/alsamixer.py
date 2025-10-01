@@ -124,7 +124,7 @@ class AlsaMixer(Module):
                 self.alsaset_process.stdin.write('cset ' + alsa_lookup + ' ' + value + '\n')
                 self.alsaset_process.stdin.flush()
 
-        def alsa_get(self, name, alsa_lookup):
+        def alsa_get(self, alsa_lookup):
             """
             Alsa mixer get function, uses an amixer instance per call
             because it doesn't work with a interactive instance (cget is not supported)

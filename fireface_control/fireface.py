@@ -20,22 +20,18 @@ class FireFace(Module):
         Card spec
         """
         if self.name == '802':
-            self.mixer_sources = {
-                'mixer:line-source-gain':  [f'AN {x + 1}' for x in range(8)],
-                'mixer:mic-source-gain': [f'MIC {x + 1}' for x in range(4)],
-                'mixer:spdif-source-gain': [f'AES {x + 1}' for x in range(2)],
-                'mixer:adat-source-gain': [f'ADAT {x + 1}' for x in range(16)],
-            }
 
-            self.mixer_inputs = ['line'] * 8 + ['mic'] * 4 + ['spdif'] * 2 + ['adat'] * 16
+            self.inputs =  [(x, 'line', f'AN {x + 1}') for x in range(8)] + \
+                           [(x, 'mic', f'MIC {x + 1}') for x in range(4)] + \
+                           [(x, 'spdif', f'AES {x + 1}') for x in range(2)] + \
+                           [(x, 'adat', f'ADAT {x + 1}') for x in range(16)]
 
-            self.mixer_outputs = range(30)
+            self.outputs = [(x, 'line', f'AN {x + 1}') for x in range(8)] + \
+                           [(x, 'hp', f'PH {x + 9}') for x in range(4)] + \
+                           [(x, 'spdif', f'AES {x + 1}') for x in range(2)] + \
+                           [(x, 'adat', f'ADAT {x + 1}') for x in range(16)]
 
-            self.mixer_outputs_default_names = [f'AN {x + 1}' for x in range(8)] + \
-                                          ['PH 9', 'PH 10'] + \
-                                          ['PH 11', 'PH 12'] + \
-                                          [f'AES {x + 1}' for x in range(2)] + \
-                                          [f'ADAT {x + 1}' for x in range(16)]
+            self.mic_options = ['invert-phase', 'mic-instrument', 'mic-power']
 
             self.output_meters = {
                 'meter:line-output':  range(8),
@@ -44,30 +40,19 @@ class FireFace(Module):
                 'meter:adat-output': range(16)
             }
 
-            self.output_fx = {
-                'fx:line-output-volume':  range(8),
-                'fx:hp-output-volume': range(4),
-                'fx:spdif-output-volume': range(2),
-                'fx:adat-output-volume': range(16)
-            }
-
         else: # UCX (untested)
 
-            self.mixer_sources = {
-                'mixer:mic-source-gain': [f'MIC {x + 1}' for x in range(2)],
-                'mixer:line-source-gain':  [f'AN {x + 1}' for x in range(6)],
-                'mixer:spdif-source-gain': [f'SPDIF {x + 1}' for x in range(2)],
-                'mixer:adat-source-gain': [f'ADAT {x + 1}' for x in range(8)],
-            }
+            self.inputs = [(x, 'mic', f'MIC {x + 1}') for x in range(2)] + \
+                          [(x, 'line', f'AN {x + 1}') for x in range(6)] + \
+                          [(x, 'spdif', f'AES {x + 1}') for x in range(2)] + \
+                          [(x, 'adat', f'ADAT {x + 1}') for x in range(8)]
 
-            self.mixer_inputs = ['mic'] * 2 + ['line'] * 6 + ['spdif'] * 2 + ['adat'] * 8
+            self.outputs =  [(x, 'line', f'AN {x + 1}') for x in range(6)] + \
+                            [(x, 'hp', f'PH {x + 7}') for x in range(2)] + \
+                            [(x, 'spdif', f'AES {x + 1}') for x in range(2)] + \
+                            [(x, 'adat', f'ADAT {x + 1}') for x in range(8)]
 
-            self.mixer_outputs = range(18)
-
-            self.mixer_outputs_default_names = [f'AN {x + 1}' for x in range(6)] + \
-                                          ['PH 7', 'PH 8'] + \
-                                          [f'SPDIF {x + 1}' for x in range(2)] + \
-                                          [f'ADAT {x + 1}' for x in range(8)]
+            self.mic_options = ['invert-phase', 'mic-power']
 
             self.output_meters = {
                 'meter:line-output':  range(6),
@@ -76,12 +61,6 @@ class FireFace(Module):
                 'meter:adat-output': range(8)
             }
 
-            self.output_fx = {
-                'fx:line-output-volume':  range(6),
-                'fx:hp-output-volume': range(2),
-                'fx:spdif-output-volume': range(2),
-                'fx:adat-output-volume': range(8)
-            }
 
         self.meter_noisefloor = -78
         self.default_eq_freqs = {'low':100, 'middle': 1000, 'high': 10000}
@@ -90,19 +69,21 @@ class FireFace(Module):
         """
         Source mixers gain parameters
         """
-        for (mixer, sources) in self.mixer_sources.items():
+        for out_index, (out_nth_of_type, out_type, out_name) in enumerate(self.outputs):
+            for in_index, (in_nth_of_type, in_type, in_name) in enumerate(self.inputs):
+                self.add_parameter(f'mixer:{in_type}-source-gain:{out_index}:{in_index}', None, types='i', default=32768)
 
-            for output in self.mixer_outputs:
+            for in_type in ['line', 'mic', 'spdif', 'adat']:
 
-                for source, source_name in enumerate(sources):
-                    self.add_parameter(f'{mixer}:{output}:{source}', None, types='i', default=32768)
-
-
-                self.add_parameter(f'{mixer}:{output}', None, types='i' * len(sources), alsa={'name': mixer, 'index': output})
-
+                self.add_parameter(
+                    f'mixer:{in_type}-source-gain:{out_index}',
+                    None,
+                    types='i' * len([x for x in self.inputs if in_type in x]),
+                    alsa={'name': f'mixer:{in_type}-source-gain', 'index': out_index}
+                )
                 self.add_mapping(
-                    src=[f'{mixer}:{output}:{source}' for source, source_name in enumerate(sources)],
-                    dest=f'{mixer}:{output}',
+                    src=[p.name for p in self.parameters.values() if f'mixer:{in_type}-source-gain:{out_index}:' in p.name],
+                    dest=f'mixer:{in_type}-source-gain:{out_index}',
                     transform=lambda *v: list(v)
                 )
 
@@ -110,79 +91,89 @@ class FireFace(Module):
         """
         Create output controls
         """
-        for dest in self.mixer_outputs:
-            self.add_parameter(f'output:volume:{dest}', None, types='i', default=0)
-            self.add_parameter(f'output:volume-db:{dest}', None, types='f', default=0, osc=True)
-            self.add_parameter(f'output:mute:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:hardware-name:{dest}', None, types='s', default=self.mixer_outputs_default_names[dest], osc=True, skip_state=True)
-            self.add_parameter(f'output:name:{dest}', None, types='s', default='', osc=True)
-            self.add_parameter(f'output:color:{dest}', None, types='s', default='', osc=True)
-            self.add_parameter(f'output:hide:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:stereo:{dest}', None, types='i', default=0, osc=True, state_order=-10)
-            self.add_parameter(f'output:mono:{dest}', None, types='i', default=1)
-            self.add_parameter(f'output:invert-phase:{dest}', None, types='i', default=0, osc=True)
+        for out_index, (out_nth_of_type, out_type, out_name) in enumerate(self.outputs):
+            self.add_parameter(f'output:volume:{out_index}', None, types='i', default=0)
+            self.add_parameter(f'output:volume-db:{out_index}', None, types='f', default=0, osc=True)
+            self.add_parameter(f'output:mute:{out_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:hardware-name:{out_index}', None, types='s', default=out_name, osc=True, skip_state=True)
+            self.add_parameter(f'output:name:{out_index}', None, types='s', default='', osc=True)
+            self.add_parameter(f'output:color:{out_index}', None, types='s', default='', osc=True)
+            self.add_parameter(f'output:hide:{out_index}', None, types='i', default=0, osc=True, output_type=out_type)
+            self.add_parameter(f'output:stereo:{out_index}', None, types='i', default=0, osc=True, state_order=-10)
+            self.add_parameter(f'output:mono:{out_index}', None, types='i', default=1)
+            self.add_parameter(f'output:invert-phase:{out_index}', None, types='i', default=0, osc=True)
 
             self.add_mapping(
-                src=[f'output:volume-db:{dest}', f'output:mute:{dest}', f'output:hide:{dest}'],
-                dest=f'output:volume:{dest}',
+                src=[f'output:volume-db:{out_index}', f'output:mute:{out_index}', f'output:hide:{out_index}'],
+                dest=f'output:volume:{out_index}',
                 transform=lambda v, m, h: v*10 - (m+h) * 900,
             )
 
             self.add_mapping(
-                src=f'output:stereo:{dest}',
-                dest=f'output:mono:{dest}',
+                src=f'output:stereo:{out_index}',
+                dest=f'output:mono:{out_index}',
                 transform=lambda v: not v,
             )
 
-            # eq
-            self.add_parameter(f'output:eq-activate:{dest}', None, types='i', default=0, osc=True)
-            for band in ['low', 'middle', 'high']:
-                self.add_parameter(f'output:eq-{band}-freq:{dest}', None, types='i', default=self.default_eq_freqs[band], osc=True)
-                self.add_parameter(f'output:eq-{band}-gain:{dest}', None, types='i', default=0, osc=True)
-                self.add_parameter(f'output:eq-{band}-quality:{dest}', None, types='i', default=10, osc=True)
-                if band != 'middle':
-                    self.add_parameter(f'output:eq-{band}-type:{dest}', None, types='i', default=self.default_eq_types[band], osc=True)
+            # meter
+            self.add_parameter(f'output:meter:{out_index}', None, types='f', default=-138, osc=True, output_type=out_type, skip_state=True)
 
-            self.add_parameter(f'output:hpf-activate:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:hpf-activate-conditionnal:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:hpf-cut-off:{dest}', None, types='i', default=20, osc=True)
-            self.add_parameter(f'output:hpf-roll-off:{dest}', None, types='i', default=0, osc=True)
+            # line options
+            if out_type == 'line':
+                self.add_parameter(f'output:line-level:{out_index}', None, types='i', default=1, osc=True)
+
+            # fx sends
+            self.add_parameter(f'output:fx-return:{out_index}', None, types='f', default=-65, osc=True, output_type=out_type)
+
+            # eq
+            self.add_parameter(f'output:eq-activate:{out_index}', None, types='i', default=0, osc=True)
+            for band in ['low', 'middle', 'high']:
+                self.add_parameter(f'output:eq-{band}-freq:{out_index}', None, types='i', default=self.default_eq_freqs[band], osc=True)
+                self.add_parameter(f'output:eq-{band}-gain:{out_index}', None, types='i', default=0, osc=True)
+                self.add_parameter(f'output:eq-{band}-quality:{out_index}', None, types='i', default=10, osc=True)
+                if band != 'middle':
+                    self.add_parameter(f'output:eq-{band}-type:{out_index}', None, types='i', default=self.default_eq_types[band], osc=True)
+
+            self.add_parameter(f'output:hpf-activate:{out_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:hpf-activate-conditionnal:{out_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:hpf-cut-off:{out_index}', None, types='i', default=20, osc=True)
+            self.add_parameter(f'output:hpf-roll-off:{out_index}', None, types='i', default=0, osc=True)
 
             # only activate hpf when eq is activated
             self.add_mapping(
-                src=[f'output:eq-activate:{dest}', f'output:hpf-activate-conditionnal:{dest}'],
-                dest=f'output:hpf-activate:{dest}',
+                src=[f'output:eq-activate:{out_index}', f'output:hpf-activate-conditionnal:{out_index}'],
+                dest=f'output:hpf-activate:{out_index}',
                 transform=lambda eq, hpf: eq and hpf
             )
 
-            # stream rerturn : straight routing from stream sources
-            self.add_parameter(f'output:stream-return:{dest}', None, types='f', default=0, osc=True)
-            self.add_parameter(f'mixer:stream-source-gain:{dest}', None, types='i' * len(self.mixer_outputs), alsa={'name': 'mixer:stream-source-gain', 'index': dest})
-            def stream_return_mapping_factory(dest):
-                return lambda vol: [0] * (dest) + [self.volume_pan_to_gains(vol, 0.5, False, in_range=[-65, 6], out_range=[32768, 40960])[0]] + [0] * (len(self.mixer_outputs) - dest - 1)
+            # stream return : straight routing from stream sources
+            self.add_parameter(f'output:stream-return:{out_index}', None, types='f', default=0, osc=True)
+            self.add_parameter(f'mixer:stream-source-gain:{out_index}', None, types='i' * len(self.outputs), alsa={'name': 'mixer:stream-source-gain', 'index': out_index})
+            def stream_return_mapping_factory(out_index):
+                return lambda vol: [0] * (out_index) + [self.volume_pan_to_gains(vol, 0.5, False, in_range=[-65, 6], out_range=[32768, 40960])[0]] + [0] * (len(self.outputs) - out_index - 1)
             self.add_mapping(
-                src=f'output:stream-return:{dest}',
-                dest=f'mixer:stream-source-gain:{dest}',
-                transform=stream_return_mapping_factory(dest)
+                src=f'output:stream-return:{out_index}',
+                dest=f'mixer:stream-source-gain:{out_index}',
+                transform=stream_return_mapping_factory(out_index)
             )
 
             # monitor return: global dimmer for monitor mix
-            self.add_parameter(f'output:monitor-return:{dest}', None, types='f', default=0, osc=True)
+            self.add_parameter(f'output:monitor-return:{out_index}', None, types='f', default=0, osc=True)
 
             # dynamics
-            self.add_parameter(f'output:dyn-activate:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:dyn-attack:{dest}', None, types='i', default=10, osc=True)
-            self.add_parameter(f'output:dyn-release:{dest}', None, types='i', default=300, osc=True)
-            self.add_parameter(f'output:dyn-gain:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:dyn-compressor-threshold:{dest}', None, types='i', default=-300, osc=True)
-            self.add_parameter(f'output:dyn-expander-threshold:{dest}', None, types='i', default=-600, osc=True)
-            self.add_parameter(f'output:dyn-compressor-ratio:{dest}', None, types='i', default=10, osc=True)
-            self.add_parameter(f'output:dyn-expander-ratio:{dest}', None, types='i', default=10, osc=True)
+            self.add_parameter(f'output:dyn-activate:{out_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:dyn-attack:{out_index}', None, types='i', default=10, osc=True)
+            self.add_parameter(f'output:dyn-release:{out_index}', None, types='i', default=300, osc=True)
+            self.add_parameter(f'output:dyn-gain:{out_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:dyn-compressor-threshold:{out_index}', None, types='i', default=-300, osc=True)
+            self.add_parameter(f'output:dyn-expander-threshold:{out_index}', None, types='i', default=-600, osc=True)
+            self.add_parameter(f'output:dyn-compressor-ratio:{out_index}', None, types='i', default=10, osc=True)
+            self.add_parameter(f'output:dyn-expander-ratio:{out_index}', None, types='i', default=10, osc=True)
 
-            self.add_parameter(f'output:autolevel-activate:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:autolevel-max-gain:{dest}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'output:autolevel-head-room:{dest}', None, types='i', default=30, osc=True)
-            self.add_parameter(f'output:autolevel-rise-time:{dest}', None, types='i', default=1, osc=True)
+            self.add_parameter(f'output:autolevel-activate:{out_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:autolevel-max-gain:{out_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:autolevel-head-room:{out_index}', None, types='i', default=30, osc=True)
+            self.add_parameter(f'output:autolevel-rise-time:{out_index}', None, types='i', default=1, osc=True)
 
         # map single output params to array params for alsa
         output_alsa_params = [
@@ -199,152 +190,125 @@ class FireFace(Module):
                 output_alsa_params.append(f'output:eq-{band}-{p}')
 
         for param in output_alsa_params:
-            self.add_parameter(param, None, types='i'*len(self.mixer_outputs), alsa={})
+            self.add_parameter(param, None, types='i' * len(self.inputs), alsa={})
             self.add_mapping(
-                src=[f'{param}:{dest}' for dest in self.mixer_outputs],
+                src=[f'{param}:{out_index}' for out_index, data in enumerate(self.inputs)],
                 dest=param,
                 transform=lambda *v: list(v)
             )
 
-
-        n_out_lines = 8 if self.name == '802' else 6
-        for i in range(n_out_lines):
-            self.add_parameter(f'output:line-level:{i}', None, types='i', default=1, osc=True)
-
-        self.add_parameter(f'output:line-level', None, types='i' * n_out_lines, alsa={})
+        # line option arrays
+        self.add_parameter(f'output:line-level', None, types='i' * len([x for x in self.outputs if 'line' in x]), alsa={})
         self.add_mapping(
-            src=[f'output:line-level:{i}' for i in range(n_out_lines)],
+            src=[p.name for p in self.parameters.values() if f'output:line-level:' in p.name],
             dest=f'output:line-level',
             transform=lambda *v: list(v)
         )
 
-
-
-        """
-        Sources gui custom parameters (name, colors, etc)
-        """
-        sources_types = []
-        sources_ids = []
-
-        for (mixer, sources) in self.mixer_sources.items():
-
-            sourcetype = mixer.split(':')[1].split('-')[0]
-
-            for source, source_name in enumerate(sources):
-
-                self.add_parameter(f'source-{sourcetype}-hardware-name:{source}', None, types='s', default=source_name, osc=True, skip_state=True)
-                self.add_parameter(f'source-{sourcetype}-name:{source}', None, types='s', default='', osc=True)
-                self.add_parameter(f'source-{sourcetype}-hide:{source}', None, types='i', default=0, osc=True)
-
-                sources_types.append(sourcetype)
-                sources_ids.append(source)
-
-        self.add_parameter('sources-types', None, types='s'*len(sources_types), default=sources_types, osc=True, skip_state=True, state_order=-2)
-        self.add_parameter('sources-ids', None, types='i'*len(sources_ids), default=sources_ids, osc=True, skip_state=True, state_order=-2)
-
-        """
-        Sources FX Sends
-        """
-        nx = 0
-        for (mixer, sources) in self.mixer_sources.items():
-
-            sourcetype = mixer.split(':')[1].split('-')[0]
-
-            for source, source_name in enumerate(sources):
-                self.add_parameter(f'input:fx-send:{nx}', None, types='f', default=-65, osc=True)
-                nx += 1
-
-            self.add_parameter(f'fx:{sourcetype}-source-gain', None, types='i' * len(sources), alsa={})
-
+        for out_type in ['line', 'mic', 'spdif', 'adat']:
+            # fx return arrays
+            self.add_parameter(f'fx:{out_type}-output-volume', None, types='i' * len([x for x in self.outputs if out_type in x]), alsa={})
             self.add_mapping(
-                src=[f'input:fx-send:{i}' for i in range(nx - len(sources), nx)],
-                dest=f'fx:{sourcetype}-source-gain',
-                transform=  lambda *gains: [x * 10 for x in gains]
+                src=[p.name for p in self.parameters.values() if f'output:fx-return:' in p.name and p.metadata['output_type'] == out_type],
+                dest=f'fx:{out_type}-output-volume',
+                transform= lambda *return_gains: [x * 10 for x in return_gains]
             )
 
+            # meters visibility
+            self.add_parameter(f'output:{out_type}-meters-visible', None, types='i', default=1)
+            self.add_mapping(
+                src=[p.name for p in self.parameters.values() if f'output:hide:' in p.name and p.metadata['output_type'] == out_type],
+                dest=f'output:{out_type}-meters-visible',
+                transform= lambda *hidden: int(0 in hidden)
+            )
 
+            # meters value
+            self.add_parameter(f'meter:{out_type}-output', None, types='i' * len([x for x in self.outputs if out_type in x]), alsa={'iface': 'CARD'}, skip_state=True)
+            self.add_mapping(
+                src=f'meter:{out_type}-output',
+                dest=[p.name for p in self.parameters.values() if f'output:meter:' in p.name and p.metadata['output_type'] == out_type],
+                transform= lambda values: [self.meter_abs_to_db(v) for v in values]
+            )
 
         """
         Input options, eq & dyn
         """
+        for in_index, (in_nth_of_type, in_type, in_name) in enumerate(self.inputs):
 
-        n_mic = 0
-        offset_mic = -1
-        offset_line = -1
-        n_line = 0
-        mic_options = ['invert-phase', 'mic-instrument', 'mic-power'] if self.name == '802' else ['invert-phase', 'mic-power']
-
-        for inp, input_type in enumerate(self.mixer_inputs):
+            # read-only
+            self.add_parameter(f'input:hardware-name:{in_index}', None, types='s', default=in_name, osc=True, skip_state=True)
+            self.add_parameter(f'input:type:{in_index}', None, types='s', default=in_type, osc=True, skip_state=True)
 
             # gui options
-            self.add_parameter(f'input:color:{inp}', None, types='s', default='', osc=True)
+            self.add_parameter(f'input:name:{in_index}', None, types='s', default='', osc=True)
+            self.add_parameter(f'input:color:{in_index}', None, types='s', default='', osc=True)
+            self.add_parameter(f'input:hide:{in_index}', None, types='i', default=0, osc=True, input_type=in_type)
+
+            # meter
+            self.add_parameter(f'input:meter:{in_index}', None, types='f', default=-138, osc=True, input_type=in_type, skip_state=True)
 
             # line options
-            if input_type == 'line':
-                if offset_line == -1:
-                    offset_line = inp
-                self.add_parameter(f'input:line-level:{inp}', None, types='i', default=0, osc=True)
-                n_line += 1
+            if in_type == 'line':
+                self.add_parameter(f'input:line-level:{in_index}', None, types='i', default=0, osc=True)
 
             # mic options
-            if input_type == 'mic':
-                if offset_mic == -1:
-                    offset_mic = inp
-                for option in mic_options:
-                    self.add_parameter(f'input:{option}:{inp}', None, types='i', default=0, osc=True)
-                n_mic += 1
+            if in_type == 'mic':
+                for option in self.mic_options:
+                    self.add_parameter(f'input:{option}:{in_index}', None, types='i', default=0, osc=True, input_type=in_type)
 
                 # prevent mic inst + mic power state (also protected at driver level)
                 if self.name == '802':
                     self.add_mapping(
-                        src=f'input:mic-instrument:{inp}',
-                        dest=f'input:mic-power:{inp}',
+                        src=f'input:mic-instrument:{in_index}',
+                        dest=f'input:mic-power:{in_index}',
                         transform=lambda v: 1 - v,
-                        condition=f'input:mic-instrument:{inp}',
+                        condition=f'input:mic-instrument:{in_index}',
                     )
                     self.add_mapping(
-                        src=f'input:mic-power:{inp}',
-                        dest=f'input:mic-instrument:{inp}',
+                        src=f'input:mic-power:{in_index}',
+                        dest=f'input:mic-instrument:{in_index}',
                         transform=lambda v: 1 - v,
-                        condition=f'input:mic-power:{inp}',
+                        condition=f'input:mic-power:{in_index}',
                     )
 
+            # fx send
+            self.add_parameter(f'input:fx-send:{in_index}', None, types='f', default=-65, osc=True, input_type=in_type)
 
             # eq
-            self.add_parameter(f'input:eq-activate:{inp}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:eq-activate:{in_index}', None, types='i', default=0, osc=True)
             for band in ['low', 'middle', 'high']:
-                self.add_parameter(f'input:eq-{band}-freq:{inp}', None, types='i', default=self.default_eq_freqs[band], osc=True)
-                self.add_parameter(f'input:eq-{band}-gain:{inp}', None, types='i', default=0, osc=True)
-                self.add_parameter(f'input:eq-{band}-quality:{inp}', None, types='i', default=10, osc=True)
+                self.add_parameter(f'input:eq-{band}-freq:{in_index}', None, types='i', default=self.default_eq_freqs[band], osc=True)
+                self.add_parameter(f'input:eq-{band}-gain:{in_index}', None, types='i', default=0, osc=True)
+                self.add_parameter(f'input:eq-{band}-quality:{in_index}', None, types='i', default=10, osc=True)
                 if band != 'middle':
-                    self.add_parameter(f'input:eq-{band}-type:{inp}', None, types='i', default=self.default_eq_types[band], osc=True)
+                    self.add_parameter(f'input:eq-{band}-type:{in_index}', None, types='i', default=self.default_eq_types[band], osc=True)
 
-            self.add_parameter(f'input:hpf-activate:{inp}', None, types='i', default=0)
-            self.add_parameter(f'input:hpf-activate-conditionnal:{inp}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'input:hpf-cut-off:{inp}', None, types='i', default=20, osc=True)
-            self.add_parameter(f'input:hpf-roll-off:{inp}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:hpf-activate:{in_index}', None, types='i', default=0)
+            self.add_parameter(f'input:hpf-activate-conditionnal:{in_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:hpf-cut-off:{in_index}', None, types='i', default=20, osc=True)
+            self.add_parameter(f'input:hpf-roll-off:{in_index}', None, types='i', default=0, osc=True)
 
             # only activate hpf when eq is activated
             self.add_mapping(
-                src=[f'input:eq-activate:{inp}', f'input:hpf-activate-conditionnal:{inp}'],
-                dest=f'input:hpf-activate:{inp}',
+                src=[f'input:eq-activate:{in_index}', f'input:hpf-activate-conditionnal:{in_index}'],
+                dest=f'input:hpf-activate:{in_index}',
                 transform=lambda eq, hpf: eq and hpf
             )
 
             # dynamics
-            self.add_parameter(f'input:dyn-activate:{inp}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'input:dyn-attack:{inp}', None, types='i', default=10, osc=True)
-            self.add_parameter(f'input:dyn-release:{inp}', None, types='i', default=300, osc=True)
-            self.add_parameter(f'input:dyn-gain:{inp}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'input:dyn-compressor-threshold:{inp}', None, types='i', default=-300, osc=True)
-            self.add_parameter(f'input:dyn-expander-threshold:{inp}', None, types='i', default=-600, osc=True)
-            self.add_parameter(f'input:dyn-compressor-ratio:{inp}', None, types='i', default=10, osc=True)
-            self.add_parameter(f'input:dyn-expander-ratio:{inp}', None, types='i', default=10, osc=True)
+            self.add_parameter(f'input:dyn-activate:{in_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:dyn-attack:{in_index}', None, types='i', default=10, osc=True)
+            self.add_parameter(f'input:dyn-release:{in_index}', None, types='i', default=300, osc=True)
+            self.add_parameter(f'input:dyn-gain:{in_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:dyn-compressor-threshold:{in_index}', None, types='i', default=-300, osc=True)
+            self.add_parameter(f'input:dyn-expander-threshold:{in_index}', None, types='i', default=-600, osc=True)
+            self.add_parameter(f'input:dyn-compressor-ratio:{in_index}', None, types='i', default=10, osc=True)
+            self.add_parameter(f'input:dyn-expander-ratio:{in_index}', None, types='i', default=10, osc=True)
 
-            self.add_parameter(f'input:autolevel-activate:{inp}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'input:autolevel-max-gain:{inp}', None, types='i', default=0, osc=True)
-            self.add_parameter(f'input:autolevel-head-room:{inp}', None, types='i', default=30, osc=True)
-            self.add_parameter(f'input:autolevel-rise-time:{inp}', None, types='i', default=1, osc=True)
+            self.add_parameter(f'input:autolevel-activate:{in_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:autolevel-max-gain:{in_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'input:autolevel-head-room:{in_index}', None, types='i', default=30, osc=True)
+            self.add_parameter(f'input:autolevel-rise-time:{in_index}', None, types='i', default=1, osc=True)
 
 
         # map single output params to array params for alsa
@@ -362,112 +326,160 @@ class FireFace(Module):
                 input_alsa_params.append(f'input:eq-{band}-{p}')
 
         for param in input_alsa_params:
-            self.add_parameter(param, None, types='i'*len(self.mixer_inputs), alsa={})
+            self.add_parameter(param, None, types='i'*len(self.inputs), alsa={})
             self.add_mapping(
-                src=[f'{param}:{inp}' for inp, inp_type in enumerate(self.mixer_inputs)],
+                src=[f'{param}:{inp}' for inp, data in enumerate(self.inputs)],
                 dest=param,
                 transform=lambda *v: list(v)
             )
 
         # line options arrays
-        self.add_parameter(f'input:line-level', None, types='i' * n_line, alsa={})
+        self.add_parameter(f'input:line-level', None, types='i' * len([x for x in self.inputs if 'line' in x]), alsa={})
         self.add_mapping(
-            src=[f'input:line-level:{i + offset_line}' for i in range(n_line)],
+            src=[p.name for p in self.parameters.values() if f'input:line-level:' in p.name],
             dest=f'input:line-level',
             transform=  lambda *v: list(v)
         )
 
         # mic options arrays
-        for option in mic_options:
-            self.add_parameter(f'input:{option}', None, types='i' * n_mic, alsa={})
+        for option in self.mic_options:
+            self.add_parameter(f'input:{option}', None, types='i' * len([x for x in self.inputs if 'mic' in x]), alsa={})
             self.add_mapping(
-                src=[f'input:{option}:{i + offset_mic}' for i in range(n_mic)],
+                src=[p.name for p in self.parameters.values() if f'input:{option}:' in p.name],
                 dest=f'input:{option}',
                 transform=lambda *v: list(v)
             )
 
+        for in_type in ['line', 'mic', 'spdif', 'adat']:
+            # fx sends arrays
+            self.add_parameter(f'fx:{in_type}-source-gain', None, types='i' * len([x for x in self.inputs if in_type in x]), alsa={})
+            self.add_mapping(
+                src=[p.name for p in self.parameters.values() if f'input:fx-send:' in p.name and p.metadata['input_type'] == in_type],
+                dest=f'fx:{in_type}-source-gain',
+                transform=lambda *gains: [x * 10 for x in gains]
+            )
+
+            # meters visibility
+            self.add_parameter(f'input:{in_type}-meters-visible', None, types='i', default=1)
+            self.add_mapping(
+                src=[p.name for p in self.parameters.values() if f'input:hide:' in p.name and p.metadata['input_type'] == in_type],
+                dest=f'input:{in_type}-meters-visible',
+                transform= lambda *hidden: int(0 in hidden)
+            )
+
+            # meters value
+            self.add_parameter(f'meter:{in_type}-input', None, types='i' * len([x for x in self.inputs if in_type in x]), alsa={'iface': 'CARD'}, skip_state=True)
+            self.add_mapping(
+                src=f'meter:{in_type}-input',
+                dest=[p.name for p in self.parameters.values() if f'input:meter:' in p.name and p.metadata['input_type'] == in_type],
+                transform= lambda values: [self.meter_abs_to_db(v) for v in values]
+            )
 
         """
         Meters
         """
-
-        for (mixer, sources) in self.mixer_sources.items():
-
-            sourcetype = mixer.split(':')[1].split('-')[0]
-
-            for source, source_name in enumerate(sources):
-
-                self.add_parameter(f'source-{sourcetype}-meter:{source}', None, types='f', default=-138, osc=True)
-
-            self.add_parameter(f'source-{sourcetype}-meters-visible', None, types='i', default=1)
-            self.add_mapping(
-                src=[f'source-{sourcetype}-hide:{source}' for source, source_name in enumerate(sources)],
-                dest=f'source-{sourcetype}-meters-visible',
-                transform= lambda *hidden: int(0 in hidden)
-            )
-
-        out_index = -1
-        for (output_meter, outputs) in self.output_meters.items():
-            outputtype = output_meter.split(':')[1].split('-')[0]
-
-            for output in outputs:
-                out_index += 1
-                self.add_parameter(f'output-meter:{out_index}', None, types='f', default=-138, osc=True)
-
-            self.add_parameter(f'output-{outputtype}-meters-visible', None, types='i', default=1)
-            self.add_mapping(
-                src=[f'output:hide:{dest + out_index - len(outputs) + 1}' for dest in outputs],
-                dest=f'output-{outputtype}-meters-visible',
-                transform= lambda *hidden: int(0 in hidden)
-            )
-
         self.add_parameter('metering', None, types='i', default=0, alsa={}, osc=True)
 
+        """
+        Monitor mixers
+        """
+        for out_index, (out_nth_of_type, out_type, out_name) in enumerate(self.outputs):
+
+            stereo_index = int(out_index / 2) * 2
+
+            lambda_volume_stereo = lambda volume, pan, mute, hide, dimmer: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960], dimmer_gain=dimmer)
+            lambda_volume_mono = lambda *a, **k: lambda_volume_stereo(*a, **k)[0]
+
+            # create gain, mute and pan controls for every input
+            # and map them to the appropriate mixer source gains
+            for in_index, (in_nth_of_type, in_type, in_name) in enumerate(self.inputs):
+
+                self.add_parameter(f'monitor:input-gain:{out_index}:{in_index}', None, types='f', default=-65, osc=True)
+                self.add_parameter(f'monitor:input-pan:{out_index}:{in_index}', None, types='f', default=0.5, osc=True)
+                self.add_parameter(f'monitor:input-mute:{out_index}:{in_index}', None, types='i', default=0, osc=True)
+
+                # Mono mapping
+                self.add_mapping(
+                    src = [
+                        f'monitor:input-gain:{out_index}:{in_index}',
+                        f'monitor:input-pan:{out_index}:{in_index}',
+                        f'monitor:input-mute:{out_index}:{in_index}',
+                        f'input:hide:{in_index}',
+                        f'output:monitor-return:{out_index}'
+                    ],
+                    dest = f'mixer:{in_type}-source-gain:{out_index}:{in_index}',
+                    transform = lambda_volume_mono,
+                    condition = f'output:stereo:{stereo_index}',
+                    condition_test = lambda stereo: not stereo
+                )
+
+            if out_index % 2 == 0:
+                # first channel of every stereo pair
+
+                for in_index, (in_nth_of_type, in_type, in_name) in enumerate(self.inputs):
+                    # Stereo mapping
+                    self.add_mapping(
+                        src = [
+                            f'monitor:input-gain:{out_index}:{in_index}',
+                            f'monitor:input-pan:{out_index}:{in_index}',
+                            f'monitor:input-mute:{out_index}:{in_index}',
+                            f'input:hide:{in_index}',
+                            f'output:monitor-return:{out_index}'
+                        ],
+                        dest = [f'mixer:{in_type}-source-gain:{index}:{in_index}' for index in (out_index, out_index + 1)],
+                        transform = lambda_volume_stereo,
+                        condition = f'output:stereo:{stereo_index}'
+                    )
+
+                linked_params = [
+                    'output:hide', 'output:volume-db', 'output:mute', 'output:name', 'output:color',
+                    'output:eq-activate', 'output:hpf-activate-conditionnal', 'output:hpf-cut-off', 'output:hpf-roll-off',
+                    'output:dyn-activate',  'output:dyn-attack',  'output:dyn-release',  'output:dyn-gain',
+                    'output:dyn-compressor-threshold',  'output:dyn-expander-threshold',  'output:dyn-compressor-ratio', 'output:dyn-expander-ratio',
+                    'output:stream-return', 'output:monitor-return', 'output:fx-return']
+
+                for band in ['low', 'middle', 'high']:
+                    for p in ['type', 'freq', 'gain', 'quality']:
+                        if band == 'middle' and p == 'type':
+                            continue
+                        linked_params.append(f'output:eq-{band}-{p}')
+
+                if out_type == 'line':
+                    linked_params.append('output:line-level')
+
+                # link outputs
+                for param in linked_params:
+                    self.add_mapping(
+                        src = f'{param}:{out_index}',
+                        dest = f'{param}:{out_index + 1}',
+                        transform = lambda v: v,
+                        condition = f'output:stereo:{stereo_index}'
+                    )
+
+                for param in ['output:stereo']:
+                    self.add_mapping(
+                        src = f'{param}:{out_index}',
+                        dest = f'{param}:{out_index + 1}',
+                        transform = lambda v: v,
+                        inverse = lambda v: v,
+                    )
+
+                self.add_parameter(f'output:pan:{out_index}', None, types='f', default=0.5, osc=True, state_order=-9)
 
         """
-        FX Returns
+        Stereo outputs
         """
-        dest = 0
-        for (fx_outmixer, outputs) in self.output_fx.items():
-            self.add_parameter(fx_outmixer, None, types='i'*len(outputs), alsa={})
-            base = dest
-            for i in range(len(outputs)):
-                self.add_parameter(f'output:fx-return:{dest}', None, types='f', default=-65, osc=True)
-                dest += 1
-            self.add_mapping(
-                src=[f'output:fx-return:{j}' for j in range(base, dest)],
-                dest=fx_outmixer,
-                transform= lambda *return_gains: [x * 10 for x in return_gains]
-            )
-
-
-        """
-        Mixers
-        """
-        for index in self.mixer_outputs:
-            self.create_mixer(index)
-
-
-        self.add_parameter('output-ids', None, types='i' * len(self.mixer_outputs), default=list(self.mixer_outputs), osc=True, state_order=-1, skip_state=True)
-        self.add_parameter('output-stereo', None, types='i' * len(self.mixer_outputs), osc=True, state_order=-1, skip_state=True)
-
-        self.add_mapping(
-            src=[f'output:stereo:{index}' for index in self.mixer_outputs],
-            dest='output-stereo',
-            transform= lambda *stereo: list(stereo)
-        )
-
+        n_stereo_pairs = int(len(self.outputs) / 2)
         # dsp stereo link, needed for stereo fx
-        n_stereo_pairs = int(len(self.mixer_outputs) / 2)
         self.add_parameter('output:stereo-link', None, types='i' * n_stereo_pairs , alsa={}, state_order=-2)
         self.add_mapping(
-            src=[f'output:stereo:{index}' for index in range(0, len(self.mixer_outputs), 2)],
+            src=[f'output:stereo:{index}' for index in range(0, len(self.outputs), 2)],
             dest='output:stereo-link',
             transform= lambda *stereo: list(stereo)
         )
         self.add_parameter('output:stereo-balance', None, types='i' * n_stereo_pairs, default=[0] * n_stereo_pairs, alsa={}, state_order=-1)
         self.add_mapping(
-            src=[f'output:pan:{index}' for index in range(0, len(self.mixer_outputs), 2)],
+            src=[f'output:pan:{index}' for index in range(0, len(self.outputs), 2)],
             dest='output:stereo-balance',
             transform= lambda *pan: [p * 200 - 100 for p in pan]
         )
@@ -498,7 +510,6 @@ class FireFace(Module):
             transform= lambda time: 100 * time
         )
 
-
         self.add_parameter('fx:reverb-activate', None, types='i', default=0, osc=True, alsa={})
         self.add_parameter('fx:reverb-attack', None, types='i', default=100, osc=True, alsa={})
         self.add_parameter('fx:reverb-hold', None, types='i', default=300, osc=True, alsa={})
@@ -528,7 +539,6 @@ class FireFace(Module):
             transform= lambda time: 10 * time
         )
 
-
         """
         Clock and Sync parameters
         """
@@ -557,20 +567,22 @@ class FireFace(Module):
         self.add_parameter('spdif-output-format', None, types='i', default=1, alsa={'iface': 'CARD'}, osc=True, poll=True)
         self.add_parameter('word-clock-single-speed', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, poll=True)
 
-
         """
         Other settings
         """
         self.add_parameter('effect-on-input', None, types='i', default=0, alsa={}, osc=True)
 
-
         """
         Channel selection
         """
-
         self.add_parameter('input:select', None, types='i', default=0, osc=True, state_order=10)
         self.add_parameter('output:select', None, types='i', default=0, osc=True, state_order=10)
 
+        """
+        Gui constants
+        """
+        self.add_parameter('inputs', None, types='i', default=len(self.inputs), osc=True, skip_state=True, state_order=-2)
+        self.add_parameter('outputs', None, types='i', default=len(self.outputs), osc=True, skip_state=True, state_order=-2)
 
         """
         Misc gui options
@@ -628,7 +640,7 @@ class FireFace(Module):
 
             for name in self.alsa_poll_parameters:
                 lookup = self.param_to_alsa_lookup(name)
-                values = self.alsamixer.alsa_get(name, lookup)
+                values = self.alsamixer.alsa_get(lookup)
                 if values:
                     self.set(name, *values)
 
@@ -643,29 +655,21 @@ class FireFace(Module):
                 # bypass meter polling if there's no client connected
                 continue
 
-            for (mixer, sources) in self.mixer_sources.items():
+            for chnl_type in ['line', 'mic', 'spdif', 'adat']:
 
-                sourcetype = mixer.split(':')[1].split('-')[0]
-                if self.get(f'source-{sourcetype}-meters-visible') == 1:
+                if self.get(f'input:{chnl_type}-meters-visible'):
+                    name = f'meter:{chnl_type}-input'
+                    lookup = self.param_to_alsa_lookup(name)
+                    meter_values = self.alsamixer.alsa_get(lookup)
+                    if meter_values:
+                        self.set(name, *meter_values)
 
-                    meters = self.alsamixer.alsa_get(f'meter:{sourcetype}-input', f'name="meter:{sourcetype}-input",iface=CARD')
-                    if meters:
-                        for i, v in enumerate(meters):
-                            self.set(f'source-{sourcetype}-meter:{i}', self.meter_abs_to_db(v))
-
-
-            out_index = -1
-            for (output_meter, outputs) in self.output_meters.items():
-
-                    outputtype = output_meter.split(':')[1].split('-')[0]
-                    if self.get(f'output-{outputtype}-meters-visible') == 1:
-                        meters = self.alsamixer.alsa_get(output_meter, f'name="{output_meter}",iface=CARD')
-                        if meters:
-                            for i, v in enumerate(meters):
-                                out_index += 1
-                                self.set(f'output-meter:{out_index}', self.meter_abs_to_db(v))
-                    else:
-                        out_index += len(outputs)
+                if self.get(f'output:{chnl_type}-meters-visible'):
+                    name = f'meter:{chnl_type}-output'
+                    lookup = self.param_to_alsa_lookup(name)
+                    meter_values = self.alsamixer.alsa_get(lookup)
+                    if meter_values:
+                        self.set(name, *meter_values)
 
     def meter_abs_to_db(self, v):
         """
@@ -709,7 +713,7 @@ class FireFace(Module):
         if name == 'output:stereo-link':
             # workaround a bug (in driver or firmware ?) that makes stereo balance toward left ignored
             # when stereo link is off. part 1: reset balance and wait a bit (doesn't work otherwise)
-            self.alsa_send('output:stereo-balance', [0]* int(len(self.mixer_outputs) / 2))
+            self.alsa_send('output:stereo-balance', [0]* int(len(self.outputs) / 2))
             sleep(0.1)
 
         self.alsamixer.alsa_set(lookup, value)
@@ -761,8 +765,8 @@ class FireFace(Module):
             if dest % 2 == 0:
                 # rename stereo outputs
                 if value == 1:
-                    nx2 = self.mixer_outputs_default_names[dest].split(' ')[-1]
-                    self.set(f'output:hardware-name:{dest}', f'{self.mixer_outputs_default_names[dest]}/{int(nx2)+1}')
+                    nx2 = self.outputs[dest][2].split(' ')[-1]
+                    self.set(f'output:hardware-name:{dest}', f'{self.outputs[dest][2]}/{int(nx2)+1}')
                     for param in ['output:volume-db', 'output:mute', 'output:name', 'output:color']:
                         self.set(f'{param}:{dest + 1}' ,self.get(f'{param}:{dest}'))
                 else:
@@ -774,122 +778,28 @@ class FireFace(Module):
 
             # reset gain/pan/mute when stereo changes
             if not self.loading_state and dest % 2 == 0 and value == 0:
-                for (mixer, sources) in self.mixer_sources.items():
-                    for source, source_name in enumerate(sources):
 
-                        mute = self.get(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest}:{source}')
+                for in_index, (in_nth_of_type, in_type, in_name) in enumerate(self.inputs):
+                    mute = self.get(f'monitor:input-mute:{dest}:{in_index}')
 
-                        if value == 1:
-                            gain = max(self.get(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}'),
-                                        self.get(f'{mixer.replace('mixer', 'monitor')}:{dest+1}:{source}'))
-                        else:
-                            gain = self.get(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}')
-
-                        # apply gain
-                        self.set(f'{mixer.replace('mixer', 'monitor')}:{dest}:{source}', gain)
-                        self.set(f'{mixer.replace('mixer', 'monitor')}:{dest+1}:{source}', gain)
-                        if value == 0:
-                            # reset pan
-                            self.reset(f'output:pan:{dest}')
-                            self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest}:{source}')
-                            self.reset(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{dest+1}:{source}')
-                            # copy mute
-                            self.set(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest}:{source}', mute)
-                            self.set(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{dest+1}:{source}', mute)
-
-    def create_mixer(self, index):
-        """
-        Create mixers
-        """
-        stereo_index = int(index/2) * 2
-
-        lambda_volume_stereo = lambda volume, pan, mute, hide, dimmer: self.volume_pan_to_gains(volume, pan, mute or hide, in_range=[-65,6], out_range=[32768, 40960], dimmer_gain=dimmer)
-        lambda_volume_mono = lambda *a, **k: lambda_volume_stereo(*a, **k)[0]
+                    if value == 1:
+                        gain = max(self.get(f'monitor:input-gain:{dest}:{in_index}'),
+                                    self.get(f'monitor:input-gain:{dest + 1}:{in_index}'))
+                    else:
+                        gain = self.get(f'monitor:input-gain:{dest}:{in_index}')
 
 
-        # create gain, mute and pan controls for every input
-        # and map them to the appropriate mixer source gains
-        for (mixer, sources) in self.mixer_sources.items():
-
-            sourcetype = mixer.split(':')[1].split('-')[0]
-
-            for source, source_name in enumerate(sources):
-
-                self.add_parameter(f'{mixer.replace('mixer', 'monitor')}:{index}:{source}', None, types='f', default=-65, osc=True)
-                self.add_parameter(f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{index}:{source}', None, types='f', default=0.5, osc=True)
-                self.add_parameter(f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{index}:{source}', None, types='i', default=0, osc=True)
-
-                self.add_mapping(
-                    src = [
-                        f'{mixer.replace('mixer', 'monitor')}:{index}:{source}',
-                        f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{index}:{source}',
-                        f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{index}:{source}',
-                        f'source-{sourcetype}-hide:{source}',
-                        f'output:monitor-return:{index}',
-                    ],
-                    dest = f'{mixer}:{index}:{source}',
-                    transform = lambda_volume_mono,
-                    condition = f'output:stereo:{stereo_index}',
-                    condition_test = lambda stereo: not stereo
-                )
-
-        if index % 2 == 0:
-            for (mixer, sources) in self.mixer_sources.items():
-
-                sourcetype = mixer.split(':')[1].split('-')[0]
-
-                for source, source_name in enumerate(sources):
-
-                    self.add_mapping(
-                        src = [
-                            f'{mixer.replace('mixer', 'monitor')}:{index}:{source}',
-                            f'{mixer.replace('mixer', 'monitor').replace('gain', 'pan')}:{index}:{source}',
-                            f'{mixer.replace('mixer', 'monitor').replace('gain', 'mute')}:{index}:{source}',
-                            f'source-{sourcetype}-hide:{source}',
-                            f'output:monitor-return:{index}',
-                        ],
-                        dest = [f'{mixer}:{index}:{source}', f'{mixer}:{index + 1}:{source}'],
-                        transform = lambda_volume_stereo,
-                        condition = f'output:stereo:{stereo_index}'
-                    )
-
-
-
-            linked_params = [
-                'output:hide', 'output:volume-db', 'output:mute', 'output:name', 'output:color',
-                'output:eq-activate', 'output:hpf-activate-conditionnal', 'output:hpf-cut-off', 'output:hpf-roll-off',
-                'output:dyn-activate',  'output:dyn-attack',  'output:dyn-release',  'output:dyn-gain',
-                'output:dyn-compressor-threshold',  'output:dyn-expander-threshold',  'output:dyn-compressor-ratio', 'output:dyn-expander-ratio',
-                'output:stream-return', 'output:monitor-return', 'output:fx-return']
-
-            for band in ['low', 'middle', 'high']:
-                for p in ['type', 'freq', 'gain', 'quality']:
-                    if band == 'middle' and p == 'type':
-                        continue
-                    linked_params.append(f'output:eq-{band}-{p}')
-
-            if index < 8:
-                linked_params.append('output:line-level')
-
-            # link outputs
-            for param in linked_params:
-                self.add_mapping(
-                    src = f'{param}:{index}',
-                    dest = f'{param}:{index + 1}',
-                    transform = lambda v: v,
-                    # inverse = lambda v: v, # should not be needed
-                    condition = f'output:stereo:{stereo_index}'
-                )
-
-            for param in ['output:stereo']:
-                self.add_mapping(
-                    src = f'{param}:{index}',
-                    dest = f'{param}:{index + 1}',
-                    transform = lambda v: v,
-                    inverse = lambda v: v,
-                )
-
-            self.add_parameter(f'output:pan:{index}', None, types='f', default=0.5, osc=True, state_order=-9)
+                    # apply gain
+                    self.set(f'monitor:input-gain:{dest}:{in_index}', gain)
+                    self.set(f'monitor:input-gain:{dest + 1}:{in_index}', gain)
+                    if value == 0:
+                        # reset pan
+                        self.reset(f'output:pan:{dest}')
+                        self.reset(f'monitor:input-pan:{dest}:{in_index}')
+                        self.reset(f'monitor:input-pan:{dest + 1}:{in_index}')
+                        # copy mute
+                        self.set(f'monitor:input-mute:{dest}:{in_index}', mute)
+                        self.set(f'monitor:input-mute:{dest + 1}:{in_index}', mute)
 
 
     def volume_pan_to_gains(self, vol, pan, mute, in_range, out_range, dimmer_gain=0):

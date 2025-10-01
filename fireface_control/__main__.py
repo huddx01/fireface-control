@@ -8,6 +8,8 @@ if __package__ == None:
     __package__ = 'fireface_control'
     path.insert(0, './')
 
+path.insert(0, dirname(__file__) + '/../../mentat/')
+
 from mentat import Engine
 
 from .config import config
@@ -39,7 +41,7 @@ if not config.dev:
     webapp_port = sock.getsockname()[1]
     sock.close()
 
-engine = Engine('FirefaceControl', port=engine_port, folder='~/.config/fireface-control/', debug='--debug' in argv)
+engine = Engine('FirefaceControl', port=engine_port, folder='~/.config/fireface-control/', debug=2)
 
 settings = Settings('Settings')
 alsamixer = AlsaMixer('AlsaMixer')
