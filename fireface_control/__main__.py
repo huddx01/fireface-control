@@ -8,11 +8,13 @@ if __package__ == None:
     __package__ = 'fireface_control'
     path.insert(0, './')
 
-path.insert(0, dirname(__file__) + '/../../mentat/')
+from .config import config
+
+if config.dev:
+    path.insert(0, dirname(__file__) + '/../../mentat/')
 
 from mentat import Engine
 
-from .config import config
 from .settings import Settings
 from .alsamixer import AlsaMixer
 from .fireface import FireFace
