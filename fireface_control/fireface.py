@@ -92,31 +92,33 @@ class FireFace(Module):
         Create output controls
         """
         for out_index, (out_nth_of_type, out_type, out_name) in enumerate(self.outputs):
-            self.add_parameter(f'output:volume:{out_index}', None, types='i', default=0)
-            self.add_parameter(f'output:volume-db:{out_index}', None, types='f', default=0, osc=True)
-            self.add_parameter(f'output:mute:{out_index}', None, types='i', default=0, osc=True)
+
+            # read-only
             self.add_parameter(f'output:hardware-name:{out_index}', None, types='s', default=out_name, osc=True, skip_state=True)
+            self.add_parameter(f'output:type:{out_index}', None, types='s', default=out_type, osc=True, skip_state=True)
+
+            # gui options
             self.add_parameter(f'output:name:{out_index}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:color:{out_index}', None, types='s', default='', osc=True)
             self.add_parameter(f'output:hide:{out_index}', None, types='i', default=0, osc=True, output_type=out_type)
-            self.add_parameter(f'output:stereo:{out_index}', None, types='i', default=0, osc=True, state_order=-10)
-            self.add_parameter(f'output:mono:{out_index}', None, types='i', default=1)
-            self.add_parameter(f'output:invert-phase:{out_index}', None, types='i', default=0, osc=True)
 
+            # volume + mute
+            self.add_parameter(f'output:volume-db:{out_index}', None, types='f', default=0, osc=True)
+            self.add_parameter(f'output:mute:{out_index}', None, types='i', default=0, osc=True)
+            self.add_parameter(f'output:stereo:{out_index}', None, types='i', default=0, osc=True, state_order=-10)
+
+            self.add_parameter(f'output:volume:{out_index}', None, types='i', default=0)
             self.add_mapping(
                 src=[f'output:volume-db:{out_index}', f'output:mute:{out_index}', f'output:hide:{out_index}'],
                 dest=f'output:volume:{out_index}',
                 transform=lambda v, m, h: v*10 - (m+h) * 900,
             )
 
-            self.add_mapping(
-                src=f'output:stereo:{out_index}',
-                dest=f'output:mono:{out_index}',
-                transform=lambda v: not v,
-            )
-
             # meter
             self.add_parameter(f'output:meter:{out_index}', None, types='f', default=-138, osc=True, output_type=out_type, skip_state=True)
+
+            # channel options
+            self.add_parameter(f'output:invert-phase:{out_index}', None, types='i', default=0, osc=True)
 
             # line options
             if out_type == 'line':
