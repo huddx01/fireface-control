@@ -624,6 +624,16 @@ class FireFace(Module):
         # Start polling
         self.start_scene('poll_alsa_parameters', self.poll_alsa_parameters)
 
+        # remove invalid params from states
+        for statename in self.states:
+            for s in self.states[statename]:
+                valid_state = [x for x in self.states[statename] if self.get_parameter(x[0])]
+                if len(valid_state) != len(self.states[statename]):
+                    invalid_param = [x[0] for x in self.states[statename] if not self.get_parameter(x[0])]
+                    self.logger.warning(f'invalid parameters found in state {statename}, they will be ignored: {invalid_param}')
+                    self.states[statename] = valid_state
+                    break
+
         # auto load last state ?
         if self.engine.get('Settings', 'autoload-state'):
             statename = self.engine.get('Settings', 'last-state')
