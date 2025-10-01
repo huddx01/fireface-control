@@ -13093,7 +13093,7 @@
         "bypass": false,
         "onCreate": "locals.fIds = {\n  F1: 'show_all',\n  F2: 'edit_names',\n  F3: 'metering',\n  F4: 'show_eq',\n  F5: 'show_dyn',\n  F6: 'show_fx',\n  F7: 'show_hw'\n}",
         "onValue": "",
-        "onKeyboard": "if (locals.fIds[key]) {\n  var id = locals.fIds[key]\n  set(id, get(id) ? 0 : 1)\n}\n\nif (key == 's' && ctrl && globals.env.prod) {\n  set('state_menu', 'save')\n}",
+        "onKeyboard": "if (locals.fIds[key]) {\n  var id = locals.fIds[key]\n  set(id, get(id) ? 0 : 1)\n}\n\nif (key == 's' && ctrl && (globals.env.prod || alt)) {\n  set('state_menu', 'save')\n}",
         "keyBinding": [
           ""
         ],
