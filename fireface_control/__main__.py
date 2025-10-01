@@ -43,7 +43,7 @@ if not config.dev:
     webapp_port = sock.getsockname()[1]
     sock.close()
 
-engine = Engine('FirefaceControl', port=engine_port, folder='~/.config/fireface-control/', debug=2)
+engine = Engine('FirefaceControl', port=engine_port, folder='~/.config/fireface-control/', debug=config.debug)
 
 settings = Settings('Settings')
 alsamixer = AlsaMixer('AlsaMixer')
