@@ -587,8 +587,6 @@ class FireFace(Module):
         """
         Misc gui options
         """
-        self.add_parameter('show-hidden', None, types='i', default=0, osc=True)
-        self.add_parameter('show-names', None, types='i', default=0, osc=True)
         self.add_parameter('show-eq', None, types='i', default=1, osc=True)
         self.add_parameter('show-dyn', None, types='i', default=1, osc=True)
         self.add_parameter('show-fx', None, types='i', default=1, osc=True)
