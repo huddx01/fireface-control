@@ -8552,7 +8552,7 @@
                     "top": 160,
                     "left": 60,
                     "lock": false,
-                    "id": "stereo_output_@{output_select}",
+                    "id": "stereo_output_sel",
                     "visible": true,
                     "interaction": true,
                     "comments": "Selected channel: toggle stereo",

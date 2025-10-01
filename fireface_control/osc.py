@@ -89,7 +89,7 @@ class OSC(Module):
                     self.send('/NOTIFY', f'power-off', f'Fireface {'disconnected' if value == [0] else 'connected'}')
 
 
-                if name in self.remote_state and self.remote_state[name] == value:
+                if name in self.remote_state and self.remote_state[name] == value and 'stereo:' not in name:
                     return
 
                 if self.filter_param(name) is False:
