@@ -561,11 +561,11 @@ class FireFace(Module):
             )
 
         # Writable parameters
-        self.add_parameter('primary-clock-source', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, poll=True)
-        self.add_parameter('optical-output-signal', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, poll=True)
-        self.add_parameter('spdif-input-interface', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, poll=True)
-        self.add_parameter('spdif-output-format', None, types='i', default=1, alsa={'iface': 'CARD'}, osc=True, poll=True)
-        self.add_parameter('word-clock-single-speed', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True, poll=True)
+        self.add_parameter('primary-clock-source', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
+        self.add_parameter('optical-output-signal', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
+        self.add_parameter('spdif-input-interface', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
+        self.add_parameter('spdif-output-format', None, types='i', default=1, alsa={'iface': 'CARD'}, osc=True)
+        self.add_parameter('word-clock-single-speed', None, types='i', default=0, alsa={'iface': 'CARD'}, osc=True)
 
         """
         Other settings
