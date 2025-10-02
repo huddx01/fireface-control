@@ -29,19 +29,6 @@
   display: flex;
 }
 
-::-webkit-scrollbar {
-  height:8rem;
-  border-bottom: 4rem solid var(--color-background);
-}
-::-webkit-scrollbar-thumb:horizontal {
-  border-bottom: 1rem solid var(--color-background)!important;
-  border-radius: 3rem;
-}
-::-webkit-scrollbar-button:decrement:start, ::-webkit-scrollbar-button:increment:end {
-  width: 1rem;
-}
-
-
 /*
   Preload greeter override
 */

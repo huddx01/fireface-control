@@ -148,15 +148,17 @@ class FireFace(Module):
                 transform=lambda eq, hpf: eq and hpf
             )
 
-            # stream return : straight routing from stream sources
+            # stream return connection matrix (default: straight routing from stream sources)
+            self.add_parameter(f'output:stream-return-matrix:{out_index}', None, types='i' * len(self.outputs), default=[0] * (out_index) + [1] + [0] * (len(self.outputs) - out_index - 1), osc=True)
+            # global volume for stream return
             self.add_parameter(f'output:stream-return:{out_index}', None, types='f', default=0, osc=True)
+            # alsa stream source
             self.add_parameter(f'mixer:stream-source-gain:{out_index}', None, types='i' * len(self.outputs), alsa={'name': 'mixer:stream-source-gain', 'index': out_index})
-            def stream_return_mapping_factory(out_index):
-                return lambda vol: [0] * (out_index) + [self.volume_pan_to_gains(vol, 0.5, False, in_range=[-65, 6], out_range=[32768, 40960])[0]] + [0] * (len(self.outputs) - out_index - 1)
+            # stream source mapping
             self.add_mapping(
-                src=f'output:stream-return:{out_index}',
+                src=[f'output:stream-return:{out_index}', f'output:stream-return-matrix:{out_index}'],
                 dest=f'mixer:stream-source-gain:{out_index}',
-                transform=stream_return_mapping_factory(out_index)
+                transform=lambda vol, matrix: [self.volume_pan_to_gains(vol, 0.5, False, in_range=[-65, 6], out_range=[32768, 40960])[0] if connection else 0 for connection in matrix ]
             )
 
             # monitor return: global dimmer for monitor mix
