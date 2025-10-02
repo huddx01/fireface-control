@@ -182,7 +182,7 @@ class OSC(Module):
         if ':select' in name:
             return True
 
-        if 'input:' in name and name.split(':')[1] not in ['color', 'name', 'hide', 'mute', 'hardware-name', 'type'] and name.split(':')[-1] != input_select:
+        if 'input:' in name and name.split(':')[1] not in ['color', 'name', 'hide', 'mute', 'hardware-name', 'type', 'mic-power', 'mic-instrument'] and name.split(':')[-1] != input_select:
             return False
 
         if 'monitor:' in name and name.split(':')[-2] != output_select:

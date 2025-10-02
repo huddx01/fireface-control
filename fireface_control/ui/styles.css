@@ -19,6 +19,10 @@
   --purple: rgba(152,71,255,1);
 }
 
+* {
+    scrollbar-width: thin;
+}
+
 /*
     Dev panel: hidden widget templates duplicated in clone matrices
 */
@@ -303,4 +307,15 @@
   border-top-right-radius:3rem;
   border-bottom-right-radius:3rem;
   margin-left:-1rem;
+}
+
+/*
+    Led
+*/
+.led-container {
+    --color-stroke: rgba(0,0,0,0.5);
+    --line-width: 2rem;
+    --widget-padding: 0;
+    --alpha-fill-off: 0.2;
+    --border-radius: 100%;
 }
