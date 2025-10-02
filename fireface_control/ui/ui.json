@@ -12048,7 +12048,7 @@
                         "borderRadius": "auto",
                         "padding": 0,
                         "html": "",
-                        "css": "class: color-menu",
+                        "css": "class: color-menu;\ni {\n  margin-top: -2rem;\n}",
                         "value": "",
                         "default": "@{this.values.0}",
                         "linkId": "",
