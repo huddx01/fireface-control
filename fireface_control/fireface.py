@@ -207,7 +207,7 @@ class FireFace(Module):
             transform=lambda *v: list(v)
         )
 
-        for out_type in ['line', 'mic', 'spdif', 'adat']:
+        for out_type in ['line', 'hp', 'spdif', 'adat']:
             # fx return arrays
             self.add_parameter(f'fx:{out_type}-output-volume', None, types='i' * len([x for x in self.outputs if out_type in x]), alsa={})
             self.add_mapping(
@@ -673,6 +673,8 @@ class FireFace(Module):
                     meter_values = self.alsamixer.alsa_get(lookup)
                     if meter_values:
                         self.set(name, *meter_values)
+
+            for chnl_type in ['line', 'hp', 'spdif', 'adat']:
 
                 if self.get(f'output:{chnl_type}-meters-visible'):
                     name = f'meter:{chnl_type}-output'
