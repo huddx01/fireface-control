@@ -80,7 +80,7 @@ class OSC(Module):
 
                 if not self.first_connect:
                     return
-                if name == 'output:select':
+                if name == 'output:select' or name == f'output:stereo:{self.fireface.get('output:select')}':
                     self.send_output_sel_state()
                 if name == 'input:select':
                     self.send_input_sel_state()
@@ -89,7 +89,7 @@ class OSC(Module):
                     self.send('/NOTIFY', f'power-off', f'Fireface {'disconnected' if value == [0] else 'connected'}')
 
 
-                if name in self.remote_state and self.remote_state[name] == value and 'stereo:' not in name and 'stream-return-matrix' not in name:
+                if name in self.remote_state and self.remote_state[name] == value and 'stereo:' not in name:
                     return
 
                 if self.filter_param(name) is False:
@@ -141,8 +141,8 @@ class OSC(Module):
             elif 'monitor:' in name and name.split(':')[-2] == output_select_str:
                 self.send(f'/{name}', *value)
 
-        if self.fireface.get(f'output:stereo:{output_select}'):
-            for name in ['output:stream-return-matrix']:
+        for name in ['output:stream-return-matrix']:
+            if self.fireface.get(f'output:stereo:{output_select}'):
                 self.send(f'/{name}:{output_select + 1}', self.fireface.get(f'{name}:{output_select + 1}'))
 
 

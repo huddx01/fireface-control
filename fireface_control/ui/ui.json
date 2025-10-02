@@ -132,7 +132,8 @@
             "asYouType": false,
             "numeric": false,
             "validation": "",
-            "maxLength": ""
+            "maxLength": "",
+            "noCanvas": false
           },
           {
             "type": "input",
@@ -175,7 +176,8 @@
             "asYouType": false,
             "numeric": false,
             "validation": "",
-            "maxLength": ""
+            "maxLength": "",
+            "noCanvas": false
           },
           {
             "type": "variable",
@@ -1157,7 +1159,8 @@
                     "ignoreDefaults": false,
                     "bypass": false,
                     "onCreate": "",
-                    "onValue": "\nif (value && get('new_state_modal')) {\n  send('/current-state', value)\n  send('/state', 'save')\n}\nset('parent', 0, {sync: false})\nset(this, '', {sync: false})"
+                    "onValue": "\nif (value && get('new_state_modal')) {\n  send('/current-state', value)\n  send('/state', 'save')\n}\nset('parent', 0, {sync: false})\nset(this, '', {sync: false})",
+                    "noCanvas": false
                   }
                 ],
                 "tabs": []
@@ -1577,7 +1580,8 @@
                     "asYouType": false,
                     "numeric": false,
                     "validation": "",
-                    "maxLength": ""
+                    "maxLength": "",
+                    "noCanvas": false
                   },
                   {
                     "type": "button",
@@ -1954,7 +1958,8 @@
                         "asYouType": false,
                         "numeric": false,
                         "validation": "",
-                        "maxLength": ""
+                        "maxLength": "",
+                        "noCanvas": false
                       }
                     ],
                     "tabs": []
@@ -2827,7 +2832,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "knob",
@@ -2924,7 +2930,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "knob",
@@ -3021,7 +3028,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           }
                         ],
                         "tabs": [],
@@ -3215,7 +3223,8 @@
                         "asYouType": false,
                         "numeric": false,
                         "validation": "",
-                        "maxLength": ""
+                        "maxLength": "",
+                        "noCanvas": false
                       },
                       {
                         "type": "knob",
@@ -4088,7 +4097,8 @@
                                         "asYouType": false,
                                         "numeric": false,
                                         "validation": "",
-                                        "maxLength": ""
+                                        "maxLength": "",
+                                        "noCanvas": false
                                       }
                                     ],
                                     "tabs": []
@@ -4274,7 +4284,8 @@
                                         "asYouType": false,
                                         "numeric": false,
                                         "validation": "",
-                                        "maxLength": ""
+                                        "maxLength": "",
+                                        "noCanvas": false
                                       }
                                     ],
                                     "tabs": []
@@ -4511,7 +4522,8 @@
                                         "asYouType": false,
                                         "numeric": false,
                                         "validation": "",
-                                        "maxLength": ""
+                                        "maxLength": "",
+                                        "noCanvas": false
                                       }
                                     ],
                                     "tabs": []
@@ -4659,7 +4671,8 @@
                                         "asYouType": false,
                                         "numeric": false,
                                         "validation": "",
-                                        "maxLength": ""
+                                        "maxLength": "",
+                                        "noCanvas": false
                                       }
                                     ],
                                     "tabs": []
@@ -4899,7 +4912,8 @@
                                     "asYouType": false,
                                     "numeric": false,
                                     "validation": "",
-                                    "maxLength": ""
+                                    "maxLength": "",
+                                    "noCanvas": false
                                   },
                                   {
                                     "type": "text",
@@ -5034,7 +5048,8 @@
                                     "asYouType": false,
                                     "numeric": false,
                                     "validation": "",
-                                    "maxLength": ""
+                                    "maxLength": "",
+                                    "noCanvas": false
                                   },
                                   {
                                     "type": "text",
@@ -5169,7 +5184,8 @@
                                     "asYouType": false,
                                     "numeric": false,
                                     "validation": "",
-                                    "maxLength": ""
+                                    "maxLength": "",
+                                    "noCanvas": false
                                   }
                                 ],
                                 "tabs": []
@@ -5790,7 +5806,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "input",
@@ -5833,7 +5850,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "input",
@@ -5876,7 +5894,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           }
                         ],
                         "tabs": []
@@ -6417,7 +6436,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -6552,7 +6572,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -6687,7 +6708,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -6829,7 +6851,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "input",
@@ -6872,7 +6895,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -7007,7 +7031,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           }
                         ],
                         "tabs": []
@@ -7909,7 +7934,8 @@
                         "asYouType": false,
                         "numeric": false,
                         "validation": "",
-                        "maxLength": ""
+                        "maxLength": "",
+                        "noCanvas": false
                       },
                       {
                         "type": "variable",
@@ -8183,7 +8209,8 @@
                         "asYouType": false,
                         "numeric": false,
                         "validation": "",
-                        "maxLength": ""
+                        "maxLength": "",
+                        "noCanvas": false
                       },
                       {
                         "type": "button",
@@ -8545,7 +8572,8 @@
                     "asYouType": false,
                     "numeric": false,
                     "validation": "",
-                    "maxLength": ""
+                    "maxLength": "",
+                    "noCanvas": false
                   },
                   {
                     "type": "button",
@@ -9021,7 +9049,8 @@
                         "asYouType": false,
                         "numeric": false,
                         "validation": "",
-                        "maxLength": ""
+                        "maxLength": "",
+                        "noCanvas": false
                       },
                       {
                         "type": "button",
@@ -9165,7 +9194,8 @@
                         "asYouType": false,
                         "numeric": false,
                         "validation": "",
-                        "maxLength": ""
+                        "maxLength": "",
+                        "noCanvas": false
                       },
                       {
                         "type": "button",
@@ -9309,7 +9339,8 @@
                         "asYouType": false,
                         "numeric": false,
                         "validation": "",
-                        "maxLength": ""
+                        "maxLength": "",
+                        "noCanvas": false
                       }
                     ],
                     "tabs": []
@@ -9407,10 +9438,10 @@
                     "lock": false,
                     "id": "stream_matrix_select",
                     "comments": "",
-                    "value": "@{stream_matrix_output_@{output_select}}",
+                    "value": "",
                     "default": "",
                     "linkId": "",
-                    "address": "auto",
+                    "address": "/output:stream-return-matrix:@{output_select}",
                     "preArgs": "",
                     "typeTags": "",
                     "decimals": 2,
@@ -9418,7 +9449,25 @@
                     "ignoreDefaults": false,
                     "bypass": false,
                     "onCreate": "",
-                    "onValue": "set('stream_matrix_sel/*', 0, {sync:false, send:false})\n\nsetTimeout(()=>{\n  var stereo = get('stereo_output_' + get('output_select')),\n      streams = get('outputs')\n\n  for (let i=0; i<streams; i++) {\n    set('stream_matrix_sel/' + i, value[i], {send:false, sync: false})\n  }\n  \n  if (stereo) {\n    var rightMatrix = get('stream_matrix_output_' + (get('output_select') + 1))\n    for (let i=0; i<streams; i++) {\n      set('stream_matrix_sel/' + (i + streams), rightMatrix[i], {send:false, sync: false})\n    }\n  \n  }\n})"
+                    "onValue": "for (let i=0; i<get('outputs'); i++) {\n  set('stream_matrix_sel/' + i, value[i])\n}"
+                  },
+                  {
+                    "type": "variable",
+                    "lock": false,
+                    "id": "stream_matrix_select_right",
+                    "comments": "",
+                    "value": "",
+                    "default": "",
+                    "linkId": "",
+                    "address": "/output:stream-return-matrix:#{@{output_select}+1}",
+                    "preArgs": "",
+                    "typeTags": "",
+                    "decimals": 2,
+                    "target": "",
+                    "ignoreDefaults": false,
+                    "bypass": false,
+                    "onCreate": "",
+                    "onValue": "var stereo = get('stereo_output_' + get('output_select'))\nvar streams = get('outputs')\nif (stereo) {\n  for (let i=0; i<get('outputs'); i++) {\n    set('stream_matrix_sel/' + (i + streams), value[i])\n  }\n}"
                   },
                   {
                     "type": "panel",
@@ -9481,7 +9530,7 @@
                         "height": "#{(@{outputs}+1)*20}",
                         "expand": false,
                         "css": "> inner {\n  flex-wrap: wrap;\n}\n",
-                        "props": "JS{\nvar props = {},\n    streams = @{outputs},\n    stereo = @{stereo_output_@{output_select}}\n    \nprops.label = $ < streams ? String($ + 1) : false\nprops.interaction = $ >= streams\nprops.alphaFillOff = $ >= streams ? '' : 0\nprops.lineWidth = $ >= streams ? 1 : 0\nprops.css = $ < streams ? 'min-width:60%' : '20%'\nprops.height = 20\n\nif (!stereo && $ >= 2 * streams) {\n  props.visible = false\n}\nif ($ >= streams) {\n  props.id = 'stream_matrix_sel/' + ($ - streams)\n  props.colorText = 'transparent'\n  props.label = $ >= streams * 2 ? 'R' : stereo ? 'L' : ' '\n}\n\nreturn props\n}",
+                        "props": "JS{\nvar props = {},\n    streams = @{outputs},\n    stereo = @{stereo_output_@{output_select}}\n    \nprops.label = $ < streams ? String($ + 1) : false\nprops.interaction = $ >= streams\nprops.alphaFillOff = $ >= streams ? '' : 0\nprops.lineWidth = $ >= streams ? 1 : 0\nprops.css = $ < streams ? 'min-width:60%' : '20%'\nprops.height = 20\n\nif (!stereo && $ >= 2 * streams) {\n  props.visible = false\n}\nif ($ >= streams) {\n  props.id = 'stream_matrix_sel/' + ($ - streams)\n  props.colorText = 'transparent'\n  props.label = $ >= streams * 2 ? 'R' : stereo ? 'L' : ' '\n  // props.address = '/output:stream-return-matrix:'\n  // props.address += $ >= streams * 2 ? @{output_select} : @{output_select} + 1\n}\n\nreturn props\n}",
                         "address": "auto",
                         "variables": "@{parent.variables}",
                         "colorText": "auto",
@@ -9515,7 +9564,7 @@
                         "ignoreDefaults": false,
                         "bypass": false,
                         "onCreate": "",
-                        "onValue": "var streams = get('outputs'),\n    stereo = get('stereo_output_' + get('output_select'))\nconsole.log('sending')\nvar leftMatrix = value.slice(streams, streams * 2)\nsend('/output:stream-return-matrix:' + get('output_select'), ...leftMatrix)\n\n\nif (stereo) {\n  var rightMatrix = value.slice(streams * 2, streams * 3)\n  send('/output:stream-return-matrix:' + (get('output_select') + 1), ...rightMatrix)\n}",
+                        "onValue": "var streams = get('outputs'),\n    stereo = get('stereo_output_' + get('output_select'))\n\nvar leftMatrix = value.slice(streams, streams * 2)\nsend('/output:stream-return-matrix:' + get('output_select'), ...leftMatrix)\n\n\nif (stereo) {\n  var rightMatrix = get(this).slice(streams * 2, streams * 3)\n  send('/output:stream-return-matrix:' + (get('output_select') + 1), ...rightMatrix)\n}",
                         "onTouch": "",
                         "widgets": [],
                         "tabs": []
@@ -10110,7 +10159,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -10245,7 +10295,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -10380,7 +10431,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -10515,7 +10567,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -10650,7 +10703,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -10785,7 +10839,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -10920,7 +10975,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -11055,7 +11111,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           },
                           {
                             "type": "text",
@@ -11190,7 +11247,8 @@
                             "asYouType": false,
                             "numeric": false,
                             "validation": "",
-                            "maxLength": ""
+                            "maxLength": "",
+                            "noCanvas": false
                           }
                         ],
                         "tabs": []
@@ -12503,25 +12561,8 @@
                         "asYouType": false,
                         "numeric": false,
                         "validation": "",
-                        "maxLength": ""
-                      },
-                      {
-                        "type": "variable",
-                        "lock": false,
-                        "id": "stream_matrix_output_@{parent.variables.output}",
-                        "comments": "",
-                        "value": "",
-                        "default": "",
-                        "linkId": "",
-                        "address": "/output:stream-return-matrix:@{parent.variables.output}",
-                        "preArgs": "",
-                        "typeTags": "",
-                        "decimals": 2,
-                        "target": "",
-                        "ignoreDefaults": false,
-                        "bypass": false,
-                        "onCreate": "",
-                        "onValue": ""
+                        "maxLength": "",
+                        "noCanvas": false
                       },
                       {
                         "type": "variable",
@@ -12849,7 +12890,8 @@
                         "asYouType": false,
                         "numeric": false,
                         "validation": "",
-                        "maxLength": ""
+                        "maxLength": "",
+                        "noCanvas": false
                       },
                       {
                         "type": "button",
