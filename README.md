@@ -32,7 +32,7 @@ python -m fireface_control -h
 
 *Key differences with Totalmix*
 
-- software output mixer is replaced with a straight routing and "pc return" controls for hardware outputs
+- software output mixer is replaced with a simple routing matrix and global dimmer per hardware outputs
 - inputs are mono only
 - echo fx are mono except pong echo
 
